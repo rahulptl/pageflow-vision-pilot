@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, FileText, Clock, TrendingUp, Plus, ArrowRight } from "lucide-react";
+import { LayoutDashboard, FileText, Clock, TrendingUp, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
@@ -63,17 +63,9 @@ export function Dashboard() {
   return (
     <div className="content-container py-8 space-y-8">
       {/* Hero Section */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-        <div className="page-header">
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-description">Monitor your layout extraction pipeline and recent activity</p>
-        </div>
-        <Link to="/generate">
-          <Button size="lg" className="gap-2 shadow-lg">
-            <Plus className="w-5 h-5" />
-            Generate Layout
-          </Button>
-        </Link>
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-description">Monitor your layout extraction pipeline and recent activity</p>
       </div>
 
       {/* Stats Grid */}
@@ -132,9 +124,9 @@ export function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Recent Layouts</CardTitle>
@@ -197,13 +189,13 @@ export function Dashboard() {
           <CardContent className="space-y-4">
             <Link to="/generate" className="block">
               <Button className="w-full gap-2 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
-                <Plus className="w-5 h-5" />
+                <FileText className="w-5 h-5" />
                 Generate Layout
               </Button>
             </Link>
             <Link to="/layouts" className="block">
               <Button variant="outline" className="w-full gap-2 h-12">
-                <FileText className="w-5 h-5" />
+                <LayoutDashboard className="w-5 h-5" />
                 Browse Layouts
               </Button>
             </Link>

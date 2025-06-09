@@ -12,12 +12,12 @@ import { formatShortDate, formatUser } from "@/utils/formatters";
 export function Dashboard() {
   const { data: layouts = [], isLoading: layoutsLoading } = useQuery({
     queryKey: ['layouts'],
-    queryFn: apiService.getLayouts,
+    queryFn: () => apiService.getLayouts(),
   });
 
   const { data: runs = [], isLoading: runsLoading } = useQuery({
     queryKey: ['runs'],
-    queryFn: apiService.getRuns,
+    queryFn: () => apiService.getRuns(),
   });
 
   // Calculate stats

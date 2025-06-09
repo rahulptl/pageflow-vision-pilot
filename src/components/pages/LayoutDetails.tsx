@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,9 +46,11 @@ export function LayoutDetails() {
     );
   }
 
-  const elementCount = Array.isArray(layout.layout_json?.elements) 
-    ? layout.layout_json.elements.length 
+  const elementCount = Array.isArray(layout.layout_json?.elements)
+    ? layout.layout_json.elements.length
     : Object.keys(layout.layout_json || {}).length;
+
+  const isTwoPager = layout.layout_metadata?.type_of_page === 'double';
 
   return (
     <div className="p-6 space-y-6">
@@ -135,15 +138,21 @@ export function LayoutDetails() {
           <CardTitle>Layout Comparison</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={isTwoPager ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
             <div className="space-y-3">
               <h3 className="font-medium text-center">Original Page</h3>
-              <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+              <div
+                className={cn(
+                  isTwoPager
+                    ? "bg-muted rounded-lg overflow-hidden border border-input hover:shadow-md transition-shadow max-w-xl mx-auto"
+                    : "aspect-[3/4] bg-muted rounded-lg overflow-hidden border border-input hover:shadow-md transition-shadow"
+                )}
+              >
                 {layout.page_image ? (
                   <img
                     src={formatBase64Image(layout.page_image) || ''}
                     alt="Original page"
-                    className="w-full h-full object-cover"
+                    className={isTwoPager ? "w-full h-auto object-contain" : "w-full h-full object-cover"}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -154,12 +163,18 @@ export function LayoutDetails() {
             </div>
             <div className="space-y-3">
               <h3 className="font-medium text-center">Extracted Layout (Bounding Boxes)</h3>
-              <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+              <div
+                className={cn(
+                  isTwoPager
+                    ? "bg-muted rounded-lg overflow-hidden border border-input hover:shadow-md transition-shadow max-w-xl mx-auto"
+                    : "aspect-[3/4] bg-muted rounded-lg overflow-hidden border border-input hover:shadow-md transition-shadow"
+                )}
+              >
                 {layout.bounding_box_image ? (
                   <img
                     src={formatBase64Image(layout.bounding_box_image) || ''}
                     alt="Layout with bounding boxes"
-                    className="w-full h-full object-cover"
+                    className={isTwoPager ? "w-full h-auto object-contain" : "w-full h-full object-cover"}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -189,7 +204,7 @@ export function LayoutDetails() {
           <CollapsibleContent>
             <CardContent>
               <div className="bg-muted rounded-lg p-4 overflow-auto max-h-96">
-                <pre className="text-sm text-muted-foreground">
+                <pre className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
                   <code>{JSON.stringify(layout.layout_json, null, 2)}</code>
                 </pre>
               </div>
@@ -206,7 +221,7 @@ export function LayoutDetails() {
           </CardHeader>
           <CardContent>
             <div className="bg-muted rounded-lg p-4 overflow-auto">
-              <pre className="text-sm text-muted-foreground">
+              <pre className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
                 <code>{JSON.stringify(layout.layout_metadata, null, 2)}</code>
               </pre>
             </div>

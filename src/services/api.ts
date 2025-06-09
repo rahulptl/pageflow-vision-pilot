@@ -34,7 +34,9 @@ class ApiService {
     formData.append('file', request.file);
 
     const params = new URLSearchParams();
-    if (request.page_no) params.append('page_no', request.page_no.toString());
+    if (request.type_of_page) params.append('type_of_page', request.type_of_page);
+    if (request.page_numbers)
+      request.page_numbers.forEach((p) => params.append('page_numbers', p.toString()));
     if (request.merge_level) params.append('merge_level', request.merge_level.toString());
 
     const url = `/layouts/run${params.toString() ? `?${params.toString()}` : ''}`;

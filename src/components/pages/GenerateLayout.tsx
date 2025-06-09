@@ -12,11 +12,14 @@ import { Upload, FileText, CheckCircle, Eye, Save, Trash2 } from "lucide-react";
 import { useDropzone } from 'react-dropzone';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
+import { PageType } from "@/types/api";
 import { useNavigate } from "react-router-dom";
 
 export function GenerateLayout() {
   const [file, setFile] = useState<File | null>(null);
   const [pageNo, setPageNo] = useState("1");
+  const [pageNo2, setPageNo2] = useState("2");
+  const [pageType, setPageType] = useState<PageType>(PageType.OnePager);
   const [mergeLevel, setMergeLevel] = useState("2");
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -25,7 +28,7 @@ export function GenerateLayout() {
   const navigate = useNavigate();
 
   const runLayoutMutation = useMutation({
-    mutationFn: apiService.runLayoutPipeline,
+    mutationFn: (req: any) => apiService.runLayoutPipeline(req),
     onSuccess: () => {
       setProgress(100);
       toast({
@@ -110,9 +113,14 @@ export function GenerateLayout() {
     }, 500);
 
     try {
+      const pages = [parseInt(pageNo)];
+      if (pageType === PageType.TwoPager) {
+        pages.push(parseInt(pageNo2));
+      }
       await runLayoutMutation.mutateAsync({
         file,
-        page_no: parseInt(pageNo),
+        type_of_page: pageType,
+        page_numbers: pages,
         merge_level: parseInt(mergeLevel),
       });
       clearInterval(progressInterval);
@@ -177,9 +185,21 @@ export function GenerateLayout() {
               </div>
 
               {/* Parameters */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pageNo">Page Number</Label>
+                  <Label htmlFor="pageType">Page Type</Label>
+                  <Select value={pageType} onValueChange={(val) => setPageType(val as PageType)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PageType.OnePager}>1 pager</SelectItem>
+                      <SelectItem value={PageType.TwoPager}>2 pager</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pageNo">Page {pageType === PageType.TwoPager ? "1" : "Number"}</Label>
                   <Input
                     id="pageNo"
                     type="number"
@@ -189,6 +209,19 @@ export function GenerateLayout() {
                     placeholder="1"
                   />
                 </div>
+                {pageType === PageType.TwoPager && (
+                  <div className="space-y-2">
+                    <Label htmlFor="pageNo2">Page 2</Label>
+                    <Input
+                      id="pageNo2"
+                      type="number"
+                      min="1"
+                      value={pageNo2}
+                      onChange={(e) => setPageNo2(e.target.value)}
+                      placeholder="2"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="mergeLevel">Merge Level</Label>
                   <Select value={mergeLevel} onValueChange={setMergeLevel}>

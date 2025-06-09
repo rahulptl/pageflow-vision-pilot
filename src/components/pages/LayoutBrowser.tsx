@@ -18,7 +18,7 @@ export function LayoutBrowser() {
 
   const { data: layouts = [], isLoading, error } = useQuery({
     queryKey: ['layouts'],
-    queryFn: apiService.getLayouts,
+    queryFn: () => apiService.getLayouts(),
   });
 
   const filteredLayouts = layouts.filter(layout => {

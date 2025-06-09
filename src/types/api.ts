@@ -22,8 +22,14 @@ export interface LayoutRun {
   updated_at: string;
 }
 
+export enum PageType {
+  OnePager = '1 pager',
+  TwoPager = '2 pager',
+}
+
 export interface RunLayoutRequest {
   file: File;
-  page_no?: number;
+  type_of_page?: PageType;
+  page_numbers?: number[];
   merge_level?: number;
 }

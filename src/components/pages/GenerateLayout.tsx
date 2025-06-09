@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, CheckCircle, XCircle, Eye, Save, Trash2 } from "lucide-react";
+import { Upload, FileText, CheckCircle, Eye, Save, Trash2 } from "lucide-react";
 import { useDropzone } from 'react-dropzone';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiService } from "@/services/api";
+import { useNavigate } from "react-router-dom";
 
 export function GenerateLayout() {
   const [file, setFile] = useState<File | null>(null);
@@ -17,9 +20,44 @@ export function GenerateLayout() {
   const [mergeLevel, setMergeLevel] = useState("2");
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const runLayoutMutation = useMutation({
+    mutationFn: apiService.runLayoutPipeline,
+    onSuccess: () => {
+      setProgress(100);
+      toast({
+        title: "Layout generated successfully!",
+        description: "Your layout has been processed and saved.",
+      });
+      
+      // Invalidate and refetch layouts
+      queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      queryClient.invalidateQueries({ queryKey: ['runs'] });
+      
+      // Reset form
+      setFile(null);
+      setProgress(0);
+      setIsProcessing(false);
+      
+      // Navigate to layouts page
+      setTimeout(() => {
+        navigate('/layouts');
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error('Layout generation failed:', error);
+      toast({
+        title: "Generation failed",
+        description: "There was an error processing your PDF. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      setProgress(0);
+    },
+  });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -60,7 +98,7 @@ export function GenerateLayout() {
     setIsProcessing(true);
     setProgress(0);
 
-    // Simulate processing with progress updates
+    // Simulate progress updates while waiting for API
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
@@ -72,73 +110,15 @@ export function GenerateLayout() {
     }, 500);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mock successful response
-      const mockPreview = {
-        id: `temp-${Date.now()}`,
-        name: file.name.replace('.pdf', ' - Layout'),
-        original_image: `https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&h=800&fit=crop`,
-        bbox_image: `https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&h=800&fit=crop&overlay=bbox`,
-        elements_count: Math.floor(Math.random() * 10) + 5,
-        confidence: 0.92 + Math.random() * 0.07,
+      await runLayoutMutation.mutateAsync({
+        file,
         page_no: parseInt(pageNo),
-        merge_level: parseInt(mergeLevel)
-      };
-
-      setProgress(100);
-      setPreviewData(mockPreview);
-      setShowPreview(true);
-      
-      toast({
-        title: "Layout generated successfully!",
-        description: "Preview your extracted layout below.",
+        merge_level: parseInt(mergeLevel),
       });
+      clearInterval(progressInterval);
     } catch (error) {
-      toast({
-        title: "Generation failed",
-        description: "There was an error processing your PDF. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
       clearInterval(progressInterval);
     }
-  };
-
-  const handleSave = async () => {
-    try {
-      // Simulate save API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Layout saved!",
-        description: "Your layout has been added to the collection.",
-      });
-      
-      // Reset form
-      setFile(null);
-      setPreviewData(null);
-      setShowPreview(false);
-      setProgress(0);
-    } catch (error) {
-      toast({
-        title: "Save failed",
-        description: "There was an error saving your layout.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDiscard = () => {
-    setPreviewData(null);
-    setShowPreview(false);
-    setProgress(0);
-    toast({
-      title: "Preview discarded",
-      description: "The temporary layout has been removed.",
-    });
   };
 
   return (
@@ -288,90 +268,21 @@ export function GenerateLayout() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Success Rate</span>
-                <span className="text-sm font-medium">96.3%</span>
+                <span className="text-sm text-muted-foreground">API Status</span>
+                <span className="text-sm font-medium">Connected</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Avg Process Time</span>
-                <span className="text-sm font-medium">2.4s</span>
+                <span className="text-sm text-muted-foreground">Max File Size</span>
+                <span className="text-sm font-medium">50 MB</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Queue Length</span>
-                <span className="text-sm font-medium">0 jobs</span>
+                <span className="text-sm text-muted-foreground">Supported Format</span>
+                <span className="text-sm font-medium">PDF</span>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Preview Modal/Section */}
-      {showPreview && previewData && (
-        <Card className="border-primary/50 bg-primary/5">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="w-5 h-5" />
-                Layout Preview
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={handleDiscard} className="gap-2">
-                  <Trash2 className="w-4 h-4" />
-                  Discard
-                </Button>
-                <Button onClick={handleSave} className="gap-2">
-                  <Save className="w-4 h-4" />
-                  Save Layout
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Preview Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-primary">{previewData.elements_count}</div>
-                <div className="text-sm text-muted-foreground">Elements Found</div>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{(previewData.confidence * 100).toFixed(1)}%</div>
-                <div className="text-sm text-muted-foreground">Confidence</div>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{previewData.page_no}</div>
-                <div className="text-sm text-muted-foreground">Page Number</div>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{previewData.merge_level}</div>
-                <div className="text-sm text-muted-foreground">Merge Level</div>
-              </div>
-            </div>
-
-            {/* Preview Images */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <h3 className="font-medium text-center">Original Page</h3>
-                <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                  <img
-                    src={previewData.original_image}
-                    alt="Original page preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              <div className="space-y-3">
-                <h3 className="font-medium text-center">Extracted Layout</h3>
-                <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                  <img
-                    src={previewData.bbox_image}
-                    alt="Layout with bounding boxes preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

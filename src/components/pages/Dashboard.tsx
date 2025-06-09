@@ -1,32 +1,67 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, TrendingUp, Clock, Users } from "lucide-react";
+import { LayoutDashboard, FileText, Clock, TrendingUp, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { apiService } from "@/services/api";
+import { formatShortDate, formatUser } from "@/utils/formatters";
 
 export function Dashboard() {
-  const stats = [
-    { title: "Total Layouts", value: "1,247", icon: FileText, trend: "+12%" },
-    { title: "Last 24h Runs", value: "23", icon: Clock, trend: "+5%" },
-    { title: "Active Creators", value: "8", icon: Users, trend: "+2" },
-    { title: "Success Rate", value: "96.3%", icon: TrendingUp, trend: "+1.2%" },
-  ];
+  const { data: layouts = [], isLoading: layoutsLoading } = useQuery({
+    queryKey: ['layouts'],
+    queryFn: apiService.getLayouts,
+  });
 
-  const recentActivity = [
-    { id: "layout-001", name: "Magazine Cover - June", creator: "Sarah Johnson", time: "2 hours ago", status: "completed" },
-    { id: "layout-002", name: "Product Catalog Page", creator: "Mike Chen", time: "4 hours ago", status: "completed" },
-    { id: "layout-003", name: "Newsletter Template", creator: "Emma Davis", time: "6 hours ago", status: "processing" },
-    { id: "layout-004", name: "Event Flyer Layout", creator: "Tom Wilson", time: "1 day ago", status: "completed" },
-    { id: "layout-005", name: "Book Chapter Design", creator: "Lisa Park", time: "1 day ago", status: "failed" },
-  ];
+  const { data: runs = [], isLoading: runsLoading } = useQuery({
+    queryKey: ['runs'],
+    queryFn: apiService.getRuns,
+  });
+
+  // Calculate stats
+  const totalLayouts = layouts.length;
+  const recentRuns = runs.filter(run => {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return new Date(run.created_at) > twentyFourHoursAgo;
+  });
+
+  const successfulRuns = runs.filter(run => run.status === 'SUCCESS').length;
+  const successRate = runs.length > 0 ? Math.round((successfulRuns / runs.length) * 100) : 0;
+
+  const avgMergeLevel = layouts.length > 0 
+    ? Math.round(layouts.reduce((acc, layout) => {
+        const mergeLevel = layout.layout_json?.merge_level || 2;
+        return acc + mergeLevel;
+      }, 0) / layouts.length * 10) / 10
+    : 2;
+
+  const recentLayouts = layouts
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
+
+  if (layoutsLoading || runsLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-muted rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-muted rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's your layout overview.</p>
+          <p className="text-muted-foreground">Welcome to Intelligent Layout Designer</p>
         </div>
         <Link to="/generate">
           <Button className="gap-2">
@@ -36,84 +71,114 @@ export function Dashboard() {
         </Link>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center text-xs text-green-600 mt-1">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {stat.trend}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Layouts</CardTitle>
+            <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-4">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <div className="flex-1">
-                  <Link to={`/layouts/${activity.id}`} className="font-medium hover:text-primary transition-colors">
-                    {activity.name}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">by {activity.creator} • {activity.time}</p>
-                </div>
-                <Badge variant={
-                  activity.status === 'completed' ? 'default' :
-                  activity.status === 'processing' ? 'secondary' : 'destructive'
-                }>
-                  {activity.status}
-                </Badge>
-              </div>
-            ))}
+          <CardContent>
+            <div className="text-2xl font-bold">{totalLayouts}</div>
+            <p className="text-xs text-muted-foreground">Extracted layouts</p>
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">24h Runs</CardTitle>
+            <Clock className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{recentRuns.length}</div>
+            <p className="text-xs text-muted-foreground">Pipeline executions</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{successRate}%</div>
+            <p className="text-xs text-muted-foreground">Pipeline success</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Merge Level</CardTitle>
+            <FileText className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{avgMergeLevel}</div>
+            <p className="text-xs text-muted-foreground">Configuration setting</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activity */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Layouts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentLayouts.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No layouts yet</p>
+                <Link to="/generate">
+                  <Button className="mt-4">Generate Your First Layout</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentLayouts.map((layout) => (
+                  <Link
+                    key={layout.layout_id}
+                    to={`/layouts/${layout.layout_id}`}
+                    className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        Layout #{layout.layout_id}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        by {formatUser(layout.created_by)} • {formatShortDate(layout.created_at)}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">
+                      Level {layout.layout_json?.merge_level || 2}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Link to="/generate" className="block">
-              <div className="p-4 rounded-lg border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Generate New Layout</h3>
-                    <p className="text-sm text-muted-foreground">Upload PDF and extract layout</p>
-                  </div>
-                </div>
-              </div>
+              <Button className="w-full gap-2">
+                <Plus className="w-4 h-4" />
+                Generate Layout
+              </Button>
             </Link>
-
             <Link to="/layouts" className="block">
-              <div className="p-4 rounded-lg border border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Browse All Layouts</h3>
-                    <p className="text-sm text-muted-foreground">View and manage existing layouts</p>
-                  </div>
-                </div>
-              </div>
+              <Button variant="outline" className="w-full gap-2">
+                <FileText className="w-4 h-4" />
+                View All Layouts
+              </Button>
             </Link>
           </CardContent>
         </Card>

@@ -7,90 +7,74 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Calendar, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { apiService } from "@/services/api";
+import { formatShortDate, formatUser, formatBase64Image } from "@/utils/formatters";
 
 export function LayoutBrowser() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [filterBy, setFilterBy] = useState("all");
 
-  const layouts = [
-    {
-      id: "layout-001",
-      name: "Magazine Cover - June",
-      creator: "Sarah Johnson",
-      created_at: "2024-06-08T10:30:00Z",
-      merge_level: 2,
-      page_no: 1,
-      thumbnail: `https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=300&fit=crop`,
-      status: "completed"
-    },
-    {
-      id: "layout-002", 
-      name: "Product Catalog Page",
-      creator: "Mike Chen",
-      created_at: "2024-06-08T08:15:00Z",
-      merge_level: 3,
-      page_no: 2,
-      thumbnail: `https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop`,
-      status: "completed"
-    },
-    {
-      id: "layout-003",
-      name: "Newsletter Template",
-      creator: "Emma Davis", 
-      created_at: "2024-06-08T06:45:00Z",
-      merge_level: 1,
-      page_no: 1,
-      thumbnail: `https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=300&fit=crop`,
-      status: "processing"
-    },
-    {
-      id: "layout-004",
-      name: "Event Flyer Layout",
-      creator: "Tom Wilson",
-      created_at: "2024-06-07T16:20:00Z",
-      merge_level: 2,
-      page_no: 1,
-      thumbnail: `https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=300&fit=crop`,
-      status: "completed"
-    },
-    {
-      id: "layout-005",
-      name: "Book Chapter Design",
-      creator: "Lisa Park",
-      created_at: "2024-06-07T14:10:00Z",
-      merge_level: 4,
-      page_no: 3,
-      thumbnail: `https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop`,
-      status: "completed"
-    },
-    {
-      id: "layout-006",
-      name: "Business Card Template",
-      creator: "Alex Rivera",
-      created_at: "2024-06-07T11:30:00Z",
-      merge_level: 1,
-      page_no: 1,
-      thumbnail: `https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=300&fit=crop`,
-      status: "completed"
-    }
-  ];
+  const { data: layouts = [], isLoading, error } = useQuery({
+    queryKey: ['layouts'],
+    queryFn: apiService.getLayouts,
+  });
 
   const filteredLayouts = layouts.filter(layout => {
-    const matchesSearch = layout.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         layout.creator.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterBy === "all" || layout.status === filterBy;
+    const layoutName = `Layout #${layout.layout_id}`;
+    const creator = formatUser(layout.created_by);
+    const matchesSearch = layoutName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         creator.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // For now, we don't have status in Layout, so we'll just filter by "all"
+    const matchesFilter = filterBy === "all";
     return matchesSearch && matchesFilter;
   });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // Sort layouts
+  const sortedLayouts = [...filteredLayouts].sort((a, b) => {
+    switch (sortBy) {
+      case "created_at":
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case "layout_id":
+        return b.layout_id - a.layout_id;
+      case "creator":
+        return formatUser(a.created_by).localeCompare(formatUser(b.created_by));
+      case "merge_level":
+        const aMerge = a.layout_json?.merge_level || 2;
+        const bMerge = b.layout_json?.merge_level || 2;
+        return bMerge - aMerge;
+      default:
+        return 0;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-muted rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-64 bg-muted rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <p className="text-destructive mb-4">Failed to load layouts</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -122,7 +106,7 @@ export function LayoutBrowser() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="created_at">Date Created</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="layout_id">Layout ID</SelectItem>
             <SelectItem value="creator">Creator</SelectItem>
             <SelectItem value="merge_level">Merge Level</SelectItem>
           </SelectContent>
@@ -134,55 +118,57 @@ export function LayoutBrowser() {
             <SelectValue placeholder="Filter" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
+            <SelectItem value="all">All Layouts</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Layout Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredLayouts.map((layout) => (
-          <Link key={layout.id} to={`/layouts/${layout.id}`}>
+        {sortedLayouts.map((layout) => (
+          <Link key={layout.layout_id} to={`/layouts/${layout.layout_id}`}>
             <Card className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer">
-              <div className="aspect-[4/3] overflow-hidden rounded-t-lg">
-                <img
-                  src={layout.thumbnail}
-                  alt={layout.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                  loading="lazy"
-                />
+              <div className="aspect-[4/3] overflow-hidden rounded-t-lg bg-muted">
+                {layout.bounding_box_image ? (
+                  <img
+                    src={formatBase64Image(layout.bounding_box_image) || ''}
+                    alt={`Layout #${layout.layout_id}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Search className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
               </div>
               <CardContent className="p-4">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <h3 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2">
-                      {layout.name}
+                      Layout #{layout.layout_id}
                     </h3>
-                    <Badge variant={
-                      layout.status === 'completed' ? 'default' :
-                      layout.status === 'processing' ? 'secondary' : 'destructive'
-                    } className="text-xs">
-                      {layout.status}
+                    <Badge variant="default" className="text-xs">
+                      Active
                     </Badge>
                   </div>
                   
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <User className="w-3 h-3" />
-                    <span className="truncate">{layout.creator}</span>
+                    <span className="truncate">{formatUser(layout.created_by)}</span>
                   </div>
                   
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3" />
-                    <span>{formatDate(layout.created_at)}</span>
+                    <span>{formatShortDate(layout.created_at)}</span>
                   </div>
                   
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Page {layout.page_no}</span>
+                    <span className="text-muted-foreground">
+                      Page {layout.layout_json?.page_number || 1}
+                    </span>
                     <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
-                      Level {layout.merge_level}
+                      Level {layout.layout_json?.merge_level || 2}
                     </span>
                   </div>
                 </div>
@@ -192,7 +178,7 @@ export function LayoutBrowser() {
         ))}
       </div>
 
-      {filteredLayouts.length === 0 && (
+      {sortedLayouts.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
             <Search className="w-6 h-6 text-muted-foreground" />

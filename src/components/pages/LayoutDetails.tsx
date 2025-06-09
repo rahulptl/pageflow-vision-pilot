@@ -4,68 +4,50 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download, Edit, Copy, ChevronDown, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useQuery } from "@tanstack/react-query";
+import { apiService } from "@/services/api";
+import { formatDate, formatUser, formatBase64Image } from "@/utils/formatters";
 
 export function LayoutDetails() {
   const { id } = useParams();
   const [jsonExpanded, setJsonExpanded] = useState(false);
 
-  // Mock data - in real app this would come from API
-  const layout = {
-    id: id,
-    name: "Magazine Cover - June",
-    creator: "Sarah Johnson",
-    created_at: "2024-06-08T10:30:00Z",
-    merge_level: 2,
-    page_no: 1,
-    status: "completed",
-    file_size: "2.4 MB",
-    dimensions: "8.5 × 11 inches",
-    original_image: `https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&h=600&fit=crop`,
-    bbox_image: `https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&h=600&fit=crop&overlay=bbox`,
-    layout_json: {
-      page_info: {
-        width: 612,
-        height: 792,
-        page_number: 1
-      },
-      elements: [
-        {
-          type: "text",
-          bbox: [50, 700, 300, 750],
-          content: "Magazine Title",
-          font_size: 24,
-          font_family: "Arial"
-        },
-        {
-          type: "image", 
-          bbox: [50, 400, 500, 680],
-          content: "main_image.jpg"
-        },
-        {
-          type: "text",
-          bbox: [50, 350, 400, 390],
-          content: "Subtitle text content here",
-          font_size: 14,
-          font_family: "Arial"
-        }
-      ],
-      merge_level: 2,
-      extraction_confidence: 0.96
-    }
-  };
+  const { data: layout, isLoading, error } = useQuery({
+    queryKey: ['layout', id],
+    queryFn: () => apiService.getLayout(Number(id)),
+    enabled: !!id,
+  });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-muted rounded w-1/3"></div>
+          <div className="h-64 bg-muted rounded"></div>
+          <div className="h-96 bg-muted rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !layout) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <p className="text-destructive mb-4">Failed to load layout</p>
+          <Link to="/layouts">
+            <Button>Back to Layouts</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const elementCount = Array.isArray(layout.layout_json?.elements) 
+    ? layout.layout_json.elements.length 
+    : Object.keys(layout.layout_json || {}).length;
 
   return (
     <div className="p-6 space-y-6">
@@ -79,8 +61,8 @@ export function LayoutDetails() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{layout.name}</h1>
-            <p className="text-muted-foreground">Layout ID: {layout.id}</p>
+            <h1 className="text-3xl font-bold text-foreground">Layout #{layout.layout_id}</h1>
+            <p className="text-muted-foreground">Layout ID: {layout.layout_id}</p>
           </div>
         </div>
         
@@ -109,37 +91,39 @@ export function LayoutDetails() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Creator</label>
-              <p className="text-sm font-medium">{layout.creator}</p>
+              <p className="text-sm font-medium">{formatUser(layout.created_by)}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Created</label>
               <p className="text-sm font-medium">{formatDate(layout.created_at)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Status</label>
-              <Badge variant={layout.status === 'completed' ? 'default' : 'secondary'} className="mt-1">
-                {layout.status}
-              </Badge>
+              <label className="text-sm font-medium text-muted-foreground">Updated</label>
+              <p className="text-sm font-medium">{formatDate(layout.updated_at)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Updated By</label>
+              <p className="text-sm font-medium">{formatUser(layout.updated_by)}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Merge Level</label>
-              <p className="text-sm font-medium">Level {layout.merge_level}</p>
+              <p className="text-sm font-medium">Level {layout.layout_json?.merge_level || 2}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Page Number</label>
-              <p className="text-sm font-medium">{layout.page_no}</p>
+              <p className="text-sm font-medium">{layout.layout_json?.page_number || 1}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">File Size</label>
-              <p className="text-sm font-medium">{layout.file_size}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Dimensions</label>
-              <p className="text-sm font-medium">{layout.dimensions}</p>
+              <label className="text-sm font-medium text-muted-foreground">Elements</label>
+              <p className="text-sm font-medium">{elementCount}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Confidence</label>
-              <p className="text-sm font-medium">{(layout.layout_json.extraction_confidence * 100).toFixed(1)}%</p>
+              <p className="text-sm font-medium">
+                {layout.layout_json?.extraction_confidence 
+                  ? `${(layout.layout_json.extraction_confidence * 100).toFixed(1)}%`
+                  : 'N/A'}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -155,21 +139,33 @@ export function LayoutDetails() {
             <div className="space-y-3">
               <h3 className="font-medium text-center">Original Page</h3>
               <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                <img
-                  src={layout.original_image}
-                  alt="Original page"
-                  className="w-full h-full object-cover"
-                />
+                {layout.page_image ? (
+                  <img
+                    src={formatBase64Image(layout.page_image) || ''}
+                    alt="Original page"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <p className="text-muted-foreground">No original image available</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="space-y-3">
               <h3 className="font-medium text-center">Extracted Layout (Bounding Boxes)</h3>
               <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                <img
-                  src={layout.bbox_image}
-                  alt="Layout with bounding boxes"
-                  className="w-full h-full object-cover"
-                />
+                {layout.bounding_box_image ? (
+                  <img
+                    src={formatBase64Image(layout.bounding_box_image) || ''}
+                    alt="Layout with bounding boxes"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <p className="text-muted-foreground">No bounding box image available</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -184,7 +180,7 @@ export function LayoutDetails() {
               <div className="flex items-center justify-between">
                 <CardTitle>Layout JSON Data</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{layout.layout_json.elements.length} elements</Badge>
+                  <Badge variant="secondary">{elementCount} elements</Badge>
                   {jsonExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </div>
               </div>
@@ -192,7 +188,7 @@ export function LayoutDetails() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent>
-              <div className="bg-muted rounded-lg p-4 overflow-auto">
+              <div className="bg-muted rounded-lg p-4 overflow-auto max-h-96">
                 <pre className="text-sm text-muted-foreground">
                   <code>{JSON.stringify(layout.layout_json, null, 2)}</code>
                 </pre>
@@ -201,6 +197,22 @@ export function LayoutDetails() {
           </CollapsibleContent>
         </Collapsible>
       </Card>
+
+      {/* Metadata JSON */}
+      {layout.layout_metadata && Object.keys(layout.layout_metadata).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Layout Metadata</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted rounded-lg p-4 overflow-auto">
+              <pre className="text-sm text-muted-foreground">
+                <code>{JSON.stringify(layout.layout_metadata, null, 2)}</code>
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

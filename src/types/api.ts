@@ -22,6 +22,22 @@ export interface LayoutRun {
   updated_at: string;
 }
 
+export interface Article {
+  article_id: number;
+  title: string;
+  page_count: number;
+  layout_pages: number[];
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export interface ArticleCreate {
+  title: string;
+  layout_pages: number[];
+}
+
 export enum PageType {
   OnePager = '1 pager',
   TwoPager = '2 pager',

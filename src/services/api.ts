@@ -1,5 +1,5 @@
 
-import { Layout, LayoutRun, RunLayoutRequest } from '@/types/api';
+import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate } from '@/types/api';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -57,6 +57,34 @@ class ApiService {
 
   async removeRun(runId: number): Promise<void> {
     await fetch(`${API_BASE_URL}/runs/${runId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getArticles(): Promise<Article[]> {
+    return this.request<Article[]>('/articles/');
+  }
+
+  async getArticle(articleId: number): Promise<Article> {
+    return this.request<Article>(`/articles/${articleId}`);
+  }
+
+  async createArticle(article: ArticleCreate): Promise<Article> {
+    return this.request<Article>('/articles/', {
+      method: 'POST',
+      body: JSON.stringify(article),
+    });
+  }
+
+  async updateArticle(articleId: number, article: ArticleCreate): Promise<Article> {
+    return this.request<Article>(`/articles/${articleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(article),
+    });
+  }
+
+  async deleteArticle(articleId: number): Promise<void> {
+    await fetch(`${API_BASE_URL}/articles/${articleId}`, {
       method: 'DELETE',
     });
   }

@@ -7,6 +7,9 @@ import { Dashboard } from "@/components/pages/Dashboard";
 import { LayoutBrowser } from "@/components/pages/LayoutBrowser";
 import { LayoutDetails } from "@/components/pages/LayoutDetails";
 import { GenerateLayout } from "@/components/pages/GenerateLayout";
+import { Articles } from "@/components/pages/Articles";
+import { ArticleDetails } from "@/components/pages/ArticleDetails";
+import { ArticleCreatePage } from "@/components/pages/ArticleCreate";
 
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -21,6 +24,9 @@ const Index = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/layouts" element={<LayoutBrowser />} />
             <Route path="/layouts/:id" element={<LayoutDetails />} />
+            <Route path="/articles" element={<Articles />} />
+            <Route path="/articles/:id" element={<ArticleDetails />} />
+            <Route path="/articles/create" element={<ArticleCreatePage />} />
             <Route path="/generate" element={<GenerateLayout />} />
           </Routes>
         </main>

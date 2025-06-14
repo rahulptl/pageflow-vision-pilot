@@ -11,7 +11,7 @@ interface LayoutPageDisplayProps {
 }
 
 export function LayoutPageDisplay({ layoutPage, layout }: LayoutPageDisplayProps) {
-  const isTwoPager = layout.layout_metadata?.type_of_layout === "two_pager";
+  const isTwoPager = layout.layout_metadata?.type_of_page === "double";
 
   return (
     <div className="space-y-4">
@@ -39,7 +39,7 @@ export function LayoutPageDisplay({ layoutPage, layout }: LayoutPageDisplayProps
         </Link>
       </div>
 
-      {/* Images Layout - Conditional based on type_of_layout */}
+      {/* Images Layout - Conditional based on type_of_page */}
       <div className={isTwoPager ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
         <ImageDisplay
           imageUrl={layout.page_image}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, FileText, Calendar, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
-import { formatDate, formatUser, formatBase64Image } from "@/utils/formatters";
+import { formatDate, formatUser, formatImageUrl } from "@/utils/formatters";
 
 export function ArticleDetails() {
   const { id } = useParams();
@@ -147,7 +146,7 @@ export function ArticleDetails() {
                     <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
                       {layout.page_image ? (
                         <img
-                          src={formatBase64Image(layout.page_image) || ''}
+                          src={formatImageUrl(layout.page_image) || ''}
                           alt={`Layout ${layout.layout_id} original`}
                           className="w-full h-full object-cover"
                         />
@@ -165,7 +164,7 @@ export function ArticleDetails() {
                     <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
                       {layout.bounding_box_image ? (
                         <img
-                          src={formatBase64Image(layout.bounding_box_image) || ''}
+                          src={formatImageUrl(layout.bounding_box_image) || ''}
                           alt={`Layout ${layout.layout_id} bounding boxes`}
                           className="w-full h-full object-cover"
                         />

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Search, Filter, Calendar, User, Plus, SlidersHorizontal } from "lucide-
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
-import { formatShortDate, formatUser, formatBase64Image } from "@/utils/formatters";
+import { formatShortDate, formatUser, formatImageUrl } from "@/utils/formatters";
 
 export function LayoutBrowser() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -148,7 +147,7 @@ export function LayoutBrowser() {
               <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50">
                 {layout.bounding_box_image ? (
                   <img
-                    src={formatBase64Image(layout.bounding_box_image) || ''}
+                    src={formatImageUrl(layout.bounding_box_image) || ''}
                     alt={`Layout #${layout.layout_id}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"

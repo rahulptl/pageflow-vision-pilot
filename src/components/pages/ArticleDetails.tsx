@@ -130,6 +130,8 @@ export function ArticleDetails() {
                 const layout = layouts.find(l => l.layout_id === layoutPage.layout_id);
                 if (!layout) return null;
                 
+                const isTwoPager = layout.layout_metadata?.type_of_layout === "two_pager";
+                
                 return (
                   <div key={layout.layout_id} className="space-y-4">
                     {/* Page Header */}
@@ -143,6 +145,11 @@ export function ArticleDetails() {
                             Spans {layoutPage.page_span} pages
                           </Badge>
                         )}
+                        {isTwoPager && (
+                          <Badge variant="outline">
+                            Two-pager
+                          </Badge>
+                        )}
                       </div>
                       <Link to={`/layouts/${layout.layout_id}`}>
                         <Button variant="outline" size="sm">
@@ -151,8 +158,8 @@ export function ArticleDetails() {
                       </Link>
                     </div>
 
-                    {/* Images Side by Side */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Images Layout - Conditional based on type_of_layout */}
+                    <div className={isTwoPager ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
                       {/* Original Image */}
                       <div className="space-y-2">
                         <h4 className="font-semibold text-sm text-muted-foreground">Original Page</h4>

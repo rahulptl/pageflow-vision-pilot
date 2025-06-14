@@ -163,15 +163,16 @@ export function ArticleDetails() {
                       {/* Original Image */}
                       <div className="space-y-2">
                         <h4 className="font-semibold text-sm text-muted-foreground">Original Page</h4>
-                        <div className="border rounded-lg overflow-hidden">
+                        <div className={`border rounded-lg overflow-hidden ${isTwoPager ? 'w-full' : ''}`}>
                           {layout.page_image ? (
                             <img
                               src={formatImageUrl(layout.page_image) || ''}
                               alt={`Page ${layoutPage.page} original`}
-                              className="w-full h-auto"
+                              className={`w-full h-auto ${isTwoPager ? 'max-w-none' : ''}`}
+                              style={isTwoPager ? { aspectRatio: 'auto' } : {}}
                             />
                           ) : (
-                            <div className="w-full aspect-[3/4] bg-muted flex items-center justify-center">
+                            <div className={`w-full bg-muted flex items-center justify-center ${isTwoPager ? 'aspect-[2/1]' : 'aspect-[3/4]'}`}>
                               <p className="text-muted-foreground text-sm">No original image available</p>
                             </div>
                           )}
@@ -181,15 +182,16 @@ export function ArticleDetails() {
                       {/* Bounding Box Image */}
                       <div className="space-y-2">
                         <h4 className="font-semibold text-sm text-muted-foreground">Layout Analysis</h4>
-                        <div className="border rounded-lg overflow-hidden">
+                        <div className={`border rounded-lg overflow-hidden ${isTwoPager ? 'w-full' : ''}`}>
                           {layout.bounding_box_image ? (
                             <img
                               src={formatImageUrl(layout.bounding_box_image) || ''}
                               alt={`Page ${layoutPage.page} bounding boxes`}
-                              className="w-full h-auto"
+                              className={`w-full h-auto ${isTwoPager ? 'max-w-none' : ''}`}
+                              style={isTwoPager ? { aspectRatio: 'auto' } : {}}
                             />
                           ) : (
-                            <div className="w-full aspect-[3/4] bg-muted flex items-center justify-center">
+                            <div className={`w-full bg-muted flex items-center justify-center ${isTwoPager ? 'aspect-[2/1]' : 'aspect-[3/4]'}`}>
                               <p className="text-muted-foreground text-sm">No bounding box image available</p>
                             </div>
                           )}

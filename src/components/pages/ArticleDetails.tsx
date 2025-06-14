@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,8 @@ export function ArticleDetails() {
     queryKey: ['layouts-for-article', article?.layout_pages],
     queryFn: async () => {
       if (!article?.layout_pages) return [];
-      const layoutPromises = article.layout_pages.map(layoutId => 
-        apiService.getLayout(layoutId)
+      const layoutPromises = article.layout_pages.map(layoutPage => 
+        apiService.getLayout(layoutPage.layout_id)
       );
       return Promise.all(layoutPromises);
     },
@@ -123,75 +124,85 @@ export function ArticleDetails() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {layouts.map((layout, index) => (
-              <div key={layout.layout_id} className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-xs">
-                      Page {index + 1}
-                    </Badge>
-                    <h3 className="font-medium">Layout #{layout.layout_id}</h3>
-                  </div>
-                  <Link to={`/layouts/${layout.layout_id}`}>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </Link>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Original Image */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Original Page</h4>
-                    <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
-                      {layout.page_image ? (
-                        <img
-                          src={formatImageUrl(layout.page_image) || ''}
-                          alt={`Layout ${layout.layout_id} original`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <p className="text-muted-foreground text-sm">No image available</p>
-                        </div>
+            {article.layout_pages.map((layoutPage, index) => {
+              const layout = layouts.find(l => l.layout_id === layoutPage.layout_id);
+              if (!layout) return null;
+              
+              return (
+                <div key={layout.layout_id} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline" className="text-xs">
+                        Page {layoutPage.page}
+                      </Badge>
+                      <h3 className="font-medium">Layout #{layout.layout_id}</h3>
+                      {layoutPage.page_span > 1 && (
+                        <Badge variant="secondary" className="text-xs">
+                          Spans {layoutPage.page_span} pages
+                        </Badge>
                       )}
                     </div>
+                    <Link to={`/layouts/${layout.layout_id}`}>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </Link>
                   </div>
                   
-                  {/* Bounding Box Image */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Layout Detection</h4>
-                    <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
-                      {layout.bounding_box_image ? (
-                        <img
-                          src={formatImageUrl(layout.bounding_box_image) || ''}
-                          alt={`Layout ${layout.layout_id} bounding boxes`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <p className="text-muted-foreground text-sm">No detection image available</p>
-                        </div>
-                      )}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Original Image */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Original Page</h4>
+                      <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
+                        {layout.page_image ? (
+                          <img
+                            src={formatImageUrl(layout.page_image) || ''}
+                            alt={`Layout ${layout.layout_id} original`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <p className="text-muted-foreground text-sm">No image available</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Bounding Box Image */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Layout Detection</h4>
+                      <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
+                        {layout.bounding_box_image ? (
+                          <img
+                            src={formatImageUrl(layout.bounding_box_image) || ''}
+                            alt={`Layout ${layout.layout_id} bounding boxes`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <p className="text-muted-foreground text-sm">No detection image available</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t">
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      <span>{formatUser(layout.created_by)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(layout.created_at)}</span>
+                    </div>
+                    <div>
+                      Page {layout.layout_json?.page_number || layoutPage.page}
                     </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t">
-                  <div className="flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    <span>{formatUser(layout.created_by)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatDate(layout.created_at)}</span>
-                  </div>
-                  <div>
-                    Page {layout.layout_json?.page_number || 1}
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

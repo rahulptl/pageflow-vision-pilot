@@ -12,8 +12,8 @@ import { ArrowLeft, Plus, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
-import { ArticleCreate } from "@/types/api";
-import { formatBase64Image, formatShortDate } from "@/utils/formatters";
+import { ArticleCreate, LayoutPage } from "@/types/api";
+import { formatImageUrl, formatShortDate } from "@/utils/formatters";
 import { toast } from "sonner";
 
 interface FormData {
@@ -54,9 +54,16 @@ export function ArticleCreatePage() {
       return;
     }
 
+    const layoutPages: LayoutPage[] = selectedLayouts.map((layoutId, index) => ({
+      page: index + 1,
+      layout_id: layoutId,
+      page_span: 1
+    }));
+
     createMutation.mutate({
       title: data.title,
-      layout_pages: selectedLayouts,
+      page_count: selectedLayouts.length,
+      layout_pages: layoutPages,
     });
   };
 
@@ -214,7 +221,7 @@ export function ArticleCreatePage() {
                         <div className="aspect-[3/4] bg-muted rounded overflow-hidden mb-2">
                           {layout.bounding_box_image ? (
                             <img
-                              src={formatBase64Image(layout.bounding_box_image) || ''}
+                              src={formatImageUrl(layout.bounding_box_image) || ''}
                               alt={`Layout ${layout.layout_id}`}
                               className="w-full h-full object-cover"
                             />

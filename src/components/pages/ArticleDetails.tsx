@@ -106,12 +106,8 @@ export function ArticleDetails() {
         </CardHeader>
         <CardContent>
           <div className="space-y-8 max-w-6xl mx-auto">
-            {layoutPageLabels.map(({ key, label, layoutPage, layout }) => (
-              <div key={key} className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold">{label}</span>
-                  <span className="text-xs text-muted-foreground">(Layout #{layout.layout_id})</span>
-                </div>
+            {layoutPageLabels.map(({ key, layoutPage, layout }) => (
+              <div key={key}>
                 <LayoutPageDisplay
                   layoutPage={layoutPage}
                   layout={layout}

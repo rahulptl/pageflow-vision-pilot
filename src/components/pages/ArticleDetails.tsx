@@ -117,13 +117,13 @@ export function ArticleDetails() {
         </CardContent>
       </Card>
 
-      {/* Stitched Magazine View */}
+      {/* Magazine Article Layout */}
       <Card>
         <CardHeader>
           <CardTitle>Magazine Article Layout</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-0 max-w-4xl mx-auto">
+          <div className="space-y-8 max-w-6xl mx-auto">
             {article.layout_pages
               .sort((a, b) => a.page - b.page)
               .map((layoutPage, index) => {
@@ -131,41 +131,63 @@ export function ArticleDetails() {
                 if (!layout) return null;
                 
                 return (
-                  <div key={layout.layout_id} className="relative">
-                    {/* Bounding Box Image */}
-                    <div className="w-full">
-                      {layout.bounding_box_image ? (
-                        <img
-                          src={formatImageUrl(layout.bounding_box_image) || ''}
-                          alt={`Page ${layoutPage.page} layout`}
-                          className="w-full h-auto"
-                        />
-                      ) : (
-                        <div className="w-full aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
-                          <p className="text-muted-foreground text-sm">No layout image available</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Page Info Overlay */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2">
-                      <Badge variant="outline" className="bg-white/90 backdrop-blur-sm">
-                        Page {layoutPage.page}
-                      </Badge>
-                      {layoutPage.page_span > 1 && (
-                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm">
-                          Spans {layoutPage.page_span} pages
+                  <div key={layout.layout_id} className="space-y-4">
+                    {/* Page Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">
+                          Page {layoutPage.page}
                         </Badge>
-                      )}
-                    </div>
-                    
-                    {/* Layout Details Overlay */}
-                    <div className="absolute top-4 right-4">
+                        {layoutPage.page_span > 1 && (
+                          <Badge variant="secondary">
+                            Spans {layoutPage.page_span} pages
+                          </Badge>
+                        )}
+                      </div>
                       <Link to={`/layouts/${layout.layout_id}`}>
-                        <Button variant="outline" size="sm" className="bg-white/90 backdrop-blur-sm">
+                        <Button variant="outline" size="sm">
                           View Details
                         </Button>
                       </Link>
+                    </div>
+
+                    {/* Images Side by Side */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Original Image */}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm text-muted-foreground">Original Page</h4>
+                        <div className="border rounded-lg overflow-hidden">
+                          {layout.page_image ? (
+                            <img
+                              src={formatImageUrl(layout.page_image) || ''}
+                              alt={`Page ${layoutPage.page} original`}
+                              className="w-full h-auto"
+                            />
+                          ) : (
+                            <div className="w-full aspect-[3/4] bg-muted flex items-center justify-center">
+                              <p className="text-muted-foreground text-sm">No original image available</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bounding Box Image */}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm text-muted-foreground">Layout Analysis</h4>
+                        <div className="border rounded-lg overflow-hidden">
+                          {layout.bounding_box_image ? (
+                            <img
+                              src={formatImageUrl(layout.bounding_box_image) || ''}
+                              alt={`Page ${layoutPage.page} bounding boxes`}
+                              className="w-full h-auto"
+                            />
+                          ) : (
+                            <div className="w-full aspect-[3/4] bg-muted flex items-center justify-center">
+                              <p className="text-muted-foreground text-sm">No bounding box image available</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );

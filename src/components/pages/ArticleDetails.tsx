@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +31,38 @@ export function ArticleDetails() {
 
   const isLoading = articleLoading || layoutsLoading;
 
+  // Helper to get layout by ID
+  const getLayoutById = (layoutId: number) => layouts.find(l => l.layout_id === layoutId);
+
+  // Compute spans and pretty labels
+  let currentPage = 1;
+  const layoutPageLabels: { key: number, label: string, layoutPage: any, layout: any }[] = [];
+  if (article && article.layout_pages && layouts.length) {
+    article.layout_pages.forEach((layoutPage) => {
+      const layout = getLayoutById(layoutPage.layout_id);
+      if (!layout) return;
+      const pageType = layout.layout_metadata?.type_of_layout === "two_pager" ? "two_pager" : "one_pager";
+      const span = pageType === "two_pager" ? 2 : 1;
+      const from = currentPage;
+      const to = currentPage + span - 1;
+      let label = "";
+      if (span === 2) {
+        label = `Pages ${from}-${to}`;
+      } else {
+        label = `Page ${from}`;
+      }
+      layoutPageLabels.push({ key: layout.layout_id, label, layoutPage, layout });
+      currentPage += span;
+    });
+  }
+
+  // Calculate actual total pages ("page_count" in DB may become outdated)
+  const totalPages = layoutPageLabels.length
+    ? (layoutPageLabels[layoutPageLabels.length - 1].label.match(/\d+$/)
+        ? Number(layoutPageLabels[layoutPageLabels.length - 1].label.match(/\d+$/)![0])
+        : 0)
+    : 0;
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -63,8 +94,10 @@ export function ArticleDetails() {
 
   return (
     <div className="p-6 space-y-6">
-      <ArticleHeader article={article} />
-      <ArticleInfo article={article} />
+      {/* Pass correct page count for display */}
+      <ArticleHeader article={{ ...article, page_count: totalPages }} />
+
+      <ArticleInfo article={{ ...article, page_count: totalPages }} />
 
       {/* Magazine Article Layout */}
       <Card>
@@ -73,20 +106,18 @@ export function ArticleDetails() {
         </CardHeader>
         <CardContent>
           <div className="space-y-8 max-w-6xl mx-auto">
-            {article.layout_pages
-              .sort((a, b) => a.page - b.page)
-              .map((layoutPage) => {
-                const layout = layouts.find(l => l.layout_id === layoutPage.layout_id);
-                if (!layout) return null;
-                
-                return (
-                  <LayoutPageDisplay
-                    key={layout.layout_id}
-                    layoutPage={layoutPage}
-                    layout={layout}
-                  />
-                );
-              })}
+            {layoutPageLabels.map(({ key, label, layoutPage, layout }) => (
+              <div key={key} className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-semibold">{label}</span>
+                  <span className="text-xs text-muted-foreground">(Layout #{layout.layout_id})</span>
+                </div>
+                <LayoutPageDisplay
+                  layoutPage={layoutPage}
+                  layout={layout}
+                />
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

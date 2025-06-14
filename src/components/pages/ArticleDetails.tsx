@@ -117,92 +117,59 @@ export function ArticleDetails() {
         </CardContent>
       </Card>
 
-      {/* Stitched Layouts */}
+      {/* Stitched Magazine View */}
       <Card>
         <CardHeader>
-          <CardTitle>Stitched Layouts (Page Order)</CardTitle>
+          <CardTitle>Magazine Article Layout</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {article.layout_pages.map((layoutPage, index) => {
-              const layout = layouts.find(l => l.layout_id === layoutPage.layout_id);
-              if (!layout) return null;
-              
-              return (
-                <div key={layout.layout_id} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="text-xs">
+          <div className="space-y-0 max-w-4xl mx-auto">
+            {article.layout_pages
+              .sort((a, b) => a.page - b.page)
+              .map((layoutPage, index) => {
+                const layout = layouts.find(l => l.layout_id === layoutPage.layout_id);
+                if (!layout) return null;
+                
+                return (
+                  <div key={layout.layout_id} className="relative">
+                    {/* Bounding Box Image */}
+                    <div className="w-full">
+                      {layout.bounding_box_image ? (
+                        <img
+                          src={formatImageUrl(layout.bounding_box_image) || ''}
+                          alt={`Page ${layoutPage.page} layout`}
+                          className="w-full h-auto"
+                        />
+                      ) : (
+                        <div className="w-full aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
+                          <p className="text-muted-foreground text-sm">No layout image available</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Page Info Overlay */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                      <Badge variant="outline" className="bg-white/90 backdrop-blur-sm">
                         Page {layoutPage.page}
                       </Badge>
-                      <h3 className="font-medium">Layout #{layout.layout_id}</h3>
                       {layoutPage.page_span > 1 && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm">
                           Spans {layoutPage.page_span} pages
                         </Badge>
                       )}
                     </div>
-                    <Link to={`/layouts/${layout.layout_id}`}>
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                    </Link>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Original Image */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Original Page</h4>
-                      <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
-                        {layout.page_image ? (
-                          <img
-                            src={formatImageUrl(layout.page_image) || ''}
-                            alt={`Layout ${layout.layout_id} original`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <p className="text-muted-foreground text-sm">No image available</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
                     
-                    {/* Bounding Box Image */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Layout Detection</h4>
-                      <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border">
-                        {layout.bounding_box_image ? (
-                          <img
-                            src={formatImageUrl(layout.bounding_box_image) || ''}
-                            alt={`Layout ${layout.layout_id} bounding boxes`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <p className="text-muted-foreground text-sm">No detection image available</p>
-                          </div>
-                        )}
-                      </div>
+                    {/* Layout Details Overlay */}
+                    <div className="absolute top-4 right-4">
+                      <Link to={`/layouts/${layout.layout_id}`}>
+                        <Button variant="outline" size="sm" className="bg-white/90 backdrop-blur-sm">
+                          View Details
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t">
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      <span>{formatUser(layout.created_by)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(layout.created_at)}</span>
-                    </div>
-                    <div>
-                      Page {layout.layout_json?.page_number || layoutPage.page}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </CardContent>
       </Card>

@@ -1,23 +1,34 @@
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Plus, Settings, File } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, File, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  isAdmin?: boolean;
 }
 
-export function Sidebar({ isOpen }: SidebarProps) {
+export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
   const location = useLocation();
 
-  const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: FileText, label: "All Layouts", href: "/layouts" },
-    { icon: File, label: "Articles", href: "/articles" },
-    { icon: Plus, label: "Generate Layout", href: "/generate" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+  const adminNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/" },
+    { icon: FileText, label: "All Layouts", href: "/admin/layouts" },
+    { icon: Plus, label: "Generate Layout", href: "/admin/generate" },
+    { icon: Users, label: "User Portal", href: "/user/" },
+    { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
+
+  const userNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/user/" },
+    { icon: File, label: "Articles", href: "/user/articles" },
+    { icon: Plus, label: "Admin Portal", href: "/admin/" },
+    { icon: Settings, label: "Settings", href: "/user/settings" },
+  ];
+
+  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
     <div
@@ -35,7 +46,9 @@ export function Sidebar({ isOpen }: SidebarProps) {
           {isOpen && (
             <div className="flex-1 min-w-0">
               <h1 className="font-semibold text-sidebar-foreground truncate text-sm">Layout Designer</h1>
-              <p className="text-xs text-sidebar-foreground/60 truncate">Intelligent Layout Designer</p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">
+                {isAdmin ? "Admin Portal" : "User Portal"}
+              </p>
             </div>
           )}
         </div>
@@ -69,12 +82,16 @@ export function Sidebar({ isOpen }: SidebarProps) {
       <div className="p-3 border-t border-sidebar-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-            <span className="text-primary font-medium text-xs">A</span>
+            <span className="text-primary font-medium text-xs">{isAdmin ? "A" : "U"}</span>
           </div>
           {isOpen && (
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-sidebar-foreground truncate">Admin User</p>
-              <p className="text-xs text-sidebar-foreground/60 truncate">admin@example.com</p>
+              <p className="text-xs font-medium text-sidebar-foreground truncate">
+                {isAdmin ? "Admin User" : "User"}
+              </p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">
+                {isAdmin ? "admin@example.com" : "user@example.com"}
+              </p>
             </div>
           )}
         </div>

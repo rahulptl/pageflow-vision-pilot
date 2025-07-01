@@ -68,7 +68,7 @@ export function ArticleCreatePage() {
     onSuccess: (article) => {
       queryClient.invalidateQueries({ queryKey: ['articles'] });
       toast.success("Article created successfully!");
-      navigate(`/articles/${article.article_id}`);
+      navigate(`/user/articles/${article.article_id}`);
     },
     onError: () => {
       toast.error("Failed to create article");
@@ -139,7 +139,7 @@ export function ArticleCreatePage() {
     <div className="content-container py-8 space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/articles">
+        <Link to="/user/articles">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="w-4 h-4" />
             Back to Articles
@@ -298,7 +298,7 @@ export function ArticleCreatePage() {
               {layouts.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No layouts available</p>
-                  <Link to="/generate">
+                  <Link to="/admin/generate">
                     <Button variant="outline" className="gap-2">
                       <Plus className="w-4 h-4" />
                       Generate Layouts First

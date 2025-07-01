@@ -45,9 +45,9 @@ export function GenerateLayout() {
       setProgress(0);
       setIsProcessing(false);
       
-      // Navigate to layouts page
+      // Navigate to admin layouts page
       setTimeout(() => {
-        navigate('/layouts');
+        navigate('/admin/layouts');
       }, 1500);
     },
     onError: (error) => {

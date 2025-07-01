@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,7 @@ export function Articles() {
           <h1 className="page-title">Articles</h1>
           <p className="page-description">Manage your stitched layout collections ({articles.length} total)</p>
         </div>
-        <Link to="/articles/create">
+        <Link to="/user/articles/create">
           <Button size="lg" className="gap-2 shadow-lg">
             <Plus className="w-5 h-5" />
             Create Article
@@ -88,7 +87,7 @@ export function Articles() {
       {/* Articles Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredArticles.map((article) => (
-          <Link key={article.article_id} to={`/articles/${article.article_id}`}>
+          <Link key={article.article_id} to={`/user/articles/${article.article_id}`}>
             <Card className="group card-hover cursor-pointer overflow-hidden">
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -138,7 +137,7 @@ export function Articles() {
               "Get started by creating your first article from existing layouts."
             }
           </p>
-          <Link to="/articles/create">
+          <Link to="/user/articles/create">
             <Button size="lg" className="gap-2">
               <Plus className="w-5 h-5" />
               Create Your First Article

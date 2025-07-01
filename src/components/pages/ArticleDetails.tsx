@@ -84,7 +84,7 @@ export function ArticleDetails() {
       <div className="p-6">
         <div className="text-center py-12">
           <p className="text-destructive mb-4">Failed to load article</p>
-          <Link to="/articles">
+          <Link to="/user/articles">
             <Button>Back to Articles</Button>
           </Link>
         </div>

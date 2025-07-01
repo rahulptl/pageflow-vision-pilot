@@ -22,12 +22,12 @@ const Index = () => {
         <main className="flex-1 overflow-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/layouts" element={<LayoutBrowser />} />
-            <Route path="/layouts/:id" element={<LayoutDetails />} />
-            <Route path="/articles" element={<Articles />} />
-            <Route path="/articles/:id" element={<ArticleDetails />} />
-            <Route path="/articles/create" element={<ArticleCreatePage />} />
-            <Route path="/generate" element={<GenerateLayout />} />
+            <Route path="layouts" element={<LayoutBrowser />} />
+            <Route path="layouts/:id" element={<LayoutDetails />} />
+            <Route path="articles" element={<Articles />} />
+            <Route path="articles/:id" element={<ArticleDetails />} />
+            <Route path="articles/create" element={<ArticleCreatePage />} />
+            <Route path="generate" element={<GenerateLayout />} />
           </Routes>
         </main>
       </div>

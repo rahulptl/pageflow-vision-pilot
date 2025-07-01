@@ -7,6 +7,7 @@ import { Dashboard } from "@/components/pages/Dashboard";
 import { Articles } from "@/components/pages/Articles";
 import { ArticleDetails } from "@/components/pages/ArticleDetails";
 import { ArticleCreatePage } from "@/components/pages/ArticleCreate";
+import { MagazineForm } from "@/components/MagazineForm";
 
 const User = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -22,6 +23,7 @@ const User = () => {
             <Route path="articles" element={<Articles />} />
             <Route path="articles/:id" element={<ArticleDetails />} />
             <Route path="articles/create" element={<ArticleCreatePage />} />
+            <Route path="magazine" element={<MagazineForm />} />
           </Routes>
         </main>
       </div>

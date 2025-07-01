@@ -1,7 +1,7 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Plus, Settings, File, Users } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, File, Users, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
@@ -24,6 +24,7 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user/" },
     { icon: File, label: "Articles", href: "/user/articles" },
+    { icon: BookOpen, label: "Create Magazine", href: "/user/magazine" },
     { icon: Plus, label: "Admin Portal", href: "/admin/" },
     { icon: Settings, label: "Settings", href: "/user/settings" },
   ];

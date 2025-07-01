@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -132,7 +131,7 @@ export function Dashboard() {
               <CardTitle>Recent Layouts</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">Latest extracted layouts</p>
             </div>
-            <Link to="/layouts">
+            <Link to="/admin/layouts">
               <Button variant="outline" size="sm" className="gap-2">
                 View All
                 <ArrowRight className="w-4 h-4" />
@@ -147,7 +146,7 @@ export function Dashboard() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2">No layouts yet</h3>
                 <p className="text-muted-foreground mb-6">Generate your first layout to get started</p>
-                <Link to="/generate">
+                <Link to="/admin/generate">
                   <Button>Generate Your First Layout</Button>
                 </Link>
               </div>
@@ -156,7 +155,7 @@ export function Dashboard() {
                 {recentLayouts.map((layout) => (
                   <Link
                     key={layout.layout_id}
-                    to={`/layouts/${layout.layout_id}`}
+                    to={`/admin/layouts/${layout.layout_id}`}
                     className="flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:bg-muted/50 hover:border-border transition-all duration-200 group"
                   >
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -187,13 +186,13 @@ export function Dashboard() {
             <p className="text-sm text-muted-foreground">Common workflow shortcuts</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Link to="/generate" className="block">
+            <Link to="/admin/generate" className="block">
               <Button className="w-full gap-2 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
                 <FileText className="w-5 h-5" />
                 Generate Layout
               </Button>
             </Link>
-            <Link to="/layouts" className="block">
+            <Link to="/admin/layouts" className="block">
               <Button variant="outline" className="w-full gap-2 h-12">
                 <LayoutDashboard className="w-5 h-5" />
                 Browse Layouts

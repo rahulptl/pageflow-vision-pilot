@@ -1,5 +1,4 @@
-
-import { Layout, LayoutRun, RunLayoutRequest } from '@/types/api';
+import { Layout, LayoutRun, RunLayoutRequest, TemplateRequest, TemplateResponse } from '@/types/api';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -27,6 +26,13 @@ class ApiService {
 
   async getLayout(layoutId: number): Promise<Layout> {
     return this.request<Layout>(`/layouts/${layoutId}`);
+  }
+
+  async findSuitableTemplate(request: TemplateRequest): Promise<TemplateResponse> {
+    return this.request<TemplateResponse>('/layouts/find-template', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
   }
 
   async runLayoutPipeline(request: RunLayoutRequest): Promise<void> {

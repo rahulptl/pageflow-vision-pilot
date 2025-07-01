@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useParams, Link } from "react-router-dom";
@@ -38,7 +37,7 @@ export function LayoutDetails() {
       <div className="p-6">
         <div className="text-center py-12">
           <p className="text-destructive mb-4">Failed to load layout</p>
-          <Link to="/layouts">
+          <Link to="/admin/layouts">
             <Button>Back to Layouts</Button>
           </Link>
         </div>
@@ -57,7 +56,7 @@ export function LayoutDetails() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/layouts">
+          <Link to="/admin/layouts">
             <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Layouts

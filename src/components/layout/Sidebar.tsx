@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, FileText, Plus, Settings } from "lucide-react";
@@ -13,10 +12,10 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: FileText, label: "All Layouts", href: "/layouts" },
-    { icon: Plus, label: "Generate Layout", href: "/generate" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+    { icon: FileText, label: "All Layouts", href: "/admin/layouts" },
+    { icon: Plus, label: "Generate Layout", href: "/admin/generate" },
+    { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
 
   return (

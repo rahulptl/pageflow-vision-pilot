@@ -1,4 +1,3 @@
-
 export interface Layout {
   layout_id: number;
   layout_metadata: Record<string, any>;
@@ -32,4 +31,20 @@ export interface RunLayoutRequest {
   type_of_page?: PageType;
   page_numbers?: number[];
   merge_level?: number;
+}
+
+export interface TemplateRequest {
+  category: string;
+  brand: string;
+  approx_pages: number;
+}
+
+export interface TemplateResponse {
+  layout_id: number;
+  layout_metadata: Record<string, any>;
+  layout_json: Record<string, any>;
+  page_image: string | null;
+  bounding_box_image: string | null;
+  created_at: string;
+  message: string;
 }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,7 +91,7 @@ export function LayoutBrowser() {
           <h1 className="page-title">All Layouts</h1>
           <p className="page-description">Browse and manage your layout collection ({layouts.length} total)</p>
         </div>
-        <Link to="/generate">
+        <Link to="/admin/generate">
           <Button size="lg" className="gap-2 shadow-lg">
             <Plus className="w-5 h-5" />
             Generate New
@@ -143,7 +142,7 @@ export function LayoutBrowser() {
       {/* Layout Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sortedLayouts.map((layout) => (
-          <Link key={layout.layout_id} to={`/layouts/${layout.layout_id}`}>
+          <Link key={layout.layout_id} to={`/admin/layouts/${layout.layout_id}`}>
             <Card className="group card-hover cursor-pointer overflow-hidden">
               <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50">
                 {layout.bounding_box_image ? (
@@ -208,7 +207,7 @@ export function LayoutBrowser() {
               "Get started by generating your first layout from a PDF document."
             }
           </p>
-          <Link to="/generate">
+          <Link to="/admin/generate">
             <Button size="lg" className="gap-2">
               <Plus className="w-5 h-5" />
               Generate Your First Layout

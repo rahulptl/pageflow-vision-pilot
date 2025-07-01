@@ -1,3 +1,4 @@
+
 export interface Layout {
   layout_id: number;
   layout_metadata: Record<string, any>;
@@ -32,6 +33,10 @@ export interface Article {
   title: string;
   page_count: number;
   layout_pages: LayoutPage[];
+  magazine_name?: string;
+  approximate_number_of_words?: number;
+  number_of_images?: number;
+  article_category?: string;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -39,11 +44,15 @@ export interface Article {
 }
 
 export interface ArticleCreate {
-  title: string;
+  article_title: string;
   page_count: number;
   layout_pages: LayoutPage[];
   created_by?: string;
   updated_by?: string;
+  magazine_name?: string;
+  approximate_number_of_words?: number;
+  number_of_images?: number;
+  article_category?: string;
 }
 
 export enum PageType {

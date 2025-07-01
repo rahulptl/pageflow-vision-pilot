@@ -1,42 +1,124 @@
-import { useState } from "react";
+
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
-import { ArticleCreate, LayoutPage } from "@/types/api";
+import { ArticleCreate, LayoutPage, Layout } from "@/types/api";
 import { formatImageUrl, formatShortDate } from "@/utils/formatters";
 import { toast } from "sonner";
+import { LayoutFilter, LayoutFilters, LayoutSort } from "@/components/articles/LayoutFilter";
 
 interface FormData {
-  title: string;
+  article_title: string;
+  magazine_name: string;
+  approximate_number_of_words: number;
+  number_of_images: number;
+  article_category: string;
+  created_by: string;
 }
 
 export function ArticleCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedLayouts, setSelectedLayouts] = useState<number[]>([]);
+  const [layoutFilters, setLayoutFilters] = useState<LayoutFilters>({
+    search: '',
+    type: '',
+    dateRange: '',
+  });
+  const [layoutSort, setLayoutSort] = useState<LayoutSort>({
+    field: 'created_at',
+    direction: 'desc',
+  });
 
   const form = useForm<FormData>({
     defaultValues: {
-      title: "",
+      article_title: "",
+      magazine_name: "",
+      approximate_number_of_words: 0,
+      number_of_images: 0,
+      article_category: "",
+      created_by: "",
     },
   });
 
-  const { data: layouts = [], isLoading } = useQuery({
+  const { data: allLayouts = [], isLoading } = useQuery({
     queryKey: ['layouts'],
     queryFn: () => apiService.getLayouts(),
   });
 
+  // Filter and sort layouts
+  const filteredLayouts = useMemo(() => {
+    let filtered = [...allLayouts];
+
+    // Apply search filter
+    if (layoutFilters.search) {
+      filtered = filtered.filter(layout => 
+        layout.layout_id.toString().includes(layoutFilters.search) ||
+        JSON.stringify(layout.layout_metadata).toLowerCase().includes(layoutFilters.search.toLowerCase())
+      );
+    }
+
+    // Apply type filter
+    if (layoutFilters.type) {
+      filtered = filtered.filter(layout => 
+        layout.layout_metadata?.type_of_layout === layoutFilters.type
+      );
+    }
+
+    // Apply date filter
+    if (layoutFilters.dateRange) {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (layoutFilters.dateRange) {
+        case 'today':
+          filterDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(layout => 
+        new Date(layout.created_at) >= filterDate
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      if (layoutSort.field === 'created_at') {
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+      } else {
+        aValue = a.layout_id;
+        bValue = b.layout_id;
+      }
+      
+      return layoutSort.direction === 'desc' ? bValue - aValue : aValue - bValue;
+    });
+
+    return filtered;
+  }, [allLayouts, layoutFilters, layoutSort]);
+
   // Returns the layout object given a layoutId
-  const getLayoutById = (layoutId: number) => layouts.find(l => l.layout_id === layoutId);
+  const getLayoutById = (layoutId: number) => allLayouts.find(l => l.layout_id === layoutId);
 
   // Helper: compute page spans and total pages for selected layouts
   function computePageLabels(selectedLayouts: number[]) {
@@ -56,6 +138,7 @@ export function ArticleCreatePage() {
     });
     return labels;
   }
+  
   const pageLabels = computePageLabels(selectedLayouts);
   const totalPages = pageLabels.length
     ? (pageLabels[pageLabels.length - 1].label.match(/\d+$/)
@@ -75,7 +158,6 @@ export function ArticleCreatePage() {
     },
   });
 
-  // Update onSubmit to use computed totalPages and update layoutPages accordingly
   const onSubmit = (data: FormData) => {
     if (selectedLayouts.length === 0) {
       toast.error("Please select at least one layout");
@@ -98,9 +180,14 @@ export function ArticleCreatePage() {
     });
 
     createMutation.mutate({
-      title: data.title,
+      article_title: data.article_title,
       page_count: totalPages,
       layout_pages: layoutPages,
+      magazine_name: data.magazine_name,
+      approximate_number_of_words: data.approximate_number_of_words,
+      number_of_images: data.number_of_images,
+      article_category: data.article_category,
+      created_by: data.created_by,
     });
   };
 
@@ -110,13 +197,6 @@ export function ArticleCreatePage() {
         ? prev.filter(id => id !== layoutId)
         : [...prev, layoutId]
     );
-  };
-
-  const moveLayout = (fromIndex: number, toIndex: number) => {
-    const newOrder = [...selectedLayouts];
-    const [moved] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, moved);
-    setSelectedLayouts(newOrder);
   };
 
   if (isLoading) {
@@ -148,7 +228,7 @@ export function ArticleCreatePage() {
         <div>
           <h1 className="text-3xl font-bold">Create New Article</h1>
           <p className="text-muted-foreground">
-            Stitch together layouts to create an article. <br />
+            Create an article with selected layouts. <br />
             <span className="font-medium">Total Pages: {totalPages}</span>
           </p>
         </div>
@@ -166,8 +246,8 @@ export function ArticleCreatePage() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="title"
-                    rules={{ required: "Title is required" }}
+                    name="article_title"
+                    rules={{ required: "Article title is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Article Title</FormLabel>
@@ -179,33 +259,124 @@ export function ArticleCreatePage() {
                     )}
                   />
 
+                  <FormField
+                    control={form.control}
+                    name="magazine_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Magazine Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter magazine name..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="approximate_number_of_words"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Word Count</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="0" 
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="number_of_images"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Image Count</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="0" 
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="article_category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="news">News</SelectItem>
+                            <SelectItem value="sports">Sports</SelectItem>
+                            <SelectItem value="technology">Technology</SelectItem>
+                            <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                            <SelectItem value="business">Business</SelectItem>
+                            <SelectItem value="entertainment">Entertainment</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="created_by"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Created By</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your name..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <div>
-                    <label className="text-sm font-medium">Selected Layouts</label>
-                    <div className="mt-2 space-y-2">
+                    <label className="text-sm font-medium">Selected Layouts ({selectedLayouts.length})</label>
+                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                       {selectedLayouts.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No layouts selected</p>
                       ) : (
-                        pageLabels.map(({ layoutId, label }, index) => {
-                          const layout = getLayoutById(layoutId);
-                          return (
-                            <div key={layoutId} className="flex items-center justify-between p-2 border rounded">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {label}
-                                </Badge>
-                                <span className="text-sm">Layout #{layoutId}</span>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleLayout(layoutId)}
-                              >
-                                <X className="w-3 h-3" />
-                              </Button>
+                        pageLabels.map(({ layoutId, label }) => (
+                          <div key={layoutId} className="flex items-center justify-between p-2 border rounded">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                {label}
+                              </Badge>
+                              <span className="text-sm">Layout #{layoutId}</span>
                             </div>
-                          );
-                        })
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleLayout(layoutId)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))
                       )}
                     </div>
                   </div>
@@ -226,22 +397,25 @@ export function ArticleCreatePage() {
         </div>
 
         {/* Layout Selection */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          <LayoutFilter
+            onFilterChange={setLayoutFilters}
+            onSortChange={setLayoutSort}
+          />
+
           <Card>
             <CardHeader>
               <CardTitle>
-                Select Layouts ({selectedLayouts.length} selected) <br />
-                <span className="font-normal text-sm">Total Pages: {totalPages}</span>
+                Select Layouts ({selectedLayouts.length} selected)
+                <br />
+                <span className="font-normal text-sm">
+                  Showing {filteredLayouts.length} of {allLayouts.length} layouts
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {layouts.map((layout) => {
-                  // Pre-calculate what page/spans this layout would have if added
-                  const previewLabels = computePageLabels([
-                    ...selectedLayouts.filter(id => id !== layout.layout_id),
-                    layout.layout_id
-                  ]);
+                {filteredLayouts.map((layout) => {
                   const isSelected = selectedLayouts.includes(layout.layout_id);
                   return (
                     <div
@@ -282,12 +456,16 @@ export function ArticleCreatePage() {
                             )}
                           </div>
                           
-                          <p className="text-xs text-muted-foreground">
-                            Created {formatShortDate(layout.created_at)}
-                          </p>
-                          {isSelected && (
-                            <p className="text-xs mt-1 text-foreground/70">{pageLabels.find(lbl => lbl.layoutId === layout.layout_id)?.label}</p>
-                          )}
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">
+                              Created {formatShortDate(layout.created_at)}
+                            </p>
+                            {layout.layout_metadata?.type_of_layout && (
+                              <Badge variant="secondary" className="text-xs">
+                                {layout.layout_metadata.type_of_layout.replace('_', ' ')}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -295,15 +473,19 @@ export function ArticleCreatePage() {
                 })}
               </div>
 
-              {layouts.length === 0 && (
+              {filteredLayouts.length === 0 && layoutFilters.search && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No layouts match your search criteria</p>
+                  <Button variant="outline" onClick={() => setLayoutFilters({ search: '', type: '', dateRange: '' })}>
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+
+              {allLayouts.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No layouts available</p>
-                  <Link to="/admin/generate">
-                    <Button variant="outline" className="gap-2">
-                      <Plus className="w-4 h-4" />
-                      Generate Layouts First
-                    </Button>
-                  </Link>
+                  <p className="text-sm text-muted-foreground">Contact your administrator to generate layouts first.</p>
                 </div>
               )}
             </CardContent>

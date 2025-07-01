@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { ArticleSearchParams } from "@/services/api";
 
 interface ArticleSearchProps {
@@ -53,7 +53,8 @@ export function ArticleSearch({ onSearch, onClear, isLoading }: ArticleSearchPro
             className="gap-2"
           >
             <Filter className="w-4 h-4" />
-            {showAdvanced ? 'Simple' : 'Advanced'}
+            Advanced
+            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
         </div>
       </CardHeader>

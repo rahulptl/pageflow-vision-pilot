@@ -42,8 +42,8 @@ export function LayoutFilter({ onFilterChange, onSortChange }: LayoutFilterProps
   };
 
   const updateSort = (field: LayoutSort['field']) => {
-    const newDirection = sort.field === field && sort.direction === 'desc' ? 'asc' : 'desc';
-    const newSort = { field, direction: newDirection };
+    const newDirection: 'asc' | 'desc' = sort.field === field && sort.direction === 'desc' ? 'asc' : 'desc';
+    const newSort: LayoutSort = { field, direction: newDirection };
     setSort(newSort);
     onSortChange(newSort);
   };

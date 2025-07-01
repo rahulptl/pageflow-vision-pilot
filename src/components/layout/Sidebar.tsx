@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Plus, Settings } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, File } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
@@ -12,10 +12,11 @@ export function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: FileText, label: "All Layouts", href: "/admin/layouts" },
-    { icon: Plus, label: "Generate Layout", href: "/admin/generate" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+    { icon: FileText, label: "All Layouts", href: "/layouts" },
+    { icon: File, label: "Articles", href: "/articles" },
+    { icon: Plus, label: "Generate Layout", href: "/generate" },
+    { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
   return (

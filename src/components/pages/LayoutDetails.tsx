@@ -8,7 +8,7 @@ import { ArrowLeft, Download, Edit, Copy, ChevronDown, ChevronRight } from "luci
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
-import { formatDate, formatUser, formatBase64Image } from "@/utils/formatters";
+import { formatDate, formatUser, formatImageUrl } from "@/utils/formatters";
 
 export function LayoutDetails() {
   const { id } = useParams();
@@ -49,7 +49,7 @@ export function LayoutDetails() {
     ? layout.layout_json.elements.length
     : Object.keys(layout.layout_json || {}).length;
 
-  const isTwoPager = layout.layout_metadata?.type_of_page === 'double';
+  const isTwoPager = layout.layout_metadata?.type_of_layout === 'two_pager';
 
   return (
     <div className="p-6 space-y-6">
@@ -149,7 +149,7 @@ export function LayoutDetails() {
               >
                 {layout.page_image ? (
                   <img
-                    src={formatBase64Image(layout.page_image) || ''}
+                    src={formatImageUrl(layout.page_image) || ''}
                     alt="Original page"
                     className={isTwoPager ? "w-full h-auto object-contain" : "w-full h-full object-cover"}
                   />
@@ -171,7 +171,7 @@ export function LayoutDetails() {
               >
                 {layout.bounding_box_image ? (
                   <img
-                    src={formatBase64Image(layout.bounding_box_image) || ''}
+                    src={formatImageUrl(layout.bounding_box_image) || ''}
                     alt="Layout with bounding boxes"
                     className={isTwoPager ? "w-full h-auto object-contain" : "w-full h-full object-cover"}
                   />

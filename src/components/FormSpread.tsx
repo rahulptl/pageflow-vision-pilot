@@ -4,6 +4,7 @@ import { FormField } from './FormField.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Layout } from 'lucide-react';
+import { formatImageUrl } from '../utils/formatters';
 
 interface FormSpreadProps {
   spread: Spread;
@@ -12,6 +13,7 @@ interface FormSpreadProps {
   onChange: (fieldName: string, value: string | string[] | File | null) => void;
   errors?: ValidationError[];
   warnings?: DriftWarning[];
+  boundingBoxImage?: string | null;
 }
 
 export const FormSpread: React.FC<FormSpreadProps> = ({
@@ -20,7 +22,8 @@ export const FormSpread: React.FC<FormSpreadProps> = ({
   data,
   onChange,
   errors = [],
-  warnings = []
+  warnings = [],
+  boundingBoxImage
 }) => {
   const getPageTitle = () => {
     return `Page ${spreadIndex + 1}`;
@@ -59,6 +62,22 @@ export const FormSpread: React.FC<FormSpreadProps> = ({
           </div>
         </div>
       </CardHeader>
+      
+      {/* Layout Reference */}
+      {boundingBoxImage && (
+        <div className="px-6 pb-4">
+          <div className="space-y-2">
+            <h4 className="font-semibold text-sm text-muted-foreground">Layout Reference</h4>
+            <div className="border rounded-lg overflow-hidden bg-muted/30">
+              <img
+                src={formatImageUrl(boundingBoxImage) || ''}
+                alt={`Page ${spreadIndex + 1} layout reference`}
+                className="w-full h-auto max-h-64 object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
       
       <CardContent className="space-y-6 p-6">
         {/* Dynamic Fields */}

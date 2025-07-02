@@ -244,6 +244,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [searchedArticles, setSearchedArticles] = useState<ArticleWithLayout[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleWithLayout | null>(null);
   const [showArticleDialog, setShowArticleDialog] = useState(false);
   const [isSearchingArticles, setIsSearchingArticles] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -385,6 +386,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       
       setArticle(article);
       setFormData(defaultValues);
+      setSelectedArticle(selectedArticle);
       
       toast({
         title: "Article selected!",
@@ -597,6 +599,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
                 onChange={(fieldName, value) => handleFieldChange(index, fieldName, value)}
                 errors={errors[index] || []}
                 warnings={warnings[index] || []}
+                boundingBoxImage={selectedArticle?.layout_pages?.[index]?.layout?.bounding_box_image}
               />
             ))}
           </div>

@@ -10,7 +10,8 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { useToast } from '../hooks/use-toast';
 import { apiService } from '../services/api';
-import { TemplateRequest } from '../types/api';
+import { TemplateRequest, Article as ApiArticle } from '../types/api';
+import { ArticleSelectionDialog } from './articles/ArticleSelectionDialog';
 
 interface MagazineFormProps {
   isAdmin?: boolean;
@@ -212,6 +213,9 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   const [formData, setFormData] = useState<FormData>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [searchedArticles, setSearchedArticles] = useState<ApiArticle[]>([]);
+  const [showArticleDialog, setShowArticleDialog] = useState(false);
+  const [isSearchingArticles, setIsSearchingArticles] = useState(false);
 
   const { errors, warnings, validateSpread, clearValidation } = useFormValidation();
   const { toast } = useToast();
@@ -262,9 +266,37 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       return;
     }
 
+    setIsSearchingArticles(true);
+    
+    try {
+      // Search for articles matching the criteria
+      const searchResults = await apiService.searchArticles({
+        article_category: category,
+        page_count: parseInt(approxPages),
+        limit: 20
+      });
+      
+      setSearchedArticles(searchResults);
+      setShowArticleDialog(true);
+      
+    } catch (error) {
+      console.error('Failed to search articles:', error);
+      toast({
+        title: "Error searching articles",
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearchingArticles(false);
+    }
+  }, [category, brand, approxPages, toast]);
+
+  const handleArticleSelect = useCallback(async (selectedArticle: ApiArticle) => {
     setIsLoadingTemplate(true);
     
     try {
+      // Use the selected article to create the magazine form structure
+      // For now, we'll still get a template but could also directly use article data
       const templateRequest: TemplateRequest = {
         category,
         brand,
@@ -283,20 +315,20 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       setArticle(article);
       
       toast({
-        title: "Template found!",
-        description: `${article.spreads.length} page(s) with ${Object.keys(article.spreads[0].expected_elements).length} content fields ready`,
+        title: "Article selected!",
+        description: `Using "${selectedArticle.title}" as content source`,
       });
       
+      console.log('Selected article:', selectedArticle);
       console.log('Parsed article structure:', article);
-      console.log('Template response:', templateResponse);
       
       // Update form data with default values
       setFormData(defaultValues);
       
     } catch (error) {
-      console.error('Failed to fetch template:', error);
+      console.error('Failed to process selected article:', error);
       toast({
-        title: "Error fetching template",
+        title: "Error processing article",
         description: "Please try again later.",
         variant: "destructive"
       });
@@ -455,9 +487,9 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
             <Button 
               onClick={handleConfigSubmit} 
               className="w-full"
-              disabled={isLoadingTemplate}
+              disabled={isSearchingArticles}
             >
-              {isLoadingTemplate ? 'Finding Template...' : 'Let AI Design Your Magazine'}
+              {isSearchingArticles ? 'Searching Articles...' : 'Find Existing Articles'}
             </Button>
           </CardContent>
         </Card>
@@ -530,6 +562,15 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
           </div>
         </>
       )}
+
+      {/* Article Selection Dialog */}
+      <ArticleSelectionDialog
+        open={showArticleDialog}
+        onOpenChange={setShowArticleDialog}
+        articles={searchedArticles}
+        onSelectArticle={handleArticleSelect}
+        isLoading={isLoadingTemplate}
+      />
     </div>
   );
-}; 
+};

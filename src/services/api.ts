@@ -7,6 +7,7 @@ export interface ArticleSearchParams {
   article_title?: string;
   magazine_name?: string;
   approximate_number_of_words?: number;
+  page_count?: number;
   number_of_images?: number;
   article_category?: string;
   created_by?: string;

@@ -24,8 +24,8 @@ export function ArticleInfo({ article }: ArticleInfoProps) {
             <p className="text-sm font-medium">{formatDate(article.created_at)}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Updated</label>
-            <p className="text-sm font-medium">{formatDate(article.updated_at)}</p>
+            <label className="text-sm font-medium text-muted-foreground">Page Count</label>
+            <p className="text-sm font-medium">{article.page_count}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-muted-foreground">Layouts Count</label>

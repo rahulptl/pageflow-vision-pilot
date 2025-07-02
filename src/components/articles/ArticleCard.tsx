@@ -23,7 +23,7 @@ export function ArticleCard({ article, onDelete, basePath = '/admin' }: ArticleC
             <div className="flex-1 min-w-0">
               <Link to={`${basePath}/articles/${article.article_id}`}>
                 <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-2 cursor-pointer">
-                  {article.title}
+                  {article.article_title}
                 </h3>
               </Link>
             </div>

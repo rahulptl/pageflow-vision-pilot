@@ -358,7 +358,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       
       toast({
         title: "Article selected!",
-        description: `Using "${selectedArticle.title}" with its original layout`,
+        description: `Using "${selectedArticle.article_title}" with its original layout`,
       });
       
     } catch (error) {

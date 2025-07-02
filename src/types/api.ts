@@ -34,7 +34,7 @@ export interface ArticlePageWithLayout extends LayoutPage {
 
 export interface Article {
   article_id: number;
-  title: string;
+  article_title: string;
   page_count: number;
   layout_pages: LayoutPage[];
   magazine_name?: string;
@@ -42,9 +42,7 @@ export interface Article {
   number_of_images?: number;
   article_category?: string;
   created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
+  created_by?: string;
 }
 
 export interface ArticleWithLayout extends Omit<Article, 'layout_pages'> {

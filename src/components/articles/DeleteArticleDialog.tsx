@@ -34,7 +34,7 @@ export function DeleteArticleDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Article</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete "{article.title}"? This action cannot be undone.
+            Are you sure you want to delete "{article.article_title}"? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

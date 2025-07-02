@@ -20,7 +20,7 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{article.title}</h1>
+          <h1 className="text-3xl font-bold text-foreground">{article.article_title}</h1>
           <p className="text-muted-foreground">Article ID: {article.article_id}</p>
         </div>
       </div>

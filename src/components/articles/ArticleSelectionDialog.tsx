@@ -67,7 +67,7 @@ export function ArticleSelectionDialog({
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="font-semibold text-lg line-clamp-2">
-                            {article.title}
+                            {article.article_title}
                           </h3>
                           <Badge variant="secondary" className="ml-2">
                             {article.article_category}

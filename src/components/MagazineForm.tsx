@@ -148,46 +148,76 @@ const parseLayoutResponse = (layoutResponse: any): { article: Article, defaultVa
     const imageTypeCount: Record<string, number> = {};
     defaultValues[pageIndex] = {};
 
-    // Group text objects by textType
-    const textObjects = page.objects?.Editorial || [];
-    const groupedTexts: Record<string, string[]> = {};
-
-    textObjects.forEach((obj: any) => {
-      if (obj.type === 'text' && obj.textType) {
-        if (!groupedTexts[obj.textType]) {
-          groupedTexts[obj.textType] = [];
-        }
-        groupedTexts[obj.textType].push(extractTextFromHtml(obj.story || ''));
-      }
-    });
+    // Process all objects from all layers
+    const allObjects = page.objects || {};
     
-    // Process grouped text objects
-    Object.entries(groupedTexts).forEach(([textType, texts]) => {
-      const cleanType = textType.replace(/\s+/g, '_').toLowerCase();
-      const combinedText = texts.join(' ');
-      
-      expectedElements[cleanType] = getTextTypeConfig(textType, combinedText);
-      defaultValues[pageIndex][cleanType] = combinedText;
-    });
-
-    // Process image objects from Background layer
-    const imageObjects = page.objects?.Background || [];
-    
-    imageObjects.forEach((obj: any) => {
-      if (obj.type === 'image' && obj.imageType) {
-        // Count occurrences of each image type
-        imageTypeCount[obj.imageType] = (imageTypeCount[obj.imageType] || 0) + 1;
-        
-        // Create unique field name
-        const cleanType = obj.imageType.replace(/\s+/g, '_').toLowerCase();
-        const fieldName = imageTypeCount[obj.imageType] === 1 
-          ? cleanType 
-          : `${cleanType}_${imageTypeCount[obj.imageType]}`;
-        
-        expectedElements[fieldName] = getImageTypeConfig(obj.imageType);
-        
-        // Image fields don't have default values (they need to be uploaded)
-        defaultValues[pageIndex][fieldName] = null;
+    // Iterate through all layers and their objects
+    Object.entries(allObjects).forEach(([layerName, layerObjects]: [string, any[]]) => {
+      if (Array.isArray(layerObjects)) {
+        layerObjects.forEach((obj: any) => {
+          // Process text objects
+          if (obj.type === 'text' && obj.textType) {
+            // Count occurrences of each text type
+            textTypeCount[obj.textType] = (textTypeCount[obj.textType] || 0) + 1;
+            
+            // Create unique field name
+            const cleanType = obj.textType.replace(/\s+/g, '_').toLowerCase();
+            const fieldName = textTypeCount[obj.textType] === 1 
+              ? cleanType 
+              : `${cleanType}_${textTypeCount[obj.textType]}`;
+            
+            const extractedText = extractTextFromHtml(obj.story || '');
+            expectedElements[fieldName] = getTextTypeConfig(obj.textType, extractedText);
+            defaultValues[pageIndex][fieldName] = extractedText;
+          }
+          
+          // Process image objects
+          if (obj.type === 'image' && obj.imageType) {
+            // Count occurrences of each image type
+            imageTypeCount[obj.imageType] = (imageTypeCount[obj.imageType] || 0) + 1;
+            
+            // Create unique field name
+            const cleanType = obj.imageType.replace(/\s+/g, '_').toLowerCase();
+            const fieldName = imageTypeCount[obj.imageType] === 1 
+              ? cleanType 
+              : `${cleanType}_${imageTypeCount[obj.imageType]}`;
+            
+            expectedElements[fieldName] = getImageTypeConfig(obj.imageType);
+            
+            // Image fields don't have default values (they need to be uploaded)
+            defaultValues[pageIndex][fieldName] = null;
+          }
+          
+          // Process grouped objects recursively
+          if (obj.type === 'group' && obj.objects) {
+            obj.objects.forEach((groupedObj: any) => {
+              if (groupedObj.type === 'text' && groupedObj.textType) {
+                textTypeCount[groupedObj.textType] = (textTypeCount[groupedObj.textType] || 0) + 1;
+                
+                const cleanType = groupedObj.textType.replace(/\s+/g, '_').toLowerCase();
+                const fieldName = textTypeCount[groupedObj.textType] === 1 
+                  ? cleanType 
+                  : `${cleanType}_${textTypeCount[groupedObj.textType]}`;
+                
+                const extractedText = extractTextFromHtml(groupedObj.story || '');
+                expectedElements[fieldName] = getTextTypeConfig(groupedObj.textType, extractedText);
+                defaultValues[pageIndex][fieldName] = extractedText;
+              }
+              
+              if (groupedObj.type === 'image' && groupedObj.imageType) {
+                imageTypeCount[groupedObj.imageType] = (imageTypeCount[groupedObj.imageType] || 0) + 1;
+                
+                const cleanType = groupedObj.imageType.replace(/\s+/g, '_').toLowerCase();
+                const fieldName = imageTypeCount[groupedObj.imageType] === 1 
+                  ? cleanType 
+                  : `${cleanType}_${imageTypeCount[groupedObj.imageType]}`;
+                
+                expectedElements[fieldName] = getImageTypeConfig(groupedObj.imageType);
+                defaultValues[pageIndex][fieldName] = null;
+              }
+            });
+          }
+        });
       }
     });
 

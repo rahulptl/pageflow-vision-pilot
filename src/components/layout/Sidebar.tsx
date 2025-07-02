@@ -17,13 +17,13 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/" },
     { icon: FileText, label: "All Layouts", href: "/admin/layouts" },
     { icon: Plus, label: "Generate Layout", href: "/admin/generate" },
+    { icon: File, label: "Articles", href: "/admin/articles" },
     { icon: Users, label: "User Portal", href: "/user/" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
 
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user/" },
-    { icon: File, label: "Articles", href: "/user/articles" },
     { icon: BookOpen, label: "Create Magazine", href: "/user/magazine" },
     { icon: Settings, label: "Settings", href: "/user/settings" },
   ];

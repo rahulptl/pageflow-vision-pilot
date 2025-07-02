@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -151,7 +150,7 @@ export function ArticleCreatePage() {
     onSuccess: (article) => {
       queryClient.invalidateQueries({ queryKey: ['articles'] });
       toast.success("Article created successfully!");
-      navigate(`/user/articles/${article.article_id}`);
+      navigate(`/admin/articles/${article.article_id}`);
     },
     onError: () => {
       toast.error("Failed to create article");
@@ -219,7 +218,7 @@ export function ArticleCreatePage() {
     <div className="content-container py-8 space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/user/articles">
+        <Link to="/admin/articles">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="w-4 h-4" />
             Back to Articles

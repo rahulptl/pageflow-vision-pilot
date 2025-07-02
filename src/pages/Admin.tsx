@@ -7,6 +7,9 @@ import { Dashboard } from "@/components/pages/Dashboard";
 import { LayoutBrowser } from "@/components/pages/LayoutBrowser";
 import { LayoutDetails } from "@/components/pages/LayoutDetails";
 import { GenerateLayout } from "@/components/pages/GenerateLayout";
+import { Articles } from "@/components/pages/Articles";
+import { ArticleDetails } from "@/components/pages/ArticleDetails";
+import { ArticleCreatePage } from "@/components/pages/ArticleCreate";
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -22,6 +25,9 @@ const Admin = () => {
             <Route path="layouts" element={<LayoutBrowser />} />
             <Route path="layouts/:id" element={<LayoutDetails />} />
             <Route path="generate" element={<GenerateLayout />} />
+            <Route path="articles" element={<Articles />} />
+            <Route path="articles/:id" element={<ArticleDetails />} />
+            <Route path="articles/create" element={<ArticleCreatePage />} />
           </Routes>
         </main>
       </div>

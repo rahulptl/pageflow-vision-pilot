@@ -4,9 +4,6 @@ import { Routes, Route } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Dashboard } from "@/components/pages/Dashboard";
-import { Articles } from "@/components/pages/Articles";
-import { ArticleDetails } from "@/components/pages/ArticleDetails";
-import { ArticleCreatePage } from "@/components/pages/ArticleCreate";
 import { MagazineForm } from "@/components/MagazineForm";
 
 const User = () => {
@@ -20,9 +17,6 @@ const User = () => {
         <main className="flex-1 overflow-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="articles" element={<Articles />} />
-            <Route path="articles/:id" element={<ArticleDetails />} />
-            <Route path="articles/create" element={<ArticleCreatePage />} />
             <Route path="magazine" element={<MagazineForm />} />
           </Routes>
         </main>

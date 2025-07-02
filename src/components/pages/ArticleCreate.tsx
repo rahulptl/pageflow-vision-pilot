@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,30 @@ export function ArticleCreatePage() {
 
   // Returns the layout object given a layoutId
   const getLayoutById = (layoutId: number) => allLayouts.find(l => l.layout_id === layoutId);
+
+  // Calculate auto-populated counts from selected layouts
+  const calculateCounts = (selectedLayoutIds: number[]) => {
+    let totalWords = 0;
+    let totalImages = 0;
+    
+    selectedLayoutIds.forEach(layoutId => {
+      const layout = getLayoutById(layoutId);
+      if (layout?.layout_metadata) {
+        totalWords += layout.layout_metadata.max_number_of_words || 0;
+        totalImages += layout.layout_metadata.number_of_images || 0;
+      }
+    });
+    
+    return { totalWords, totalImages };
+  };
+
+  const { totalWords, totalImages } = calculateCounts(selectedLayouts);
+
+  // Update form fields when layout selection changes
+  React.useEffect(() => {
+    form.setValue("approximate_number_of_words", totalWords);
+    form.setValue("number_of_images", totalImages);
+  }, [totalWords, totalImages, form]);
 
   // Helper: compute page spans and total pages for selected layouts
   function computePageLabels(selectedLayouts: number[]) {
@@ -277,7 +302,7 @@ export function ArticleCreatePage() {
                       control={form.control}
                       name="approximate_number_of_words"
                       render={({ field }) => (
-                        <FormItem>
+                       <FormItem>
                           <FormLabel>Word Count</FormLabel>
                           <FormControl>
                             <Input 
@@ -287,6 +312,9 @@ export function ArticleCreatePage() {
                               onChange={(e) => field.onChange(Number(e.target.value))}
                             />
                           </FormControl>
+                          <p className="text-xs text-muted-foreground">
+                            Auto-calculated from selected layouts ({totalWords} total). You can edit this value.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -296,7 +324,7 @@ export function ArticleCreatePage() {
                       control={form.control}
                       name="number_of_images"
                       render={({ field }) => (
-                        <FormItem>
+                       <FormItem>
                           <FormLabel>Image Count</FormLabel>
                           <FormControl>
                             <Input 
@@ -306,6 +334,9 @@ export function ArticleCreatePage() {
                               onChange={(e) => field.onChange(Number(e.target.value))}
                             />
                           </FormControl>
+                          <p className="text-xs text-muted-foreground">
+                            Auto-calculated from selected layouts ({totalImages} total). You can edit this value.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}

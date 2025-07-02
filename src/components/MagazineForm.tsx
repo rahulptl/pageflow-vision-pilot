@@ -216,9 +216,37 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   const [searchedArticles, setSearchedArticles] = useState<ApiArticle[]>([]);
   const [showArticleDialog, setShowArticleDialog] = useState(false);
   const [isSearchingArticles, setIsSearchingArticles] = useState(false);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
 
   const { errors, warnings, validateSpread, clearValidation } = useFormValidation();
   const { toast } = useToast();
+
+  // Load available options on component mount
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        const { categories, brands } = await apiService.getDistinctArticleValues();
+        setAvailableCategories(categories);
+        setAvailableBrands(brands);
+      } catch (error) {
+        console.error('Failed to load dropdown options:', error);
+        toast({
+          title: "Warning",
+          description: "Could not load category and brand options from articles",
+          variant: "destructive"
+        });
+        // Fall back to empty arrays if API fails
+        setAvailableCategories([]);
+        setAvailableBrands([]);
+      } finally {
+        setIsLoadingOptions(false);
+      }
+    };
+
+    loadOptions();
+  }, [toast]);
 
   // Auto-save to localStorage (but don't save immediately when defaults are loaded)
   useEffect(() => {
@@ -444,12 +472,12 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category} onValueChange={setCategory} disabled={isLoadingOptions}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={isLoadingOptions ? "Loading..." : "Select category"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockCategories.map(cat => (
+                    {availableCategories.map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -458,12 +486,12 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
               
               <div>
                 <Label htmlFor="brand">Brand</Label>
-                <Select value={brand} onValueChange={setBrand}>
+                <Select value={brand} onValueChange={setBrand} disabled={isLoadingOptions}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select brand" />
+                    <SelectValue placeholder={isLoadingOptions ? "Loading..." : "Select brand"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockBrands.map(b => (
+                    {availableBrands.map(b => (
                       <SelectItem key={b} value={b}>{b}</SelectItem>
                     ))}
                   </SelectContent>
@@ -487,7 +515,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
             <Button 
               onClick={handleConfigSubmit} 
               className="w-full"
-              disabled={isSearchingArticles}
+              disabled={isSearchingArticles || isLoadingOptions || !category || !brand || !approxPages}
             >
               {isSearchingArticles ? 'Searching Articles...' : 'Find Existing Articles'}
             </Button>

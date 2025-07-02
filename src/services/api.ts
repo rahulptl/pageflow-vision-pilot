@@ -120,6 +120,27 @@ class ApiService {
     });
   }
 
+  async getDistinctArticleValues(): Promise<{
+    categories: string[];
+    brands: string[];
+  }> {
+    const articles = await this.request<Article[]>('/articles/');
+    
+    const categories = [...new Set(
+      articles
+        .map(article => article.article_category)
+        .filter(category => category && category.trim() !== '')
+    )].sort();
+    
+    const brands = [...new Set(
+      articles
+        .map(article => article.magazine_name)
+        .filter(brand => brand && brand.trim() !== '')
+    )].sort();
+    
+    return { categories, brands };
+  }
+
   async checkHealth(): Promise<any> {
     return this.request<any>('/health');
   }

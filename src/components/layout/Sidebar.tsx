@@ -25,7 +25,6 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user/" },
     { icon: BookOpen, label: "Create Magazine", href: "/user/magazine" },
-    { icon: Settings, label: "Settings", href: "/user/settings" },
   ];
 
   const navItems = isAdmin ? adminNavItems : userNavItems;

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Dashboard } from "@/components/pages/Dashboard";
@@ -18,6 +18,8 @@ const User = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="magazine" element={<MagazineForm />} />
+            {/* Redirect any invalid user routes to dashboard */}
+            <Route path="*" element={<Navigate to="/user/" replace />} />
           </Routes>
         </main>
       </div>

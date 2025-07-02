@@ -37,17 +37,17 @@ export function ArticleSelectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Select an Article</DialogTitle>
+          <DialogTitle>AI-Curated Layout Suggestions</DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="h-[500px] pr-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">Loading articles...</div>
+              <div className="text-muted-foreground">AI is crafting personalized layouts...</div>
             </div>
           ) : articles.length === 0 ? (
             <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">No articles found matching your criteria</div>
+              <div className="text-muted-foreground">AI couldn't find suitable layouts for your vision</div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -176,7 +176,7 @@ export function ArticleSelectionDialog({
             onClick={handleSelect} 
             disabled={!selectedArticleId}
           >
-            Use Selected Article
+            Adapt This Layout with AI
           </Button>
         </div>
       </DialogContent>

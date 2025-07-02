@@ -389,8 +389,8 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       setSelectedArticle(selectedArticle);
       
       toast({
-        title: "Article selected!",
-        description: `Using "${selectedArticle.article_title}" with its original layout`,
+        title: "AI Layout Adapted!",
+        description: `AI has intelligently adapted "${selectedArticle.article_title}" layout for your content`,
       });
       
     } catch (error) {
@@ -471,8 +471,8 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
-        title: "Magazine created successfully!",
-        description: "Your magazine has been generated and is ready for download",
+        title: "AI Magazine Created Successfully!",
+        description: "Your AI-crafted magazine has been generated and is ready for download",
       });
       
       // Clear the form
@@ -499,7 +499,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-2">AI Magazine Creator</h1>
         <p className="text-muted-foreground">
-          Tell us what you want, and AI will craft the perfect magazine layout for your content
+          Describe your vision and watch AI craft the perfect magazine layout with intelligent content placement
         </p>
       </div>
 
@@ -507,7 +507,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       {!article && (
         <Card>
           <CardHeader>
-            <CardTitle>What kind of magazine are you creating?</CardTitle>
+            <CardTitle>Tell AI About Your Magazine Vision</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -558,7 +558,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
               className="w-full"
               disabled={isSearchingArticles || isLoadingOptions || !category || !brand || !approxPages}
             >
-              {isSearchingArticles ? 'Searching Articles...' : 'Find Existing Articles'}
+              {isSearchingArticles ? 'AI is analyzing your vision...' : 'Generate AI Magazine Layout'}
             </Button>
           </CardContent>
         </Card>

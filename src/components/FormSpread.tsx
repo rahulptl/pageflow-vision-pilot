@@ -101,9 +101,9 @@ export const FormSpread: React.FC<FormSpreadProps> = ({
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-medium text-amber-800">Layout Adjustments</span>
             </div>
-            <p className="text-xs text-amber-700">
-              Your content exceeds the original layout bounds. AI will intelligently adjust fonts, spacing, and positioning to accommodate your content.
-            </p>
+             <p className="text-xs text-amber-700">
+               AI will intelligently adjust fonts, spacing, and positioning to accommodate your content while maintaining visual harmony.
+             </p>
           </div>
         )}
       </CardContent>

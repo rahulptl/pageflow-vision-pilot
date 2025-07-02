@@ -47,7 +47,7 @@ export function ArticleCreatePage() {
       magazine_name: "",
       approximate_number_of_words: 0,
       number_of_images: 0,
-      article_category: "",
+      article_category: "news", // Set a default value instead of empty string
       created_by: "",
     },
   });
@@ -318,7 +318,7 @@ export function ArticleCreatePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || "news"}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select category..." />

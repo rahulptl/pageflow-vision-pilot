@@ -61,65 +61,103 @@ export function ArticleSelectionDialog({
                   }`}
                   onClick={() => setSelectedArticleId(article.article_id)}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      {/* Article Preview */}
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-lg line-clamp-2">
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      {/* Article Metadata - Formatted at the top */}
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-bold text-xl line-clamp-2 flex-1">
                             {article.article_title}
                           </h3>
-                          <Badge variant="secondary" className="ml-2">
+                          <Badge variant="secondary" className="ml-3 text-sm font-medium">
                             {article.article_category}
                           </Badge>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-1">
-                            <FileText className="w-4 h-4" />
-                            {article.approximate_number_of_words} words
+                        {/* Magazine and Basic Info */}
+                        <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-medium text-foreground">Magazine:</span>
+                            <span className="font-semibold text-primary">{article.magazine_name}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Images className="w-4 h-4" />
-                            {article.number_of_images} images
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <User className="w-4 h-4" />
-                            {article.created_by}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(article.created_at).toLocaleDateString()}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-medium text-foreground">Pages:</span>
+                            <span className="font-semibold">{article.page_count}</span>
                           </div>
                         </div>
-
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          Magazine: {article.magazine_name} • {article.page_count} pages
-                        </p>
+                        
+                        {/* Detailed Stats */}
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Words:</span>
+                            <span className="font-medium">{article.approximate_number_of_words?.toLocaleString() || 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Images className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Images:</span>
+                            <span className="font-medium">{article.number_of_images || 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Created by:</span>
+                            <span className="font-medium">{article.created_by || 'Unknown'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Date:</span>
+                            <span className="font-medium">{new Date(article.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Layout Preview - Show horizontal stitched bounding box images */}
-                      <div className="w-48 h-32 flex-shrink-0">
-                        <div className="flex gap-1 h-full overflow-x-auto">
-                          {article.layout_pages.map((layoutPage, index) => (
-                            <div
-                              key={index}
-                              className="flex-shrink-0 h-full"
-                              style={{ width: `${100 / article.layout_pages.length}%` }}
-                            >
-                              {layoutPage.layout?.bounding_box_image ? (
-                                <img
-                                  src={formatImageUrl(layoutPage.layout.bounding_box_image) || ''}
-                                  alt={`Page ${layoutPage.page} layout`}
-                                  className="w-full h-full object-cover rounded border"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted rounded border flex items-center justify-center text-xs">
-                                  P{layoutPage.page}
-                                </div>
-                              )}
+                      {/* Layout Preview - Stitched Bounding Box Images */}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm text-muted-foreground">Layout Preview:</h4>
+                        <div className="border rounded-lg p-2 bg-background">
+                          <div className="flex gap-1 overflow-x-auto">
+                            {article.layout_pages
+                              .sort((a, b) => a.page - b.page) // Ensure proper order
+                              .map((layoutPage, index) => (
+                              <div
+                                key={`${layoutPage.page}-${index}`}
+                                className="flex-shrink-0 relative"
+                                style={{ 
+                                  width: `${Math.max(120, 400 / article.layout_pages.length)}px`,
+                                  minWidth: '80px'
+                                }}
+                              >
+                                {layoutPage.layout?.bounding_box_image ? (
+                                  <div className="space-y-1">
+                                    <img
+                                      src={formatImageUrl(layoutPage.layout.bounding_box_image) || ''}
+                                      alt={`Page ${layoutPage.page} layout`}
+                                      className="w-full h-24 object-cover rounded border shadow-sm"
+                                    />
+                                    <div className="text-xs text-center text-muted-foreground font-medium">
+                                      Page {layoutPage.page}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <div className="w-full h-24 bg-muted rounded border flex items-center justify-center">
+                                      <div className="text-xs text-muted-foreground font-medium">
+                                        P{layoutPage.page}
+                                      </div>
+                                    </div>
+                                    <div className="text-xs text-center text-muted-foreground font-medium">
+                                      Page {layoutPage.page}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          {article.layout_pages.length === 0 && (
+                            <div className="text-center py-4 text-muted-foreground text-sm">
+                              No layout data available
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     </div>

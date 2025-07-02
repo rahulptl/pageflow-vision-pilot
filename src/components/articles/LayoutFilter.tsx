@@ -85,12 +85,12 @@ export function LayoutFilter({ onFilterChange, onSortChange }: LayoutFilterProps
           </div>
           <div>
             <Label htmlFor="type">Layout Type</Label>
-            <Select value={filters.type} onValueChange={(value) => updateFilter('type', value)}>
+            <Select value={filters.type || "all"} onValueChange={(value) => updateFilter('type', value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="one_pager">One Pager</SelectItem>
                 <SelectItem value="two_pager">Two Pager</SelectItem>
               </SelectContent>
@@ -98,12 +98,12 @@ export function LayoutFilter({ onFilterChange, onSortChange }: LayoutFilterProps
           </div>
           <div>
             <Label htmlFor="date">Date Range</Label>
-            <Select value={filters.dateRange} onValueChange={(value) => updateFilter('dateRange', value)}>
+            <Select value={filters.dateRange || "all"} onValueChange={(value) => updateFilter('dateRange', value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All time" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Time</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="week">This Week</SelectItem>
                 <SelectItem value="month">This Month</SelectItem>

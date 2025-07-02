@@ -28,17 +28,19 @@ export function AppLayout({ isAdmin, baseRoute }: AppLayoutProps) {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             
-            {/* Magazine routes - available to both admin and user */}
-            <Route path="magazine" element={<MagazineForm />} />
+            {/* Articles - Admin: full CRUD, User: read/search only */}
+            <Route path="articles" element={<Articles isAdmin={isAdmin} />} />
+            <Route path="articles/:id" element={<ArticleDetails isAdmin={isAdmin} />} />
             
-            {/* Admin-only routes */}
+            {/* Magazines - Admin: full CRUD, User: create only */}
+            <Route path="magazines" element={<MagazineForm />} />
+            
+            {/* Admin-only routes - Layouts */}
             {isAdmin && (
               <>
                 <Route path="layouts" element={<LayoutBrowser />} />
                 <Route path="layouts/:id" element={<LayoutDetails />} />
                 <Route path="generate" element={<GenerateLayout />} />
-                <Route path="articles" element={<Articles />} />
-                <Route path="articles/:id" element={<ArticleDetails />} />
                 <Route path="articles/create" element={<ArticleCreatePage />} />
               </>
             )}

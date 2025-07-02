@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Grid, List } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService, ArticleSearchParams } from "@/services/api";
 import { Article } from "@/types/api";
@@ -11,7 +11,13 @@ import { ArticleSearch } from "@/components/articles/ArticleSearch";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { DeleteArticleDialog } from "@/components/articles/DeleteArticleDialog";
 
-export function Articles() {
+interface ArticlesProps {
+  isAdmin?: boolean;
+}
+
+export function Articles({ isAdmin = false }: ArticlesProps) {
+  const location = useLocation();
+  const basePath = location.pathname.includes('/admin') ? '/admin' : '/user';
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useState<ArticleSearchParams>({});
   const [isSearching, setIsSearching] = useState(false);
@@ -123,12 +129,14 @@ export function Articles() {
               <List className="w-4 h-4" />
             </Button>
           </div>
-          <Link to="/user/articles/create">
-            <Button size="lg" className="gap-2 shadow-lg">
-              <Plus className="w-5 h-5" />
-              Create Article
-            </Button>
-          </Link>
+          {isAdmin && (
+            <Link to={`${basePath}/articles/create`}>
+              <Button size="lg" className="gap-2 shadow-lg">
+                <Plus className="w-5 h-5" />
+                Create Article
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -162,8 +170,8 @@ export function Articles() {
                 <ArticleCard
                   key={article.article_id}
                   article={article}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onDelete={isAdmin ? () => setDeleteArticle(article) : undefined}
+                  basePath={basePath}
                 />
               ))}
             </div>
@@ -181,12 +189,14 @@ export function Articles() {
                   "Get started by creating your first article from existing layouts."
                 }
               </p>
-              <Link to="/user/articles/create">
-                <Button size="lg" className="gap-2">
-                  <Plus className="w-5 h-5" />
-                  Create Your First Article
-                </Button>
-              </Link>
+              {isAdmin && (
+                <Link to={`${basePath}/articles/create`}>
+                  <Button size="lg" className="gap-2">
+                    <Plus className="w-5 h-5" />
+                    Create Your First Article
+                  </Button>
+                </Link>
+              )}
             </div>
           )}
         </>

@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +9,11 @@ import { formatShortDate, formatUser } from "@/utils/formatters";
 
 interface ArticleCardProps {
   article: Article;
-  onEdit: (article: Article) => void;
-  onDelete: (articleId: number) => void;
+  onDelete?: (article: Article) => void;
+  basePath?: string;
 }
 
-export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
+export function ArticleCard({ article, onDelete, basePath = '/admin' }: ArticleCardProps) {
   return (
     <Card className="group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/30">
       <CardContent className="p-6">
@@ -22,7 +21,7 @@ export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
           {/* Header with Actions */}
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <Link to={`/user/articles/${article.article_id}`}>
+              <Link to={`${basePath}/articles/${article.article_id}`}>
                 <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-2 cursor-pointer">
                   {article.title}
                 </h3>
@@ -40,22 +39,20 @@ export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to={`/user/articles/${article.article_id}`} className="flex items-center gap-2">
+                    <Link to={`${basePath}/articles/${article.article_id}`} className="flex items-center gap-2">
                       <Eye className="w-4 h-4" />
                       View Details
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit(article)} className="flex items-center gap-2">
-                    <Edit className="w-4 h-4" />
-                    Edit Article
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onDelete(article.article_id)}
-                    className="flex items-center gap-2 text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Article
-                  </DropdownMenuItem>
+                  {onDelete && (
+                    <DropdownMenuItem 
+                      onClick={() => onDelete(article)}
+                      className="flex items-center gap-2 text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Article
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -79,7 +76,7 @@ export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
                 <FileText className="w-3 h-3" />
                 <span>{article.layout_pages.length} layouts</span>
               </div>
-              <Link to={`/user/articles/${article.article_id}`}>
+              <Link to={`${basePath}/articles/${article.article_id}`}>
                 <Button variant="ghost" size="sm" className="text-xs">
                   View Article →
                 </Button>

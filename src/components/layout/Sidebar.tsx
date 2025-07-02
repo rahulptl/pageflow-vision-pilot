@@ -15,16 +15,19 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
 
   const adminNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/" },
-    { icon: FileText, label: "All Layouts", href: "/admin/layouts" },
+    { icon: FileText, label: "Layouts", href: "/admin/layouts" },
     { icon: Plus, label: "Generate Layout", href: "/admin/generate" },
     { icon: File, label: "Articles", href: "/admin/articles" },
+    { icon: BookOpen, label: "Magazines", href: "/admin/magazines" },
     { icon: Users, label: "User Portal", href: "/user/" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
 
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user/" },
-    { icon: BookOpen, label: "Create Magazine", href: "/user/magazine" },
+    { icon: File, label: "Articles", href: "/user/articles" },
+    { icon: BookOpen, label: "Create Magazine", href: "/user/magazines" },
+    { icon: Settings, label: "Settings", href: "/user/settings" },
   ];
 
   const navItems = isAdmin ? adminNavItems : userNavItems;

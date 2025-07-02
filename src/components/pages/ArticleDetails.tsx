@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useParams } from "react-router-dom";
@@ -8,8 +8,14 @@ import { ArticleHeader } from "./ArticleHeader";
 import { ArticleInfo } from "./ArticleInfo";
 import { LayoutPageDisplay } from "./LayoutPageDisplay";
 
-export function ArticleDetails() {
+interface ArticleDetailsProps {
+  isAdmin?: boolean;
+}
+
+export function ArticleDetails({ isAdmin = false }: ArticleDetailsProps) {
   const { id } = useParams();
+  const location = useLocation();
+  const basePath = location.pathname.includes('/admin') ? '/admin' : '/user';
 
   const { data: article, isLoading: articleLoading, error: articleError } = useQuery({
     queryKey: ['article', id],
@@ -84,7 +90,7 @@ export function ArticleDetails() {
       <div className="p-6">
         <div className="text-center py-12">
           <p className="text-destructive mb-4">Failed to load article</p>
-          <Link to="/user/articles">
+          <Link to={`${basePath}/articles`}>
             <Button>Back to Articles</Button>
           </Link>
         </div>

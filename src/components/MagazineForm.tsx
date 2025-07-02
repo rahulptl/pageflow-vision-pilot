@@ -12,6 +12,10 @@ import { useToast } from '../hooks/use-toast';
 import { apiService } from '../services/api';
 import { TemplateRequest } from '../types/api';
 
+interface MagazineFormProps {
+  isAdmin?: boolean;
+}
+
 // Mock data for demonstration
 const mockCategories = ['Fashion', 'Tech', 'Lifestyle', 'Food'];
 const mockBrands = ['GlamIt', 'TechNow', 'LifeStyle Co', 'FoodieWorld'];
@@ -200,7 +204,7 @@ const parseLayoutResponse = (layoutResponse: any): { article: Article, defaultVa
   return { article, defaultValues };
 };
 
-export const MagazineForm: React.FC = () => {
+export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) => {
   const [category, setCategory] = useState<string>('');
   const [brand, setBrand] = useState<string>('');
   const [approxPages, setApproxPages] = useState<string>('');

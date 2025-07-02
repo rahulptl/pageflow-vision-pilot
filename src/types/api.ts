@@ -28,6 +28,10 @@ export interface LayoutPage {
   page_span: number;
 }
 
+export interface ArticlePageWithLayout extends LayoutPage {
+  layout: Layout | null;
+}
+
 export interface Article {
   article_id: number;
   title: string;
@@ -41,6 +45,10 @@ export interface Article {
   updated_at: string;
   created_by: string | null;
   updated_by: string | null;
+}
+
+export interface ArticleWithLayout extends Omit<Article, 'layout_pages'> {
+  layout_pages: ArticlePageWithLayout[];
 }
 
 export interface ArticleCreate {

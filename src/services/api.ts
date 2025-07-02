@@ -1,5 +1,5 @@
 
-import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, TemplateRequest, TemplateResponse } from '@/types/api';
+import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse } from '@/types/api';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -84,7 +84,7 @@ class ApiService {
     return this.request<Article[]>('/articles/');
   }
 
-  async searchArticles(params: ArticleSearchParams): Promise<Article[]> {
+  async searchArticles(params: ArticleSearchParams): Promise<ArticleWithLayout[]> {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
@@ -93,7 +93,7 @@ class ApiService {
     });
     
     const endpoint = `/articles/search${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return this.request<Article[]>(endpoint);
+    return this.request<ArticleWithLayout[]>(endpoint);
   }
 
   async getArticle(articleId: number): Promise<Article> {

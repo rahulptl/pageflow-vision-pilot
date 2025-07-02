@@ -1,17 +1,18 @@
 import { useState } from "react";
-import { Article } from "@/types/api";
+import { ArticleWithLayout } from "@/types/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Images, FileText, Calendar, User } from "lucide-react";
+import { formatImageUrl } from "@/utils/formatters";
 
 interface ArticleSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  articles: Article[];
-  onSelectArticle: (article: Article) => void;
+  articles: ArticleWithLayout[];
+  onSelectArticle: (article: ArticleWithLayout) => void;
   isLoading?: boolean;
 }
 
@@ -97,15 +98,26 @@ export function ArticleSelectionDialog({
                         </p>
                       </div>
 
-                      {/* Layout Preview - Show horizontal layout pages */}
+                      {/* Layout Preview - Show horizontal stitched bounding box images */}
                       <div className="w-48 h-32 flex-shrink-0">
                         <div className="flex gap-1 h-full overflow-x-auto">
                           {article.layout_pages.map((layoutPage, index) => (
                             <div
                               key={index}
-                              className="w-16 h-full bg-muted rounded border flex items-center justify-center text-xs flex-shrink-0"
+                              className="flex-shrink-0 h-full"
+                              style={{ width: `${100 / article.layout_pages.length}%` }}
                             >
-                              P{layoutPage.page}
+                              {layoutPage.layout?.bounding_box_image ? (
+                                <img
+                                  src={formatImageUrl(layoutPage.layout.bounding_box_image) || ''}
+                                  alt={`Page ${layoutPage.page} layout`}
+                                  className="w-full h-full object-cover rounded border"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted rounded border flex items-center justify-center text-xs">
+                                  P{layoutPage.page}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>

@@ -10,7 +10,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { useToast } from '../hooks/use-toast';
 import { apiService } from '../services/api';
-import { TemplateRequest, Article as ApiArticle } from '../types/api';
+import { TemplateRequest, ArticleWithLayout } from '../types/api';
 import { ArticleSelectionDialog } from './articles/ArticleSelectionDialog';
 
 interface MagazineFormProps {
@@ -213,7 +213,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   const [formData, setFormData] = useState<FormData>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
-  const [searchedArticles, setSearchedArticles] = useState<ApiArticle[]>([]);
+  const [searchedArticles, setSearchedArticles] = useState<ArticleWithLayout[]>([]);
   const [showArticleDialog, setShowArticleDialog] = useState(false);
   const [isSearchingArticles, setIsSearchingArticles] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -319,39 +319,47 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
     }
   }, [category, brand, approxPages, toast]);
 
-  const handleArticleSelect = useCallback(async (selectedArticle: ApiArticle) => {
+  const handleArticleSelect = useCallback(async (selectedArticle: ArticleWithLayout) => {
     setIsLoadingTemplate(true);
     
     try {
-      // Use the selected article to create the magazine form structure
-      // For now, we'll still get a template but could also directly use article data
-      const templateRequest: TemplateRequest = {
-        category,
-        brand,
-        approx_pages: parseInt(approxPages)
+      // Use the layout data directly from the selected article
+      const layoutPages = selectedArticle.layout_pages.filter(page => page.layout);
+      
+      if (layoutPages.length === 0) {
+        throw new Error('No layout data found in selected article');
+      }
+
+      // Create article structure from the selected article's layout data
+      const spreads = layoutPages.map((layoutPage, pageIndex) => {
+        const layoutData = layoutPage.layout!;
+        const { article: parsedArticle, defaultValues: pageDefaults } = parseLayoutResponse(layoutData);
+        return parsedArticle.spreads[0]; // Each layout is a single page/spread
+      });
+
+      const article: Article = {
+        spreads: spreads.filter(spread => Object.keys(spread.expected_elements).length > 0)
       };
 
-      const templateResponse = await apiService.findSuitableTemplate(templateRequest);
-      
-      // Parse the real layout response to create dynamic form structure
-      const { article, defaultValues } = parseLayoutResponse(templateResponse);
+      // Combine default values from all pages
+      const defaultValues: FormData = {};
+      layoutPages.forEach((layoutPage, pageIndex) => {
+        const layoutData = layoutPage.layout!;
+        const { defaultValues: pageDefaults } = parseLayoutResponse(layoutData);
+        defaultValues[pageIndex] = pageDefaults[0] || {};
+      });
       
       if (article.spreads.length === 0) {
-        throw new Error('No valid layout elements found in template');
+        throw new Error('No valid layout elements found in article');
       }
       
       setArticle(article);
+      setFormData(defaultValues);
       
       toast({
         title: "Article selected!",
-        description: `Using "${selectedArticle.title}" as content source`,
+        description: `Using "${selectedArticle.title}" with its original layout`,
       });
-      
-      console.log('Selected article:', selectedArticle);
-      console.log('Parsed article structure:', article);
-      
-      // Update form data with default values
-      setFormData(defaultValues);
       
     } catch (error) {
       console.error('Failed to process selected article:', error);
@@ -362,8 +370,9 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
       });
     } finally {
       setIsLoadingTemplate(false);
+      setShowArticleDialog(false);
     }
-  }, [category, brand, approxPages, toast]);
+  }, [toast]);
 
   const handleFieldChange = useCallback((
     spreadIndex: number,

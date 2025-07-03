@@ -26,10 +26,11 @@ export function LayoutBrowser() {
   const layoutId = isLayoutIdSearch ? parseInt(activeSearchTerm.trim()) : null;
 
   // Query for specific layout by ID
-  const { data: specificLayout, isLoading: isLoadingSpecific } = useQuery({
+  const { data: specificLayout, isLoading: isLoadingSpecific, error: specificLayoutError } = useQuery({
     queryKey: ['layout', layoutId],
     queryFn: () => apiService.getLayout(layoutId!),
     enabled: isLayoutIdSearch && layoutId !== null && activeSearchTerm.length > 0,
+    retry: false, // Don't retry on 404
   });
 
   // Query for paginated layouts
@@ -260,12 +261,30 @@ export function LayoutBrowser() {
         </div>
       </Card>
 
+      {/* Search Not Found State */}
+      {isLayoutIdSearch && activeSearchTerm && specificLayoutError && (
+        <Card className="p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Layout Not Found</h3>
+            <p className="text-muted-foreground mb-4">
+              Layout ID "{activeSearchTerm}" could not be found.
+            </p>
+            <Button variant="outline" onClick={handleClearSearch}>
+              Clear Search
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Layout Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sortedLayouts.map((layout) => (
-          <Card key={layout.layout_id} className="group card-hover overflow-hidden">
-            <Link to={`/admin/layouts/${layout.layout_id}`}>
-              <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50 cursor-pointer">
+          <Link key={layout.layout_id} to={`/admin/layouts/${layout.layout_id}`}>
+            <Card className="group card-hover overflow-hidden cursor-pointer">
+              <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50">
                 {layout.bounding_box_image ? (
                   <img
                     src={formatImageUrl(layout.bounding_box_image) || ''}
@@ -279,52 +298,50 @@ export function LayoutBrowser() {
                   </div>
                 )}
               </div>
-            </Link>
-            <CardContent className="p-5">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <Link to={`/admin/layouts/${layout.layout_id}`}>
-                    <h3 className="font-semibold hover:text-primary transition-colors line-clamp-1 cursor-pointer">
+              <CardContent className="p-5">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-1">
                       Layout #{layout.layout_id}
                     </h3>
-                  </Link>
-                  <Badge variant="default" className="text-xs shrink-0 ml-2">
-                    Active
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="w-3 h-3" />
-                  <span className="truncate">{formatUser(layout.created_by)}</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
-                  <span>{formatShortDate(layout.created_at)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm pt-2 border-t border-border/50">
-                  <span className="text-muted-foreground">
-                    Page {layout.layout_json?.page_number || 1}
-                  </span>
-                  <Badge variant="secondary" className="text-xs">
-                    Level {layout.layout_json?.merge_level || 2}
-                  </Badge>
-                </div>
+                    <Badge variant="default" className="text-xs shrink-0 ml-2">
+                      Active
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="w-3 h-3" />
+                    <span className="truncate">{formatUser(layout.created_by)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatShortDate(layout.created_at)}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-border/50">
+                    <span className="text-muted-foreground">
+                      Page {layout.layout_json?.page_number || 1}
+                    </span>
+                    <Badge variant="secondary" className="text-xs">
+                      Level {layout.layout_json?.merge_level || 2}
+                    </Badge>
+                  </div>
 
-                <div className="flex gap-2 pt-2">
-                  <Link to={`/admin/layouts/${layout.layout_id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
-                    </Button>
-                  </Link>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <EditLayoutDialog layout={layout} />
+                  <div className="flex gap-2 pt-2">
+                    <div className="flex-1">
+                      <div className="w-full h-9 bg-muted/50 rounded-md flex items-center justify-center text-sm text-muted-foreground">
+                        Click to view details
+                      </div>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <EditLayoutDialog layout={layout} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

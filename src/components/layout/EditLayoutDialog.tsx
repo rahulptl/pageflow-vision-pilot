@@ -25,6 +25,7 @@ export function EditLayoutDialog({ layout }: EditLayoutDialogProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['layouts'] });
       queryClient.invalidateQueries({ queryKey: ['layout', layout.layout_id] });
+      queryClient.invalidateQueries({ queryKey: ['layouts-all'] });
       toast.success("Layout updated successfully!");
       setOpen(false);
       setBoundingBoxImage(null);

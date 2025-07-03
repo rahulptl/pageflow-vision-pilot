@@ -4,11 +4,12 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Edit, Copy, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
-import { formatDate, formatUser, formatImageUrl } from "@/utils/formatters";
+import { formatDate, formatImageUrl } from "@/utils/formatters";
+import { EditLayoutDialog } from "@/components/layout/EditLayoutDialog";
 
 export function LayoutDetails() {
   const { id } = useParams();
@@ -45,10 +46,6 @@ export function LayoutDetails() {
     );
   }
 
-  const elementCount = Array.isArray(layout.layout_json?.elements)
-    ? layout.layout_json.elements.length
-    : Object.keys(layout.layout_json || {}).length;
-
   const isTwoPager = layout.layout_metadata?.type_of_layout === 'two_pager';
 
   return (
@@ -68,20 +65,7 @@ export function LayoutDetails() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Copy className="w-4 h-4" />
-            Duplicate
-          </Button>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
-          <Button size="sm" className="gap-2">
-            <Edit className="w-4 h-4" />
-            Use Layout
-          </Button>
-        </div>
+        <EditLayoutDialog layout={layout} />
       </div>
 
       {/* Metadata Card */}
@@ -90,11 +74,7 @@ export function LayoutDetails() {
           <CardTitle>Layout Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Creator</label>
-              <p className="text-sm font-medium">{formatUser(layout.created_by)}</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Created</label>
               <p className="text-sm font-medium">{formatDate(layout.created_at)}</p>
@@ -104,28 +84,8 @@ export function LayoutDetails() {
               <p className="text-sm font-medium">{formatDate(layout.updated_at)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Updated By</label>
-              <p className="text-sm font-medium">{formatUser(layout.updated_by)}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Merge Level</label>
-              <p className="text-sm font-medium">Level {layout.layout_json?.merge_level || 2}</p>
-            </div>
-            <div>
               <label className="text-sm font-medium text-muted-foreground">Page Number</label>
               <p className="text-sm font-medium">{layout.layout_json?.page_number || 1}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Elements</label>
-              <p className="text-sm font-medium">{elementCount}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Confidence</label>
-              <p className="text-sm font-medium">
-                {layout.layout_json?.extraction_confidence 
-                  ? `${(layout.layout_json.extraction_confidence * 100).toFixed(1)}%`
-                  : 'N/A'}
-              </p>
             </div>
           </div>
         </CardContent>
@@ -194,7 +154,6 @@ export function LayoutDetails() {
               <div className="flex items-center justify-between">
                 <CardTitle>Layout JSON Data</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{elementCount} elements</Badge>
                   {jsonExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </div>
               </div>

@@ -46,7 +46,7 @@ export function LayoutDetails() {
     );
   }
 
-  const isTwoPager = layout.layout_metadata?.type_of_layout === '2 Pager';
+  const isTwoPager = layout.layout_metadata?.type_of_layout === '2 pager';
 
   return (
     <div className="p-6 space-y-6">

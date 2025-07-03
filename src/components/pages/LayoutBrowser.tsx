@@ -73,9 +73,9 @@ export function LayoutBrowser() {
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         return new Date(layout.created_at) >= oneWeekAgo;
       case "two_pager":
-        return layout.layout_metadata?.type_of_layout === "two_pager";
+        return layout.layout_metadata?.type_of_page === "2 pager";
       case "one_pager":
-        return layout.layout_metadata?.type_of_layout !== "two_pager";
+        return layout.layout_metadata?.type_of_page === "1 pager";
       case "high_confidence":
         return (layout.layout_json?.extraction_confidence || 0) > 0.8;
       default:

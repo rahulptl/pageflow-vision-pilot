@@ -47,8 +47,8 @@ export function ArticleDetails({ isAdmin = false }: ArticleDetailsProps) {
     article.layout_pages.forEach((layoutPage) => {
       const layout = getLayoutById(layoutPage.layout_id);
       if (!layout) return;
-      const pageType = layout.layout_metadata?.type_of_layout === "two_pager" ? "two_pager" : "one_pager";
-      const span = pageType === "two_pager" ? 2 : 1;
+      const pageType = layout.layout_metadata?.type_of_page === "2 pager" ? "2 pager" : "1 pager";
+      const span = pageType === "2 pager" ? 2 : 1;
       const from = currentPage;
       const to = currentPage + span - 1;
       let label = "";

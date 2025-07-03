@@ -11,7 +11,7 @@ interface LayoutPageDisplayProps {
 }
 
 export function LayoutPageDisplay({ layoutPage, layout }: LayoutPageDisplayProps) {
-  const isTwoPager = layout.layout_metadata?.type_of_layout === "two_pager";
+  const isTwoPager = layout.layout_metadata?.type_of_page === "2 pager";
   const from = layoutPage.page;
   const to = layoutPage.page + layoutPage.page_span - 1;
 

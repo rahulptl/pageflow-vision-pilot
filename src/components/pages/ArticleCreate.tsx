@@ -73,7 +73,7 @@ export function ArticleCreatePage() {
     // Apply type filter
     if (layoutFilters.type) {
       filtered = filtered.filter(layout => 
-        layout.layout_metadata?.type_of_layout === layoutFilters.type
+        layout.layout_metadata?.type_of_page === layoutFilters.type
       );
     }
 
@@ -150,8 +150,8 @@ export function ArticleCreatePage() {
     const labels: { layoutId: number; label: string }[] = [];
     selectedLayouts.forEach(layoutId => {
       const layout = getLayoutById(layoutId);
-      const type = layout?.layout_metadata?.type_of_layout === "two_pager" ? "two_pager" : "one_pager";
-      const span = type === "two_pager" ? 2 : 1;
+      const type = layout?.layout_metadata?.type_of_page === "2 pager" ? "2 pager" : "1 pager";
+      const span = type === "2 pager" ? 2 : 1;
       const from = currentPage;
       const to = currentPage + span - 1;
       let label = "";
@@ -192,7 +192,7 @@ export function ArticleCreatePage() {
     let pageCounter = 1;
     const layoutPages: LayoutPage[] = selectedLayouts.map((layoutId) => {
       const layout = getLayoutById(layoutId);
-      const isTwoPager = layout?.layout_metadata?.type_of_layout === "two_pager";
+      const isTwoPager = layout?.layout_metadata?.type_of_page === "2 pager";
       const page_span = isTwoPager ? 2 : 1;
       const layoutPage = {
         page: pageCounter,
@@ -490,9 +490,9 @@ export function ArticleCreatePage() {
                             <p className="text-xs text-muted-foreground">
                               Created {formatShortDate(layout.created_at)}
                             </p>
-                            {layout.layout_metadata?.type_of_layout && (
+                            {layout.layout_metadata?.type_of_page && (
                               <Badge variant="secondary" className="text-xs">
-                                {layout.layout_metadata.type_of_layout.replace('_', ' ')}
+                                {layout.layout_metadata.type_of_page}
                               </Badge>
                             )}
                           </div>

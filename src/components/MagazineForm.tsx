@@ -236,8 +236,8 @@ const parseLayoutResponse = (layoutResponse: any): { article: Article, defaultVa
 };
 
 export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) => {
+  const [title, setTitle] = useState<string>('');
   const [category, setCategory] = useState<string>('');
-  const [brand, setBrand] = useState<string>('');
   const [approxPages, setApproxPages] = useState<string>('');
   const [article, setArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<FormData>({});
@@ -248,7 +248,8 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   const [showArticleDialog, setShowArticleDialog] = useState(false);
   const [isSearchingArticles, setIsSearchingArticles] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [availableTitles, setAvailableTitles] = useState<string[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
 
   const { errors, warnings, validateSpread, clearValidation } = useFormValidation();
@@ -259,18 +260,18 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
     const loadOptions = async () => {
       try {
         const { categories, brands } = await apiService.getDistinctArticleValues();
-        setAvailableCategories(categories);
-        setAvailableBrands(brands);
+        setAvailableCategories(categories.map(cat => cat.toUpperCase()));
+        setAvailableTitles(brands);
       } catch (error) {
         console.error('Failed to load dropdown options:', error);
         toast({
           title: "Warning",
-          description: "Could not load category and brand options from articles",
+          description: "Could not load title and category options from articles",
           variant: "destructive"
         });
         // Fall back to empty arrays if API fails
         setAvailableCategories([]);
-        setAvailableBrands([]);
+        setAvailableTitles([]);
       } finally {
         setIsLoadingOptions(false);
       }
@@ -278,6 +279,41 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
 
     loadOptions();
   }, [toast]);
+
+  // Filter categories based on selected title
+  useEffect(() => {
+    const filterCategories = async () => {
+      if (!title) {
+        setFilteredCategories([]);
+        setCategory('');
+        return;
+      }
+
+      try {
+        // Search for articles with the selected title to get available categories
+        const searchResults = await apiService.searchArticles({
+          magazine_name: title,
+          limit: 100 // Get enough results to see all categories for this title
+        });
+        
+        const titleCategories = [...new Set(searchResults.map(article => 
+          article.article_category.toUpperCase()
+        ))];
+        
+        setFilteredCategories(titleCategories);
+        
+        // Reset category if current selection is not available for this title
+        if (category && !titleCategories.includes(category)) {
+          setCategory('');
+        }
+      } catch (error) {
+        console.error('Failed to filter categories:', error);
+        setFilteredCategories(availableCategories);
+      }
+    };
+
+    filterCategories();
+  }, [title, availableCategories, category]);
 
   // Auto-save to localStorage (but don't save immediately when defaults are loaded)
   useEffect(() => {
@@ -316,7 +352,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   }, [article, toast]);
 
   const handleConfigSubmit = useCallback(async () => {
-    if (!category || !brand || !approxPages) {
+    if (!title || !category || !approxPages) {
       toast({
         title: "Missing information",
         description: "Please fill in all configuration fields",
@@ -330,6 +366,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
     try {
       // Search for articles matching the criteria
       const searchResults = await apiService.searchArticles({
+        magazine_name: title,
         article_category: category,
         page_count: parseInt(approxPages),
         limit: 20
@@ -348,7 +385,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
     } finally {
       setIsSearchingArticles(false);
     }
-  }, [category, brand, approxPages, toast]);
+  }, [title, category, approxPages, toast]);
 
   const handleArticleSelect = useCallback(async (selectedArticle: ArticleWithLayout) => {
     setIsLoadingTemplate(true);
@@ -512,28 +549,28 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="category">Category</Label>
-                <Select value={category} onValueChange={setCategory} disabled={isLoadingOptions}>
+                <Label htmlFor="title">Title</Label>
+                <Select value={title} onValueChange={setTitle} disabled={isLoadingOptions}>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingOptions ? "Loading..." : "Select category"} />
+                    <SelectValue placeholder={isLoadingOptions ? "Loading..." : "Select title"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableCategories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    {availableTitles.map(t => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="brand">Brand</Label>
-                <Select value={brand} onValueChange={setBrand} disabled={isLoadingOptions}>
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory} disabled={isLoadingOptions || !title}>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingOptions ? "Loading..." : "Select brand"} />
+                    <SelectValue placeholder={!title ? "Select title first" : isLoadingOptions ? "Loading..." : "Select category"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableBrands.map(b => (
-                      <SelectItem key={b} value={b}>{b}</SelectItem>
+                    {filteredCategories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -556,7 +593,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
             <Button 
               onClick={handleConfigSubmit} 
               className="w-full"
-              disabled={isSearchingArticles || isLoadingOptions || !category || !brand || !approxPages}
+              disabled={isSearchingArticles || isLoadingOptions || !title || !category || !approxPages}
             >
               {isSearchingArticles ? 'AI is analyzing your vision...' : 'Generate AI Magazine Layout'}
             </Button>
@@ -571,7 +608,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
           <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
             <div>
               <h2 className="font-semibold">
-                {category} • {brand} • {article.spreads.length * 2} Pages
+                {title} • {category} • {article.spreads.length * 2} Pages
               </h2>
             </div>
             <div className="flex gap-2">

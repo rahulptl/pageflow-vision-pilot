@@ -84,8 +84,8 @@ export function LayoutDetails() {
               <p className="text-sm font-medium">{formatDate(layout.updated_at)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Page Number</label>
-              <p className="text-sm font-medium">{layout.layout_json?.page_number || 1}</p>
+              <label className="text-sm font-medium text-muted-foreground">Page Type</label>
+              <p className="text-sm font-medium">{layout.layout_metadata?.type_of_page || 'Unknown'}</p>
             </div>
           </div>
         </CardContent>

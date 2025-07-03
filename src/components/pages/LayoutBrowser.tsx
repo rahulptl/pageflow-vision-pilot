@@ -304,28 +304,16 @@ export function LayoutBrowser() {
                     <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-1">
                       Layout #{layout.layout_id}
                     </h3>
-                    <Badge variant="default" className="text-xs shrink-0 ml-2">
-                      Active
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="w-3 h-3" />
-                    <span className="truncate">{formatUser(layout.created_by)}</span>
+                    {layout.layout_metadata?.type_of_page && (
+                      <Badge variant="secondary" className="text-xs shrink-0 ml-2">
+                        {layout.layout_metadata.type_of_page}
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     <span>{formatShortDate(layout.created_at)}</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-sm pt-2 border-t border-border/50">
-                    <span className="text-muted-foreground">
-                      Page {layout.layout_json?.page_number || 1}
-                    </span>
-                    <Badge variant="secondary" className="text-xs">
-                      Level {layout.layout_json?.merge_level || 2}
-                    </Badge>
                   </div>
 
                   <div className="flex gap-2 pt-2">

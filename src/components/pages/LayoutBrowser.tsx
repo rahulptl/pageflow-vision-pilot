@@ -16,17 +16,53 @@ export function LayoutBrowser() {
   const [sortBy, setSortBy] = useState("created_at");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [quickFilter, setQuickFilter] = useState("all");
 
   const skip = (currentPage - 1) * itemsPerPage;
 
-  const { data: layouts = [], isLoading, error } = useQuery({
-    queryKey: ['layouts', skip, itemsPerPage, sortBy],
-    queryFn: () => apiService.getLayouts(skip, itemsPerPage),
+  // Check if search term is a valid layout ID (number)
+  const isLayoutIdSearch = /^\d+$/.test(searchTerm.trim());
+  const layoutId = isLayoutIdSearch ? parseInt(searchTerm.trim()) : null;
+
+  // Query for specific layout by ID
+  const { data: specificLayout, isLoading: isLoadingSpecific } = useQuery({
+    queryKey: ['layout', layoutId],
+    queryFn: () => apiService.getLayout(layoutId!),
+    enabled: isLayoutIdSearch && layoutId !== null,
   });
 
-  // Since we're using server-side pagination, we don't filter/sort here anymore
-  // The server should handle sorting, but for now we'll still do client-side sorting
-  const sortedLayouts = [...layouts].sort((a, b) => {
+  // Query for paginated layouts
+  const { data: layouts = [], isLoading: isLoadingLayouts, error } = useQuery({
+    queryKey: ['layouts', skip, itemsPerPage, sortBy],
+    queryFn: () => apiService.getLayouts(skip, itemsPerPage),
+    enabled: !isLayoutIdSearch,
+  });
+
+  const isLoading = isLoadingLayouts || isLoadingSpecific;
+
+  // Determine which layouts to display
+  const allLayouts = isLayoutIdSearch && specificLayout ? [specificLayout] : layouts;
+
+  // Apply quick filters
+  const quickFilteredLayouts = allLayouts.filter(layout => {
+    switch (quickFilter) {
+      case "recent":
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return new Date(layout.created_at) >= oneWeekAgo;
+      case "two_pager":
+        return layout.layout_metadata?.type_of_layout === "two_pager";
+      case "one_pager":
+        return layout.layout_metadata?.type_of_layout !== "two_pager";
+      case "high_confidence":
+        return (layout.layout_json?.extraction_confidence || 0) > 0.8;
+      default:
+        return true;
+    }
+  });
+
+  // Sort layouts (only if not searching by specific ID)
+  const sortedLayouts = isLayoutIdSearch ? quickFilteredLayouts : [...quickFilteredLayouts].sort((a, b) => {
     switch (sortBy) {
       case "created_at":
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -38,23 +74,17 @@ export function LayoutBrowser() {
         const aMerge = a.layout_json?.merge_level || 2;
         const bMerge = b.layout_json?.merge_level || 2;
         return bMerge - aMerge;
+      case "confidence":
+        const aConf = a.layout_json?.extraction_confidence || 0;
+        const bConf = b.layout_json?.extraction_confidence || 0;
+        return bConf - aConf;
       default:
         return 0;
     }
   });
 
-  // Filter layouts based on search term
-  const filteredLayouts = sortedLayouts.filter(layout => {
-    if (!searchTerm) return true;
-    const layoutName = `Layout #${layout.layout_id}`;
-    const creator = formatUser(layout.created_by);
-    return layoutName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           creator.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
-  const totalPages = Math.ceil(filteredLayouts.length / itemsPerPage);
-  const hasNextPage = layouts.length === itemsPerPage; // Assume there are more if we got a full page
-  const hasPrevPage = currentPage > 1;
+  const hasNextPage = !isLayoutIdSearch && layouts.length === itemsPerPage;
+  const hasPrevPage = !isLayoutIdSearch && currentPage > 1;
 
   if (isLoading) {
     return (
@@ -109,59 +139,101 @@ export function LayoutBrowser() {
 
       {/* Filters Bar */}
       <Card className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search layouts..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset to first page when searching
-              }}
-              className="pl-10 h-11"
-            />
-          </div>
-          
-          <div className="flex gap-3">
-            <Select value={sortBy} onValueChange={(value) => {
-              setSortBy(value);
-              setCurrentPage(1); // Reset to first page when sorting
-            }}>
-              <SelectTrigger className="w-48 h-11">
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at">Newest First</SelectItem>
-                <SelectItem value="layout_id">Layout ID</SelectItem>
-                <SelectItem value="creator">Creator</SelectItem>
-                <SelectItem value="merge_level">Merge Level</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={isLayoutIdSearch ? "Enter Layout ID..." : "Search layouts..."}
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10 h-11"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <Select value={sortBy} onValueChange={(value) => {
+                setSortBy(value);
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-48 h-11">
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">Newest First</SelectItem>
+                  <SelectItem value="layout_id">Layout ID</SelectItem>
+                  <SelectItem value="creator">Creator</SelectItem>
+                  <SelectItem value="merge_level">Merge Level</SelectItem>
+                  <SelectItem value="confidence">Confidence</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-              setItemsPerPage(Number(value));
-              setCurrentPage(1); // Reset to first page when changing page size
-            }}>
-              <SelectTrigger className="w-40 h-11">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Per Page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="6">6 per page</SelectItem>
-                <SelectItem value="12">12 per page</SelectItem>
-                <SelectItem value="24">24 per page</SelectItem>
-                <SelectItem value="48">48 per page</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-40 h-11">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Per Page" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6 per page</SelectItem>
+                  <SelectItem value="12">12 per page</SelectItem>
+                  <SelectItem value="24">24 per page</SelectItem>
+                  <SelectItem value="48">48 per page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Quick Filters */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={quickFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuickFilter("all")}
+            >
+              All Layouts
+            </Button>
+            <Button
+              variant={quickFilter === "recent" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuickFilter("recent")}
+            >
+              Recent (7 days)
+            </Button>
+            <Button
+              variant={quickFilter === "two_pager" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuickFilter("two_pager")}
+            >
+              Two Pager
+            </Button>
+            <Button
+              variant={quickFilter === "one_pager" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuickFilter("one_pager")}
+            >
+              One Pager
+            </Button>
+            <Button
+              variant={quickFilter === "high_confidence" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuickFilter("high_confidence")}
+            >
+              High Confidence
+            </Button>
           </div>
         </div>
       </Card>
 
       {/* Layout Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredLayouts.map((layout) => (
+        {sortedLayouts.map((layout) => (
           <Card key={layout.layout_id} className="group card-hover overflow-hidden">
             <Link to={`/admin/layouts/${layout.layout_id}`}>
               <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50 cursor-pointer">
@@ -233,7 +305,7 @@ export function LayoutBrowser() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               Showing {skip + 1}-{Math.min(skip + layouts.length, skip + itemsPerPage)} of page {currentPage}
-              {filteredLayouts.length !== layouts.length && ` (${filteredLayouts.length} filtered)`}
+              {sortedLayouts.length !== layouts.length && ` (${sortedLayouts.length} filtered)`}
             </div>
             
             <div className="flex items-center gap-2">
@@ -268,7 +340,7 @@ export function LayoutBrowser() {
       )}
 
       {/* Empty State */}
-      {filteredLayouts.length === 0 && (
+      {sortedLayouts.length === 0 && (
         <div className="text-center py-16">
           <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
             <Search className="w-10 h-10 text-muted-foreground" />

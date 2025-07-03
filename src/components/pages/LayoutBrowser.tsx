@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Calendar, User, Plus, SlidersHorizontal } from "lucide-react";
+import { Search, Filter, Calendar, User, Plus, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
@@ -14,25 +14,19 @@ import { EditLayoutDialog } from "@/components/layout/EditLayoutDialog";
 export function LayoutBrowser() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
-  const [filterBy, setFilterBy] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+
+  const skip = (currentPage - 1) * itemsPerPage;
 
   const { data: layouts = [], isLoading, error } = useQuery({
-    queryKey: ['layouts'],
-    queryFn: () => apiService.getLayouts(),
+    queryKey: ['layouts', skip, itemsPerPage, sortBy],
+    queryFn: () => apiService.getLayouts(skip, itemsPerPage),
   });
 
-  const filteredLayouts = layouts.filter(layout => {
-    const layoutName = `Layout #${layout.layout_id}`;
-    const creator = formatUser(layout.created_by);
-    const matchesSearch = layoutName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         creator.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filterBy === "all";
-    return matchesSearch && matchesFilter;
-  });
-
-  // Sort layouts
-  const sortedLayouts = [...filteredLayouts].sort((a, b) => {
+  // Since we're using server-side pagination, we don't filter/sort here anymore
+  // The server should handle sorting, but for now we'll still do client-side sorting
+  const sortedLayouts = [...layouts].sort((a, b) => {
     switch (sortBy) {
       case "created_at":
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -48,6 +42,19 @@ export function LayoutBrowser() {
         return 0;
     }
   });
+
+  // Filter layouts based on search term
+  const filteredLayouts = sortedLayouts.filter(layout => {
+    if (!searchTerm) return true;
+    const layoutName = `Layout #${layout.layout_id}`;
+    const creator = formatUser(layout.created_by);
+    return layoutName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           creator.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const totalPages = Math.ceil(filteredLayouts.length / itemsPerPage);
+  const hasNextPage = layouts.length === itemsPerPage; // Assume there are more if we got a full page
+  const hasPrevPage = currentPage > 1;
 
   if (isLoading) {
     return (
@@ -108,13 +115,19 @@ export function LayoutBrowser() {
             <Input
               placeholder="Search layouts..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to first page when searching
+              }}
               className="pl-10 h-11"
             />
           </div>
           
           <div className="flex gap-3">
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(value) => {
+              setSortBy(value);
+              setCurrentPage(1); // Reset to first page when sorting
+            }}>
               <SelectTrigger className="w-48 h-11">
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Sort by" />
@@ -127,13 +140,19 @@ export function LayoutBrowser() {
               </SelectContent>
             </Select>
 
-            <Select value={filterBy} onValueChange={setFilterBy}>
+            <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1); // Reset to first page when changing page size
+            }}>
               <SelectTrigger className="w-40 h-11">
                 <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter" />
+                <SelectValue placeholder="Per Page" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Layouts</SelectItem>
+                <SelectItem value="6">6 per page</SelectItem>
+                <SelectItem value="12">12 per page</SelectItem>
+                <SelectItem value="24">24 per page</SelectItem>
+                <SelectItem value="48">48 per page</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -142,7 +161,7 @@ export function LayoutBrowser() {
 
       {/* Layout Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {sortedLayouts.map((layout) => (
+        {filteredLayouts.map((layout) => (
           <Card key={layout.layout_id} className="group card-hover overflow-hidden">
             <Link to={`/admin/layouts/${layout.layout_id}`}>
               <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50 cursor-pointer">
@@ -208,8 +227,48 @@ export function LayoutBrowser() {
         ))}
       </div>
 
+      {/* Pagination Controls */}
+      {layouts.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Showing {skip + 1}-{Math.min(skip + layouts.length, skip + itemsPerPage)} of page {currentPage}
+              {filteredLayouts.length !== layouts.length && ` (${filteredLayouts.length} filtered)`}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={!hasPrevPage}
+                className="gap-2"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+              
+              <div className="text-sm text-muted-foreground px-4">
+                Page {currentPage}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={!hasNextPage}
+                className="gap-2"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Empty State */}
-      {sortedLayouts.length === 0 && (
+      {filteredLayouts.length === 0 && (
         <div className="text-center py-16">
           <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
             <Search className="w-10 h-10 text-muted-foreground" />

@@ -54,8 +54,8 @@ export function ArticleCreatePage() {
   });
 
   const { data: allLayouts = [], isLoading } = useQuery({
-    queryKey: ['layouts'],
-    queryFn: () => apiService.getLayouts(),
+    queryKey: ['layouts-all'],
+    queryFn: () => apiService.getLayouts(0, 1000), // Get a large number of layouts for article creation
   });
 
   // Filter and sort layouts

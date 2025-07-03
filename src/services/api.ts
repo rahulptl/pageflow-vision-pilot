@@ -33,8 +33,11 @@ class ApiService {
     return response.json();
   }
 
-  async getLayouts(): Promise<Layout[]> {
-    return this.request<Layout[]>('/layouts/');
+  async getLayouts(skip: number = 0, limit: number = 100): Promise<Layout[]> {
+    const params = new URLSearchParams();
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+    return this.request<Layout[]>(`/layouts/?${params.toString()}`);
   }
 
   async getLayout(layoutId: number): Promise<Layout> {

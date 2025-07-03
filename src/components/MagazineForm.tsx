@@ -261,7 +261,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
     const loadOptions = async () => {
       try {
         const { categories, brands } = await apiService.getDistinctArticleValues();
-        const upperCaseCategories = categories.map(cat => cat.toUpperCase());
+        const upperCaseCategories = categories.filter(cat => cat != null).map(cat => cat.toUpperCase());
         
         setAvailableCategories(upperCaseCategories);
         setAvailableTitles(brands);
@@ -273,7 +273,10 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
         
         allArticles.forEach(article => {
           const titleKey = article.magazine_name;
-          const categoryKey = article.article_category.toUpperCase();
+          const categoryKey = article.article_category?.toUpperCase();
+          
+          // Skip articles with null/undefined values
+          if (!titleKey || !categoryKey) return;
           
           if (!mapping[titleKey]) {
             mapping[titleKey] = [];

@@ -14,6 +14,7 @@ interface FormSpreadProps {
   errors?: ValidationError[];
   warnings?: DriftWarning[];
   boundingBoxImage?: string | null;
+  pageNumbers: string; // e.g., "Page 1, Page 2" for 2-pager or "Page 3" for 1-pager
 }
 
 export const FormSpread: React.FC<FormSpreadProps> = ({
@@ -23,11 +24,9 @@ export const FormSpread: React.FC<FormSpreadProps> = ({
   onChange,
   errors = [],
   warnings = [],
-  boundingBoxImage
+  boundingBoxImage,
+  pageNumbers
 }) => {
-  const getPageTitle = () => {
-    return `Page ${spreadIndex + 1}`;
-  };
 
   const getFieldErrors = (fieldName: string) => {
     return errors.filter(error => error.field === fieldName).map(error => error.message);
@@ -46,7 +45,7 @@ export const FormSpread: React.FC<FormSpreadProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Layout className="h-5 w-5" />
-            {getPageTitle()}
+            {pageNumbers}
           </CardTitle>
           <div className="flex gap-2">
             {hasErrors && (

@@ -725,18 +725,40 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
 
           {/* Layout Pages */}
           <div className="space-y-8">
-            {article.spreads.map((spread, index) => (
-              <FormSpread
-                key={index}
-                spread={spread}
-                spreadIndex={index}
-                data={formData[index] || {}}
-                onChange={(fieldName, value) => handleFieldChange(index, fieldName, value)}
-                errors={errors[index] || []}
-                warnings={warnings[index] || []}
-                boundingBoxImage={selectedArticle?.layout_pages?.[index]?.layout?.bounding_box_image}
-              />
-            ))}
+            {article.spreads.map((spread, index) => {
+              // Calculate page numbers based on layout types
+              let currentPageNumber = 1;
+              
+              // Calculate the starting page number for this spread
+              for (let i = 0; i < index; i++) {
+                const layoutData = selectedArticle?.layout_pages?.[i]?.layout;
+                const isTwoPager = layoutData?.layout_metadata?.type_of_page === '2 pager';
+                currentPageNumber += isTwoPager ? 2 : 1;
+              }
+              
+              // Determine if current spread is a 2-pager
+              const currentLayoutData = selectedArticle?.layout_pages?.[index]?.layout;
+              const isCurrentTwoPager = currentLayoutData?.layout_metadata?.type_of_page === '2 pager';
+              
+              // Generate page numbers string
+              const pageNumbers = isCurrentTwoPager 
+                ? `Page ${currentPageNumber}, Page ${currentPageNumber + 1}`
+                : `Page ${currentPageNumber}`;
+              
+              return (
+                <FormSpread
+                  key={index}
+                  spread={spread}
+                  spreadIndex={index}
+                  data={formData[index] || {}}
+                  onChange={(fieldName, value) => handleFieldChange(index, fieldName, value)}
+                  errors={errors[index] || []}
+                  warnings={warnings[index] || []}
+                  boundingBoxImage={selectedArticle?.layout_pages?.[index]?.layout?.bounding_box_image}
+                  pageNumbers={pageNumbers}
+                />
+              );
+            })}
           </div>
 
           {/* Submit Section */}

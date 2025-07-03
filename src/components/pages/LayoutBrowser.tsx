@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Calendar, User, Plus, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, Calendar, User, Plus, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
@@ -13,6 +13,7 @@ import { EditLayoutDialog } from "@/components/layout/EditLayoutDialog";
 
 export function LayoutBrowser() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
@@ -20,25 +21,35 @@ export function LayoutBrowser() {
 
   const skip = (currentPage - 1) * itemsPerPage;
 
+  // Debounce search term to avoid too many requests
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // Wait 500ms before executing search
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Check if search term is a valid layout ID (number)
-  const isLayoutIdSearch = /^\d+$/.test(searchTerm.trim());
-  const layoutId = isLayoutIdSearch ? parseInt(searchTerm.trim()) : null;
+  const isLayoutIdSearch = /^\d+$/.test(debouncedSearchTerm.trim());
+  const layoutId = isLayoutIdSearch ? parseInt(debouncedSearchTerm.trim()) : null;
 
   // Query for specific layout by ID
   const { data: specificLayout, isLoading: isLoadingSpecific } = useQuery({
     queryKey: ['layout', layoutId],
     queryFn: () => apiService.getLayout(layoutId!),
-    enabled: isLayoutIdSearch && layoutId !== null,
+    enabled: isLayoutIdSearch && layoutId !== null && debouncedSearchTerm.length > 0,
   });
 
   // Query for paginated layouts
   const { data: layouts = [], isLoading: isLoadingLayouts, error } = useQuery({
     queryKey: ['layouts', skip, itemsPerPage, sortBy],
     queryFn: () => apiService.getLayouts(skip, itemsPerPage),
-    enabled: !isLayoutIdSearch,
+    enabled: !isLayoutIdSearch || debouncedSearchTerm.length === 0,
   });
 
   const isLoading = isLoadingLayouts || isLoadingSpecific;
+  const isSearching = searchTerm !== debouncedSearchTerm && searchTerm.length > 0;
 
   // Determine which layouts to display
   const allLayouts = isLayoutIdSearch && specificLayout ? [specificLayout] : layouts;
@@ -150,8 +161,11 @@ export function LayoutBrowser() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 h-11"
+                className="pl-10 pr-10 h-11"
               />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+              )}
             </div>
             
             <div className="flex gap-3">

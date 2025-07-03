@@ -41,6 +41,23 @@ class ApiService {
     return this.request<Layout>(`/layouts/${layoutId}`);
   }
 
+  async updateLayout(layoutId: number, boundingBoxImage: File, layoutJson: File): Promise<Layout> {
+    const formData = new FormData();
+    formData.append('bounding_box_image', boundingBoxImage);
+    formData.append('layout_json', layoutJson);
+
+    const response = await fetch(`${API_BASE_URL}/layouts/${layoutId}`, {
+      method: 'PUT',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update layout: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   async findSuitableTemplate(request: TemplateRequest): Promise<TemplateResponse> {
     return this.request<TemplateResponse>('/layouts/find-template', {
       method: 'POST',

@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
 import { formatShortDate, formatUser, formatImageUrl } from "@/utils/formatters";
+import { EditLayoutDialog } from "@/components/layout/EditLayoutDialog";
 
 export function LayoutBrowser() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -142,9 +143,9 @@ export function LayoutBrowser() {
       {/* Layout Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sortedLayouts.map((layout) => (
-          <Link key={layout.layout_id} to={`/admin/layouts/${layout.layout_id}`}>
-            <Card className="group card-hover cursor-pointer overflow-hidden">
-              <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50">
+          <Card key={layout.layout_id} className="group card-hover overflow-hidden">
+            <Link to={`/admin/layouts/${layout.layout_id}`}>
+              <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50 cursor-pointer">
                 {layout.bounding_box_image ? (
                   <img
                     src={formatImageUrl(layout.bounding_box_image) || ''}
@@ -158,39 +159,52 @@ export function LayoutBrowser() {
                   </div>
                 )}
               </div>
-              <CardContent className="p-5">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-1">
+            </Link>
+            <CardContent className="p-5">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <Link to={`/admin/layouts/${layout.layout_id}`}>
+                    <h3 className="font-semibold hover:text-primary transition-colors line-clamp-1 cursor-pointer">
                       Layout #{layout.layout_id}
                     </h3>
-                    <Badge variant="default" className="text-xs shrink-0 ml-2">
-                      Active
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="w-3 h-3" />
-                    <span className="truncate">{formatUser(layout.created_by)}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatShortDate(layout.created_at)}</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-sm pt-2 border-t border-border/50">
-                    <span className="text-muted-foreground">
-                      Page {layout.layout_json?.page_number || 1}
-                    </span>
-                    <Badge variant="secondary" className="text-xs">
-                      Level {layout.layout_json?.merge_level || 2}
-                    </Badge>
+                  </Link>
+                  <Badge variant="default" className="text-xs shrink-0 ml-2">
+                    Active
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="w-3 h-3" />
+                  <span className="truncate">{formatUser(layout.created_by)}</span>
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-3 h-3" />
+                  <span>{formatShortDate(layout.created_at)}</span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm pt-2 border-t border-border/50">
+                  <span className="text-muted-foreground">
+                    Page {layout.layout_json?.page_number || 1}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    Level {layout.layout_json?.merge_level || 2}
+                  </Badge>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Link to={`/admin/layouts/${layout.layout_id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">
+                      View Details
+                    </Button>
+                  </Link>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <EditLayoutDialog layout={layout} />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 

@@ -250,18 +250,42 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableTitles, setAvailableTitles] = useState<string[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
+  const [titleCategoryMap, setTitleCategoryMap] = useState<Record<string, string[]>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
 
   const { errors, warnings, validateSpread, clearValidation } = useFormValidation();
   const { toast } = useToast();
 
-  // Load available options on component mount
+  // Load available options and build title-category mapping on component mount
   useEffect(() => {
     const loadOptions = async () => {
       try {
         const { categories, brands } = await apiService.getDistinctArticleValues();
-        setAvailableCategories(categories.map(cat => cat.toUpperCase()));
+        const upperCaseCategories = categories.map(cat => cat.toUpperCase());
+        
+        setAvailableCategories(upperCaseCategories);
         setAvailableTitles(brands);
+        setFilteredCategories(upperCaseCategories); // Show all categories initially
+        
+        // Build title-category mapping by fetching all articles
+        const allArticles = await apiService.searchArticles({ limit: 1000 });
+        const mapping: Record<string, string[]> = {};
+        
+        allArticles.forEach(article => {
+          const titleKey = article.magazine_name;
+          const categoryKey = article.article_category.toUpperCase();
+          
+          if (!mapping[titleKey]) {
+            mapping[titleKey] = [];
+          }
+          
+          if (!mapping[titleKey].includes(categoryKey)) {
+            mapping[titleKey].push(categoryKey);
+          }
+        });
+        
+        setTitleCategoryMap(mapping);
+        
       } catch (error) {
         console.error('Failed to load dropdown options:', error);
         toast({
@@ -272,6 +296,7 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
         // Fall back to empty arrays if API fails
         setAvailableCategories([]);
         setAvailableTitles([]);
+        setFilteredCategories([]);
       } finally {
         setIsLoadingOptions(false);
       }
@@ -280,40 +305,22 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
     loadOptions();
   }, [toast]);
 
-  // Filter categories based on selected title
+  // Filter categories based on selected title (client-side filtering)
   useEffect(() => {
-    const filterCategories = async () => {
-      if (!title) {
-        setFilteredCategories([]);
-        setCategory('');
-        return;
-      }
+    if (!title) {
+      setFilteredCategories(availableCategories);
+      setCategory('');
+      return;
+    }
 
-      try {
-        // Search for articles with the selected title to get available categories
-        const searchResults = await apiService.searchArticles({
-          magazine_name: title,
-          limit: 100 // Get enough results to see all categories for this title
-        });
-        
-        const titleCategories = [...new Set(searchResults.map(article => 
-          article.article_category.toUpperCase()
-        ))];
-        
-        setFilteredCategories(titleCategories);
-        
-        // Reset category if current selection is not available for this title
-        if (category && !titleCategories.includes(category)) {
-          setCategory('');
-        }
-      } catch (error) {
-        console.error('Failed to filter categories:', error);
-        setFilteredCategories(availableCategories);
-      }
-    };
-
-    filterCategories();
-  }, [title, availableCategories, category]);
+    const titleCategories = titleCategoryMap[title] || [];
+    setFilteredCategories(titleCategories);
+    
+    // Reset category if current selection is not available for this title
+    if (category && !titleCategories.includes(category)) {
+      setCategory('');
+    }
+  }, [title, titleCategoryMap, availableCategories, category]);
 
   // Auto-save to localStorage (but don't save immediately when defaults are loaded)
   useEffect(() => {
@@ -564,9 +571,9 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
               
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={category} onValueChange={setCategory} disabled={isLoadingOptions || !title}>
+                <Select value={category} onValueChange={setCategory} disabled={isLoadingOptions}>
                   <SelectTrigger>
-                    <SelectValue placeholder={!title ? "Select title first" : isLoadingOptions ? "Loading..." : "Select category"} />
+                    <SelectValue placeholder={isLoadingOptions ? "Loading..." : "Select category"} />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredCategories.map(cat => (

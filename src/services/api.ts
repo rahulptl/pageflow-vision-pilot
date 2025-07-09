@@ -178,10 +178,12 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/generate_image`, {
       method: 'POST',
       body: formData,
+      // Don't set Content-Type header - let browser set it for FormData
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to generate image: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Failed to generate image: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     return response.json();

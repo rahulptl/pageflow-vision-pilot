@@ -36,6 +36,31 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
 
   const currentUser = isAdmin ? 'admin@example.com' : 'user@example.com';
 
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const loadSessions = async () => {
+    try {
+      const imageEdits = await apiService.getAllImageEdits();
+      const chatSessions: ChatSession[] = imageEdits.map(edit => ({
+        id: edit.session_id,
+        title: edit.edits[0]?.prompt.slice(0, 30) + '...' || 'Image Edit Session',
+        lastMessage: edit.edits[edit.edits.length - 1]?.prompt || 'No messages',
+        timestamp: new Date(edit.updated_at),
+        imageEdit: edit,
+      }));
+      setSessions(chatSessions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat sessions",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -127,25 +152,7 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
       });
 
       // Update sessions list
-      const sessionTitle = inputPrompt.slice(0, 50) + (inputPrompt.length > 50 ? '...' : '');
-      setSessions(prev => {
-        const existingIndex = prev.findIndex(s => s.id === result.session_id);
-        const sessionData: ChatSession = {
-          id: result.session_id,
-          title: sessionTitle,
-          lastMessage: inputPrompt,
-          timestamp: new Date(result.updated_at),
-          imageEdit: result,
-        };
-
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = sessionData;
-          return updated;
-        } else {
-          return [sessionData, ...prev];
-        }
-      });
+      await loadSessions(); // Refresh sessions after successful operation
 
       // Clear input and file
       setInputPrompt('');

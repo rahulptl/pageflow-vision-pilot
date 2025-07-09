@@ -207,6 +207,10 @@ class ApiService {
     return response.json();
   }
 
+  async getAllImageEdits(): Promise<ImageEdit[]> {
+    return this.request<ImageEdit[]>('/image_edit');
+  }
+
   async getImageEdit(sessionId: string): Promise<ImageEdit> {
     return this.request<ImageEdit>(`/image_edit/${sessionId}`);
   }

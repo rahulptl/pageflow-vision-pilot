@@ -190,7 +190,7 @@ class ApiService {
   }
 
   async editImage(sessionId: string, prompt: string): Promise<ImageEdit> {
-    const formData = new FormData();
+    const formData = new URLSearchParams();
     formData.append('session_id', sessionId);
     formData.append('prompt', prompt);
 
@@ -203,7 +203,8 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to edit image: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Failed to edit image: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     return response.json();

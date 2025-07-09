@@ -10,6 +10,7 @@ import { Articles } from "@/components/pages/Articles";
 import { ArticleDetails } from "@/components/pages/ArticleDetails";
 import { ArticleCreatePage } from "@/components/pages/ArticleCreate";
 import { MagazineForm } from "@/components/MagazineForm";
+import { ImageGeneration } from "@/components/pages/ImageGeneration";
 
 interface AppLayoutProps {
   isAdmin: boolean;
@@ -34,6 +35,9 @@ export function AppLayout({ isAdmin, baseRoute }: AppLayoutProps) {
             
             {/* Magazines - Admin: full CRUD, User: create only */}
             <Route path="magazines" element={<MagazineForm />} />
+            
+            {/* Image Generation - Available to both Admin and User */}
+            <Route path="image-generation" element={<ImageGeneration isAdmin={isAdmin} />} />
             
             {/* Admin-only routes - Layouts */}
             {isAdmin && (

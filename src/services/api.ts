@@ -1,5 +1,6 @@
 
 import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse } from '@/types/api';
+import { ImageEdit } from '@/types/imageGeneration';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -163,6 +164,51 @@ class ApiService {
 
   async checkHealth(): Promise<any> {
     return this.request<any>('/health');
+  }
+
+  // Image Generation APIs
+  async generateImage(image: File, prompt: string, createdBy?: string): Promise<ImageEdit> {
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('prompt', prompt);
+    if (createdBy) {
+      formData.append('created_by', createdBy);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/generate_image`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate image: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async editImage(sessionId: string, prompt: string): Promise<ImageEdit> {
+    const formData = new FormData();
+    formData.append('session_id', sessionId);
+    formData.append('prompt', prompt);
+
+    const response = await fetch(`${API_BASE_URL}/image_edit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to edit image: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async getImageEdit(sessionId: string): Promise<ImageEdit> {
+    return this.request<ImageEdit>(`/image_edit/${sessionId}`);
   }
 }
 

@@ -348,14 +348,16 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
                       <>
                         <p className="text-sm mb-2">{message.content}</p>
                         {message.image && (
-                          <div className="relative group">
+                          <div 
+                            className="relative group cursor-pointer"
+                            onClick={() => handleImageClick(message.image!)}
+                          >
                             <img
                               src={message.image}
                               alt="Generated or uploaded"
-                              className="rounded-md max-w-full h-auto cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                              onClick={() => handleImageClick(message.image!)}
+                              className="rounded-md max-w-full h-auto transition-all duration-200 hover:scale-105 hover:shadow-lg"
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-md flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-md flex items-center justify-center pointer-events-none">
                               <Expand className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                             </div>
                           </div>

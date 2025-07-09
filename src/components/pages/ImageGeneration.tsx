@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   ImageIcon, 
@@ -13,7 +14,9 @@ import {
   Plus, 
   MessageCircle,
   Clock,
-  Sparkles
+  Sparkles,
+  X,
+  Expand
 } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { ChatMessage, ChatSession, ImageEdit } from '@/types/imageGeneration';
@@ -31,6 +34,8 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [imageEdit, setImageEdit] = useState<ImageEdit | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -230,6 +235,11 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
     }
   };
 
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setIsImageModalOpen(true);
+  };
+
   return (
     <div className="h-full flex">
       {/* Sessions Sidebar */}
@@ -313,26 +323,48 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
               messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                 >
                   <div
-                    className={`max-w-md p-4 rounded-lg ${
+                    className={`max-w-md p-4 rounded-lg transition-all duration-300 ${
                       message.type === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
+                        : message.isLoading
+                        ? 'bg-muted animate-pulse border-2 border-primary/20'
+                        : 'bg-muted hover:shadow-lg'
+                    } ${message.isLoading ? 'animate-scale-in' : ''}`}
                   >
-                    <p className="text-sm mb-2">{message.content}</p>
-                    {message.image && (
-                      <img
-                        src={message.image}
-                        alt="Generated or uploaded"
-                        className="rounded-md max-w-full h-auto"
-                      />
+                    {message.isLoading ? (
+                      <div className="flex items-center gap-3">
+                        <div className="flex space-x-1">
+                          <div className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                          <div className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                          <div className="h-2 w-2 bg-primary rounded-full animate-bounce"></div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Creating your image...</p>
+                        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm mb-2">{message.content}</p>
+                        {message.image && (
+                          <div className="relative group">
+                            <img
+                              src={message.image}
+                              alt="Generated or uploaded"
+                              className="rounded-md max-w-full h-auto cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                              onClick={() => handleImageClick(message.image!)}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-md flex items-center justify-center">
+                              <Expand className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-xs opacity-70 mt-2">
+                          {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+                        </div>
+                      </>
                     )}
-                    <div className="text-xs opacity-70 mt-2">
-                      {formatDistanceToNow(message.timestamp, { addSuffix: true })}
-                    </div>
                   </div>
                 </div>
               ))
@@ -411,6 +443,34 @@ export function ImageGeneration({ isAdmin }: ImageGenerationProps) {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+          <DialogHeader className="px-4 pt-4 pb-2">
+            <DialogTitle className="flex items-center justify-between">
+              Image Preview
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsImageModalOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-4">
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt="Full size preview"
+                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

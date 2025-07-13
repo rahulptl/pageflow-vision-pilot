@@ -80,7 +80,7 @@ function SortableSlot({ slot, allLayouts, onSwapLayout, onEditPage, onFillSlot }
       <div
         ref={setNodeRef}
         style={style}
-        className={`border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 min-h-[200px] flex flex-col items-center justify-center bg-muted/20 ${
+        className={`border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 h-[280px] flex flex-col items-center justify-center bg-muted/20 ${
           isDragging ? 'opacity-50' : ''
         }`}
       >
@@ -100,22 +100,6 @@ function SortableSlot({ slot, allLayouts, onSwapLayout, onEditPage, onFillSlot }
     );
   }
 
-  if (slot.isSecondSlot) {
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`border border-muted rounded-lg p-2 min-h-[100px] flex items-center justify-center bg-muted/50 ${
-          isDragging ? 'opacity-50' : ''
-        }`}
-      >
-        <p className="text-xs text-muted-foreground text-center">
-          Part of 2-pager above
-        </p>
-      </div>
-    );
-  }
-
   const page = slot.pageData!;
   const is2Pager = page.typeOfPage.includes('2 pager');
 
@@ -123,11 +107,11 @@ function SortableSlot({ slot, allLayouts, onSwapLayout, onEditPage, onFillSlot }
     <Card
       ref={setNodeRef}
       style={style}
-      className={`relative ${isDragging ? 'opacity-50' : ''} ${
-        is2Pager ? 'row-span-2' : ''
+      className={`relative h-[280px] ${isDragging ? 'opacity-50' : ''} ${
+        is2Pager ? 'col-span-2' : 'col-span-1'
       }`}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-4 h-full flex flex-col">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div
@@ -155,14 +139,14 @@ function SortableSlot({ slot, allLayouts, onSwapLayout, onEditPage, onFillSlot }
             )}
             {is2Pager && (
               <Badge variant="outline" className="text-xs">
-                2-Slot
+                2-Column
               </Badge>
             )}
           </div>
         </div>
 
         {/* Layout Preview */}
-        <div className="mb-4 bg-muted rounded-lg p-2 min-h-[120px] flex items-center justify-center">
+        <div className="mb-4 bg-muted rounded-lg p-2 flex-1 flex items-center justify-center">
           {page.layout?.bounding_box_image ? (
             <img
               src={page.layout.bounding_box_image}
@@ -253,47 +237,28 @@ function SortableSlot({ slot, allLayouts, onSwapLayout, onEditPage, onFillSlot }
 }
 
 export function MagazineStoryboard({ pages, allLayouts, onSwapLayout, onEditPage, onSlotsChange }: MagazineStoryboardProps) {
-  // Convert pages to slots
+  // Convert pages to slots for 2-column grid
   const createSlotsFromPages = (pages: PagePlan[]): SlotData[] => {
     const slots: SlotData[] = [];
-    let slotNumber = 1;
     
-    pages.forEach((page, pageIndex) => {
-      const is2Pager = page.typeOfPage.includes('2 pager');
-      
-      // First slot for the page
+    pages.forEach((page) => {
       slots.push({
-        id: `slot-${slotNumber}`,
-        slotNumber,
+        id: `page-${page.pageNumber}`,
+        slotNumber: page.pageNumber,
         isOccupied: true,
         pageData: page,
         isSecondSlot: false,
       });
-      
-      if (is2Pager) {
-        // Second slot for 2-pager
-        slots.push({
-          id: `slot-${slotNumber + 1}`,
-          slotNumber: slotNumber + 1,
-          isOccupied: true,
-          pageData: page,
-          isSecondSlot: true,
-        });
-        slotNumber += 2;
-      } else {
-        slotNumber += 1;
-      }
     });
     
-    // Add empty slots to reach the total page count (assuming pageCount is available)
-    const targetSlots = Math.max(10, slotNumber + 2); // Add some buffer
-    while (slotNumber <= targetSlots) {
+    // Add empty slots to reach at least 10 total
+    const targetSlots = Math.max(10, pages.length + 3);
+    for (let i = pages.length + 1; i <= targetSlots; i++) {
       slots.push({
-        id: `slot-${slotNumber}`,
-        slotNumber,
+        id: `empty-${i}`,
+        slotNumber: i,
         isOccupied: false,
       });
-      slotNumber++;
     }
     
     return slots;
@@ -385,7 +350,7 @@ export function MagazineStoryboard({ pages, allLayouts, onSwapLayout, onEditPage
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={slots.map(slot => slot.id)} strategy={verticalListSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {slots.slice(0, 20).map((slot) => ( // Limit to first 20 slots for display
               <SortableSlot
                 key={slot.id}

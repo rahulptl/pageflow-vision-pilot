@@ -88,3 +88,9 @@ export interface TemplateResponse {
   created_at: string;
   message: string;
 }
+
+export interface LayoutRecommendation {
+  page_number: number;
+  type_of_page: string;
+  layout_id: number;
+}

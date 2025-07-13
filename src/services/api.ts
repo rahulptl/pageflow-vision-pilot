@@ -1,5 +1,5 @@
 
-import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse } from '@/types/api';
+import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse, LayoutRecommendation } from '@/types/api';
 import { ImageEdit } from '@/types/imageGeneration';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -164,6 +164,16 @@ class ApiService {
 
   async checkHealth(): Promise<any> {
     return this.request<any>('/health');
+  }
+
+  // Recommendation API
+  async getLayoutRecommendations(magazineName: string, articleCategory: string, pageCount: number): Promise<LayoutRecommendation[]> {
+    const params = new URLSearchParams({
+      magazine_name: magazineName,
+      article_category: articleCategory, 
+      page_count: pageCount.toString()
+    });
+    return this.request<LayoutRecommendation[]>(`/articles/recommend?${params}`);
   }
 
   // Image Generation APIs

@@ -27,7 +27,7 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user/" },
     { icon: File, label: "Articles", href: "/user/articles" },
-    { icon: BookOpen, label: "Create Magazine", href: "/user/magazines" },
+    { icon: BookOpen, label: "Create Magazine", href: "/user/magazines/create" },
     { icon: Sparkles, label: "Image Generation", href: "/user/image-generation" },
     { icon: Settings, label: "Settings", href: "/user/settings" },
   ];

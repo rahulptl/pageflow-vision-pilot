@@ -41,6 +41,14 @@ interface PagePlan {
   xmlUploaded: boolean;
 }
 
+interface SlotData {
+  id: string;
+  slotNumber: number;
+  isOccupied: boolean;
+  pageData?: PagePlan;
+  isSecondSlot?: boolean; // For 2-pagers, marks the second slot
+}
+
 export function MagazineCreatePage() {
   const [step, setStep] = useState<'workspace' | 'form' | 'storyboard' | 'editing'>('workspace');
   const [formData, setFormData] = useState<MagazineFormData>({
@@ -397,6 +405,13 @@ export function MagazineCreatePage() {
             allLayouts={allLayouts}
             onSwapLayout={handleSwapLayout}
             onEditPage={handleEditPage}
+            onSlotsChange={(slots) => {
+              // Convert slots back to pages for state management
+              const updatedPages = slots
+                .filter(slot => slot.isOccupied && !slot.isSecondSlot && slot.pageData)
+                .map(slot => slot.pageData!);
+              setPagePlan(updatedPages);
+            }}
           />
         </TabsContent>
 

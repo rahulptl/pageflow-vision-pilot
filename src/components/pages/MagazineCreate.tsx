@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Edit, ArrowRight, Check } from "lucide-react";
+import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar } from "lucide-react";
 import { apiService } from "@/services/api";
 import { Layout, LayoutRecommendation } from "@/types/api";
 import { toast } from "sonner";
@@ -15,9 +15,21 @@ import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
 
 interface MagazineFormData {
+  name: string;
   title: string;
   category: string;
   pageCount: number;
+}
+
+interface SavedMagazine {
+  id: string;
+  name: string;
+  title: string;
+  category: string;
+  pageCount: number;
+  progress: number;
+  lastModified: string;
+  pagePlan: PagePlan[];
 }
 
 interface PagePlan {
@@ -30,8 +42,9 @@ interface PagePlan {
 }
 
 export function MagazineCreatePage() {
-  const [step, setStep] = useState<'form' | 'storyboard' | 'editing'>('form');
+  const [step, setStep] = useState<'workspace' | 'form' | 'storyboard' | 'editing'>('workspace');
   const [formData, setFormData] = useState<MagazineFormData>({
+    name: '',
     title: '',
     category: '',
     pageCount: 10
@@ -40,6 +53,30 @@ export function MagazineCreatePage() {
   const [pagePlan, setPagePlan] = useState<PagePlan[]>([]);
   const [editingPage, setEditingPage] = useState<PagePlan | null>(null);
   const [activeTab, setActiveTab] = useState('storyboard');
+  
+  // Mock saved magazines - in real app this would come from API
+  const [savedMagazines] = useState<SavedMagazine[]>([
+    {
+      id: '1',
+      name: 'Tech Weekly Issue 5',
+      title: 'Latest AI Innovations',
+      category: 'Technology',
+      pageCount: 12,
+      progress: 75,
+      lastModified: '2 hours ago',
+      pagePlan: []
+    },
+    {
+      id: '2', 
+      name: 'Lifestyle Magazine',
+      title: 'Summer Fashion Trends',
+      category: 'Lifestyle',
+      pageCount: 8,
+      progress: 30,
+      lastModified: '1 day ago',
+      pagePlan: []
+    }
+  ]);
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
@@ -87,11 +124,37 @@ export function MagazineCreatePage() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.category || formData.pageCount < 1) {
+    if (!formData.name || !formData.title || !formData.category || formData.pageCount < 1) {
       toast.error('Please fill in all fields');
       return;
     }
     getRecommendationsMutation.mutate();
+  };
+
+  const handleOpenMagazine = (magazine: SavedMagazine) => {
+    setFormData({
+      name: magazine.name,
+      title: magazine.title,
+      category: magazine.category,
+      pageCount: magazine.pageCount
+    });
+    setPagePlan(magazine.pagePlan);
+    if (magazine.pagePlan.length > 0) {
+      setStep('storyboard');
+    } else {
+      setStep('form');
+    }
+  };
+
+  const handleCreateNew = () => {
+    setFormData({
+      name: '',
+      title: '',
+      category: '',
+      pageCount: 10
+    });
+    setPagePlan([]);
+    setStep('form');
   };
 
   const handleSwapLayout = (pageIndex: number, newLayoutId: number) => {
@@ -155,6 +218,62 @@ export function MagazineCreatePage() {
     ? (pagePlan.filter(p => p.isCompleted && p.xmlUploaded).length / pagePlan.length) * 100 
     : 0;
 
+  if (step === 'workspace') {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Magazine Workspace</h1>
+          <p className="text-muted-foreground">Create new magazines or continue working on existing ones</p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          {/* Create New Magazine Card */}
+          <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer" onClick={handleCreateNew}>
+            <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+              <Plus className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="font-semibold mb-2">Create New Magazine</h3>
+              <p className="text-sm text-muted-foreground">Start a new magazine project</p>
+            </CardContent>
+          </Card>
+
+          {/* Existing Magazines */}
+          {savedMagazines.map((magazine) => (
+            <Card key={magazine.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleOpenMagazine(magazine)}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">{magazine.name}</CardTitle>
+                <p className="text-sm text-muted-foreground">{magazine.title}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="secondary">{magazine.category}</Badge>
+                  <Badge variant="outline">{magazine.pageCount} pages</Badge>
+                </div>
+                
+                <div className="space-y-2 mb-3">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span>{magazine.progress}%</span>
+                  </div>
+                  <Progress value={magazine.progress} className="h-2" />
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{magazine.lastModified}</span>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-auto p-1">
+                    <FolderOpen className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'form') {
     return (
       <div className="container mx-auto py-8 max-w-2xl">
@@ -165,12 +284,22 @@ export function MagazineCreatePage() {
           <CardContent>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="title">Magazine Title</Label>
+                <Label htmlFor="name">Magazine Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter magazine name (e.g., Tech Weekly Issue 6)"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="title">Article Title</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter magazine title"
+                  placeholder="Enter article title"
                 />
               </div>
               
@@ -196,14 +325,23 @@ export function MagazineCreatePage() {
                 />
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={getRecommendationsMutation.isPending}
-              >
-                {getRecommendationsMutation.isPending ? 'Getting Recommendations...' : 'Create Magazine Plan'}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setStep('workspace')}
+                >
+                  Back to Workspace
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1" 
+                  disabled={getRecommendationsMutation.isPending}
+                >
+                  {getRecommendationsMutation.isPending ? 'Getting Recommendations...' : 'Create Magazine Plan'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -224,7 +362,15 @@ export function MagazineCreatePage() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">{formData.title}</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{formData.name}</h1>
+            <p className="text-lg text-muted-foreground">{formData.title}</p>
+          </div>
+          <Button variant="outline" onClick={() => setStep('workspace')}>
+            Back to Workspace
+          </Button>
+        </div>
         <div className="flex items-center gap-4 mb-4">
           <Badge variant="secondary">{formData.category}</Badge>
           <Badge variant="outline">{formData.pageCount} pages</Badge>

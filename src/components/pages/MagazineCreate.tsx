@@ -15,17 +15,17 @@ import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
 
 interface MagazineFormData {
-  name: string;
-  title: string;
-  category: string;
+  articleName: string;
+  magazineTitle: string;
+  magazineCategory: string;
   pageCount: number;
 }
 
 interface SavedMagazine {
   id: string;
-  name: string;
-  title: string;
-  category: string;
+  articleName: string;
+  magazineTitle: string;
+  magazineCategory: string;
   pageCount: number;
   progress: number;
   lastModified: string;
@@ -44,9 +44,9 @@ interface PagePlan {
 export function MagazineCreatePage() {
   const [step, setStep] = useState<'workspace' | 'form' | 'storyboard' | 'editing'>('workspace');
   const [formData, setFormData] = useState<MagazineFormData>({
-    name: '',
-    title: '',
-    category: '',
+    articleName: '',
+    magazineTitle: '',
+    magazineCategory: '',
     pageCount: 10
   });
   const [recommendations, setRecommendations] = useState<LayoutRecommendation[]>([]);
@@ -58,9 +58,9 @@ export function MagazineCreatePage() {
   const [savedMagazines] = useState<SavedMagazine[]>([
     {
       id: '1',
-      name: 'Tech Weekly Issue 5',
-      title: 'Latest AI Innovations',
-      category: 'Technology',
+      articleName: 'Tech Weekly Issue 5',
+      magazineTitle: 'Latest AI Innovations',
+      magazineCategory: 'Technology',
       pageCount: 12,
       progress: 75,
       lastModified: '2 hours ago',
@@ -68,9 +68,9 @@ export function MagazineCreatePage() {
     },
     {
       id: '2', 
-      name: 'Lifestyle Magazine',
-      title: 'Summer Fashion Trends',
-      category: 'Lifestyle',
+      articleName: 'Lifestyle Magazine',
+      magazineTitle: 'Summer Fashion Trends',
+      magazineCategory: 'Lifestyle',
       pageCount: 8,
       progress: 30,
       lastModified: '1 day ago',
@@ -81,8 +81,8 @@ export function MagazineCreatePage() {
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
     mutationFn: () => apiService.getLayoutRecommendations(
-      formData.title || 'UNKNOWN',
-      formData.category || 'UNKNOWN', 
+      formData.magazineTitle || 'UNKNOWN',
+      formData.magazineCategory || 'UNKNOWN', 
       formData.pageCount
     ),
     onSuccess: async (data) => {
@@ -124,7 +124,7 @@ export function MagazineCreatePage() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.title || !formData.category || formData.pageCount < 1) {
+    if (!formData.articleName || !formData.magazineTitle || !formData.magazineCategory || formData.pageCount < 1) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -133,9 +133,9 @@ export function MagazineCreatePage() {
 
   const handleOpenMagazine = (magazine: SavedMagazine) => {
     setFormData({
-      name: magazine.name,
-      title: magazine.title,
-      category: magazine.category,
+      articleName: magazine.articleName,
+      magazineTitle: magazine.magazineTitle,
+      magazineCategory: magazine.magazineCategory,
       pageCount: magazine.pageCount
     });
     setPagePlan(magazine.pagePlan);
@@ -148,9 +148,9 @@ export function MagazineCreatePage() {
 
   const handleCreateNew = () => {
     setFormData({
-      name: '',
-      title: '',
-      category: '',
+      articleName: '',
+      magazineTitle: '',
+      magazineCategory: '',
       pageCount: 10
     });
     setPagePlan([]);
@@ -240,12 +240,12 @@ export function MagazineCreatePage() {
           {savedMagazines.map((magazine) => (
             <Card key={magazine.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleOpenMagazine(magazine)}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{magazine.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">{magazine.title}</p>
+                <CardTitle className="text-lg">{magazine.articleName}</CardTitle>
+                <p className="text-sm text-muted-foreground">{magazine.magazineTitle}</p>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="secondary">{magazine.category}</Badge>
+                  <Badge variant="secondary">{magazine.magazineCategory}</Badge>
                   <Badge variant="outline">{magazine.pageCount} pages</Badge>
                 </div>
                 
@@ -284,31 +284,32 @@ export function MagazineCreatePage() {
           <CardContent>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Magazine Name</Label>
+                <Label htmlFor="articleName">Article Name</Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter magazine name (e.g., Tech Weekly Issue 6)"
+                  id="articleName"
+                  value={formData.articleName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, articleName: e.target.value }))}
+                  placeholder="Enter unique article name (e.g., Tech Weekly Issue 6)"
+                />
+                <p className="text-xs text-muted-foreground mt-1">This is a unique name for this article</p>
+              </div>
+              
+              <div>
+                <Label htmlFor="magazineTitle">Magazine Title</Label>
+                <Input
+                  id="magazineTitle"
+                  value={formData.magazineTitle}
+                  onChange={(e) => setFormData(prev => ({ ...prev, magazineTitle: e.target.value }))}
+                  placeholder="Enter magazine title"
                 />
               </div>
               
               <div>
-                <Label htmlFor="title">Article Title</Label>
+                <Label htmlFor="magazineCategory">Magazine Category</Label>
                 <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter article title"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  id="magazineCategory"
+                  value={formData.magazineCategory}
+                  onChange={(e) => setFormData(prev => ({ ...prev, magazineCategory: e.target.value }))}
                   placeholder="Enter category (e.g., car, lifestyle, tech)"
                 />
               </div>
@@ -364,15 +365,15 @@ export function MagazineCreatePage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{formData.name}</h1>
-            <p className="text-lg text-muted-foreground">{formData.title}</p>
+            <h1 className="text-3xl font-bold mb-2">{formData.articleName}</h1>
+            <p className="text-lg text-muted-foreground">{formData.magazineTitle}</p>
           </div>
           <Button variant="outline" onClick={() => setStep('workspace')}>
             Back to Workspace
           </Button>
         </div>
         <div className="flex items-center gap-4 mb-4">
-          <Badge variant="secondary">{formData.category}</Badge>
+          <Badge variant="secondary">{formData.magazineCategory}</Badge>
           <Badge variant="outline">{formData.pageCount} pages</Badge>
         </div>
         <div className="space-y-2">

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit, RefreshCw, Check, GripVertical } from "lucide-react";
+import { Edit, RefreshCw, Check, GripVertical, Trash2 } from "lucide-react";
 import { Layout } from "@/types/api";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -25,6 +25,7 @@ interface MagazineStoryboardProps {
   onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
   onReorderPages: (pages: PagePlan[]) => void;
+  onRemovePage: (pageIndex: number) => void;
 }
 interface SortablePageCardProps {
   page: PagePlan;
@@ -32,13 +33,15 @@ interface SortablePageCardProps {
   allLayouts: Layout[];
   onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
+  onRemovePage: (pageIndex: number) => void;
 }
 function SortablePageCard({
   page,
   index,
   allLayouts,
   onSwapLayout,
-  onEditPage
+  onEditPage,
+  onRemovePage
 }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [selectedOnePagers, setSelectedOnePagers] = useState<number[]>([]);
@@ -104,14 +107,9 @@ function SortablePageCard({
             </div>
             
             <div>
-              <h3 className="font-medium flex items-center gap-2">
-                Page {page.pageNumber}
-                {is2Pager}
+              <h3 className="font-medium">
+                {is2Pager ? `Pages ${page.pageNumber}-${page.pageNumber + 1}` : `Page ${page.pageNumber}`}
               </h3>
-              <p className="text-xs text-muted-foreground">
-                {page.typeOfPage}
-                {is2Pager && ` (Pages ${page.pageNumber}-${page.pageNumber + 1})`}
-              </p>
             </div>
           </div>
           
@@ -133,7 +131,7 @@ function SortablePageCard({
           <div className="flex gap-2">
             <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex-1 transition-transform duration-150 hover:scale-[1.02]">
+                <Button variant="outline" size="sm" className="transition-transform duration-150 hover:scale-[1.02]">
                   <RefreshCw className="h-3 w-3 mr-1" />
                   Swap Layout
                 </Button>
@@ -364,9 +362,14 @@ function SortablePageCard({
               </DialogContent>
             </Dialog>
 
-            <Button size="sm" className="flex-1 transition-transform duration-150 hover:scale-[1.02]" onClick={() => onEditPage(page)}>
+            <Button size="sm" className="transition-transform duration-150 hover:scale-[1.02]" onClick={() => onEditPage(page)}>
               <Edit className="h-3 w-3 mr-1" />
               Edit
+            </Button>
+            
+            <Button variant="destructive" size="sm" className="transition-transform duration-150 hover:scale-[1.02]" onClick={() => onRemovePage(index)}>
+              <Trash2 className="h-3 w-3 mr-1" />
+              Remove
             </Button>
           </div>
 
@@ -382,7 +385,8 @@ export function MagazineStoryboard({
   allLayouts,
   onSwapLayout,
   onEditPage,
-  onReorderPages
+  onReorderPages,
+  onRemovePage
 }: MagazineStoryboardProps) {
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: {
@@ -407,7 +411,7 @@ export function MagazineStoryboard({
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
-            {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} />)}
+            {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} onRemovePage={onRemovePage} />)}
           </div>
         </SortableContext>
       </DndContext>

@@ -264,6 +264,30 @@ export function MagazineCreatePage() {
     setPagePlan(pagesWithUpdatedNumbers);
   };
 
+  const handleRemovePage = (pageIndex: number) => {
+    setPagePlan(prev => {
+      const newPlan = [...prev];
+      newPlan.splice(pageIndex, 1);
+      
+      // Update page numbers for all subsequent pages
+      let currentPageNumber = 1;
+      return newPlan.map((page) => {
+        const updatedPage = {
+          ...page,
+          pageNumber: currentPageNumber
+        };
+        
+        if (page.typeOfPage === '2 pager') {
+          currentPageNumber += 2;
+        } else {
+          currentPageNumber += 1;
+        }
+        
+        return updatedPage;
+      });
+    });
+  };
+
   const handleEditPage = (page: PagePlan) => {
     setEditingPage(page);
     setStep('editing');
@@ -494,6 +518,7 @@ export function MagazineCreatePage() {
             onSwapLayout={handleSwapLayout}
             onEditPage={handleEditPage}
             onReorderPages={handleReorderPages}
+            onRemovePage={handleRemovePage}
           />
         </TabsContent>
 

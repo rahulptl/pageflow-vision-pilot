@@ -168,6 +168,15 @@ export function MagazineCreatePage() {
     ));
   };
 
+  const handleReorderPages = (reorderedPages: PagePlan[]) => {
+    // Update page numbers based on new order
+    const pagesWithUpdatedNumbers = reorderedPages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1
+    }));
+    setPagePlan(pagesWithUpdatedNumbers);
+  };
+
   const handleEditPage = (page: PagePlan) => {
     setEditingPage(page);
     setStep('editing');
@@ -397,6 +406,7 @@ export function MagazineCreatePage() {
             allLayouts={allLayouts}
             onSwapLayout={handleSwapLayout}
             onEditPage={handleEditPage}
+            onReorderPages={handleReorderPages}
           />
         </TabsContent>
 

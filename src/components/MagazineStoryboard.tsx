@@ -54,6 +54,7 @@ interface SortablePageCardProps {
 
 function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [selectedOnePagers, setSelectedOnePagers] = useState<number[]>([]);
   
   const {
     attributes,
@@ -78,6 +79,41 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
   };
 
   const is2Pager = page.typeOfPage === '2 pager';
+
+  // Reset selection when dialog opens/closes
+  React.useEffect(() => {
+    if (!swapDialogOpen) {
+      setSelectedOnePagers([]);
+    }
+  }, [swapDialogOpen]);
+
+  const handleOnePagerClick = (layoutId: number) => {
+    if (is2Pager) {
+      // For 2-pagers, allow selecting up to 2 one-pagers
+      setSelectedOnePagers(prev => {
+        if (prev.includes(layoutId)) {
+          return prev.filter(id => id !== layoutId);
+        } else if (prev.length < 2) {
+          return [...prev, layoutId];
+        }
+        return prev;
+      });
+    } else {
+      // For 1-pagers, immediate swap
+      onSwapLayout(index, layoutId);
+      setSwapDialogOpen(false);
+    }
+  };
+
+  const handleConfirmOnePagers = () => {
+    if (selectedOnePagers.length === 2) {
+      // For now, use the first selected layout ID
+      // TODO: Handle creating two separate pages from the selected layouts
+      onSwapLayout(index, selectedOnePagers[0]);
+      setSwapDialogOpen(false);
+      setSelectedOnePagers([]);
+    }
+  };
 
   return (
     <Card 
@@ -215,46 +251,76 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
 
                         {/* 1-Page Layouts Section for 2-pagers */}
                         <div>
-                          <h3 className="text-sm font-medium mb-3">1-Page Layouts (Choose 2 to fill spread)</h3>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-medium">1-Page Layouts (Choose exactly 2)</h3>
+                            <Badge variant="outline" className="text-xs">
+                              {selectedOnePagers.length}/2 selected
+                            </Badge>
+                          </div>
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {allLayouts
                               .filter(layout => layout.layout_metadata?.type_of_page === '1 pager')
-                              .map((layout) => (
-                                <Card 
-                                  key={layout.layout_id} 
-                                  className="cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] border-orange-200 hover:border-orange-300"
-                                  onClick={() => {
-                                    onSwapLayout(index, layout.layout_id);
-                                    setSwapDialogOpen(false);
-                                  }}
-                                >
-                                  <CardContent className="p-3">
-                                    <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                                      {layout.bounding_box_image ? (
-                                        <img
-                                          src={layout.bounding_box_image}
-                                          alt={`Layout ${layout.layout_id}`}
-                                          className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
-                                        />
-                                      ) : (
-                                        <div className="text-xs text-center text-muted-foreground">
-                                          Layout {layout.layout_id}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-center">
-                                      <div className="font-medium">#{layout.layout_id}</div>
-                                      <div className="text-muted-foreground">
-                                        {layout.layout_metadata?.layout_category}
+                              .map((layout) => {
+                                const isSelected = selectedOnePagers.includes(layout.layout_id);
+                                const canSelect = selectedOnePagers.length < 2 || isSelected;
+                                
+                                return (
+                                  <Card 
+                                    key={layout.layout_id} 
+                                    className={`cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                                      isSelected 
+                                        ? 'ring-2 ring-orange-500 bg-orange-50/50 border-orange-300' 
+                                        : canSelect 
+                                          ? 'hover:bg-muted border-orange-200/50 hover:border-orange-300' 
+                                          : 'opacity-50 cursor-not-allowed border-gray-200'
+                                    }`}
+                                    onClick={() => canSelect && handleOnePagerClick(layout.layout_id)}
+                                  >
+                                    <CardContent className="p-3">
+                                      <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden relative">
+                                        {layout.bounding_box_image ? (
+                                          <img
+                                            src={layout.bounding_box_image}
+                                            alt={`Layout ${layout.layout_id}`}
+                                            className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
+                                          />
+                                        ) : (
+                                          <div className="text-xs text-center text-muted-foreground">
+                                            Layout {layout.layout_id}
+                                          </div>
+                                        )}
+                                        {isSelected && (
+                                          <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                            {selectedOnePagers.indexOf(layout.layout_id) + 1}
+                                          </div>
+                                        )}
                                       </div>
-                                      <Badge variant="outline" className="text-xs mt-1">
-                                        1-Page
-                                      </Badge>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
+                                      <div className="text-xs text-center">
+                                        <div className="font-medium">#{layout.layout_id}</div>
+                                        <div className="text-muted-foreground">
+                                          {layout.layout_metadata?.layout_category}
+                                        </div>
+                                        <Badge variant={isSelected ? "default" : "outline"} className="text-xs mt-1">
+                                          1-Page {isSelected && `(${selectedOnePagers.indexOf(layout.layout_id) + 1})`}
+                                        </Badge>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
                           </div>
+                          
+                          {/* Confirmation button for 2 selected 1-pagers */}
+                          {selectedOnePagers.length === 2 && (
+                            <div className="mt-4 flex justify-center">
+                              <Button 
+                                onClick={handleConfirmOnePagers}
+                                className="animate-fade-in"
+                              >
+                                Confirm Selection ({selectedOnePagers.length} layouts)
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </>
                     ) : (
@@ -270,10 +336,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                                 className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
                                   layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
                                 }`}
-                                onClick={() => {
-                                  onSwapLayout(index, layout.layout_id);
-                                  setSwapDialogOpen(false);
-                                }}
+                                 onClick={() => handleOnePagerClick(layout.layout_id)}
                               >
                                 <CardContent className="p-3">
                                   <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">

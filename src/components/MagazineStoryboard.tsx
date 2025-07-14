@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit, RefreshCw, Check, GripVertical, Trash2 } from "lucide-react";
+import { Edit, RefreshCw, Check, GripVertical, Trash2, Save } from "lucide-react";
 import { Layout } from "@/types/api";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -26,6 +26,7 @@ interface MagazineStoryboardProps {
   onEditPage: (page: PagePlan) => void;
   onReorderPages: (pages: PagePlan[]) => void;
   onRemovePage: (pageIndex: number) => void;
+  onSave?: () => void;
 }
 interface SortablePageCardProps {
   page: PagePlan;
@@ -98,7 +99,7 @@ function SortablePageCard({
       setSelectedOnePagers([]);
     }
   };
-  return <Card ref={setNodeRef} style={style} className={`relative transition-all duration-200 ${isDragging ? 'shadow-2xl scale-[1.02] rotate-1' : 'hover:shadow-md'} ${is2Pager ? 'ring-2 ring-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
+  return <Card ref={setNodeRef} style={style} className={`relative transition-all duration-200 ${isDragging ? 'shadow-2xl scale-[1.02] rotate-1' : 'hover:shadow-md'} ${is2Pager ? 'ring-2 ring-gray-400/30 bg-gray-50/50 dark:bg-gray-900/30' : ''}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -132,8 +133,8 @@ function SortablePageCard({
             Layout #{page.layoutId} - {page.layout?.layout_metadata?.layout_category}
           </div>
           
-          {/* Action buttons at bottom */}
-          <div className="flex justify-center gap-2">
+          {/* Action buttons at bottom - fixed height container for uniform alignment */}
+          <div className="flex justify-center gap-2 h-8 items-center">
             <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
@@ -384,7 +385,8 @@ export function MagazineStoryboard({
   onSwapLayout,
   onEditPage,
   onReorderPages,
-  onRemovePage
+  onRemovePage,
+  onSave
 }: MagazineStoryboardProps) {
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: {
@@ -405,7 +407,29 @@ export function MagazineStoryboard({
       onReorderPages(reorderedPages);
     }
   }
+
+  // Calculate total pages considering 2-pagers take 2 pages
+  const totalPages = pages.reduce((total, page) => {
+    return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+  }, 0);
+  
   return <div className="space-y-6">
+      {/* Header with page counter and save button */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-semibold">Magazine Storyboard</h2>
+          <Badge variant="outline" className="text-sm">
+            {totalPages} {totalPages === 1 ? 'Page' : 'Pages'}
+          </Badge>
+        </div>
+        {onSave && (
+          <Button onClick={onSave} className="flex items-center gap-2">
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        )}
+      </div>
+
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">

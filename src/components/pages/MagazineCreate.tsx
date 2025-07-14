@@ -334,6 +334,11 @@ export function MagazineCreatePage() {
     toast.success('Creating article with all pages stitched together!');
   };
 
+  const handleSaveStoryboard = () => {
+    // In a real app, this would save to API/database
+    toast.success('Storyboard saved successfully!');
+  };
+
   const progress = pagePlan.length > 0 
     ? (pagePlan.filter(p => p.isCompleted && p.xmlUploaded).length / pagePlan.length) * 100 
     : 0;
@@ -519,6 +524,7 @@ export function MagazineCreatePage() {
             onEditPage={handleEditPage}
             onReorderPages={handleReorderPages}
             onRemovePage={handleRemovePage}
+            onSave={handleSaveStoryboard}
           />
         </TabsContent>
 

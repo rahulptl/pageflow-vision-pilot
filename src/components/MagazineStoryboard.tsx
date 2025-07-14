@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,7 @@ interface SortablePageCardProps {
 
 function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   const {
     attributes,
@@ -61,21 +63,40 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: page.pageNumber.toString() });
+  } = useSortable({ 
+    id: page.pageNumber.toString(),
+    transition: {
+      duration: 300,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 200ms ease',
+    transition: transition || 'transform 300ms cubic-bezier(0.25, 1, 0.5, 1)',
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 50 : 'auto',
   };
+
+  // Trigger animation when page is moved
+  React.useEffect(() => {
+    if (transform && !isDragging) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [transform, isDragging]);
+
+  const is2Pager = page.typeOfPage === '2 pager';
 
   return (
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`relative transition-all duration-200 animate-fade-in ${
+      className={`relative transition-all duration-300 animate-fade-in ${
         isDragging ? 'shadow-2xl scale-105 rotate-2' : 'hover:shadow-md'
+      } ${isAnimating ? 'animate-pulse' : ''} ${
+        is2Pager ? 'ring-2 ring-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20' : ''
       }`}
     >
       <CardContent className="p-4">
@@ -89,12 +110,26 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-semibold">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
+              is2Pager 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-primary text-primary-foreground'
+            }`}>
               {page.pageNumber}
             </div>
             <div>
-              <h3 className="font-medium">Page {page.pageNumber}</h3>
-              <p className="text-xs text-muted-foreground">{page.typeOfPage}</p>
+              <h3 className="font-medium flex items-center gap-2">
+                Page {page.pageNumber}
+                {is2Pager && (
+                  <Badge variant="secondary" className="text-xs px-1 py-0">
+                    2-Page Spread
+                  </Badge>
+                )}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {page.typeOfPage}
+                {is2Pager && ` (Pages ${page.pageNumber}-${page.pageNumber + 1})`}
+              </p>
             </div>
           </div>
           

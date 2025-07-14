@@ -169,11 +169,24 @@ export function MagazineCreatePage() {
   };
 
   const handleReorderPages = (reorderedPages: PagePlan[]) => {
-    // Update page numbers based on new order
-    const pagesWithUpdatedNumbers = reorderedPages.map((page, index) => ({
-      ...page,
-      pageNumber: index + 1
-    }));
+    // Update page numbers based on new order, considering 2-pagers take 2 page slots
+    let currentPageNumber = 1;
+    const pagesWithUpdatedNumbers = reorderedPages.map((page) => {
+      const updatedPage = {
+        ...page,
+        pageNumber: currentPageNumber
+      };
+      
+      // If this is a 2-pager, increment by 2, otherwise by 1
+      if (page.typeOfPage === '2 pager') {
+        currentPageNumber += 2;
+      } else {
+        currentPageNumber += 1;
+      }
+      
+      return updatedPage;
+    });
+    
     setPagePlan(pagesWithUpdatedNumbers);
   };
 

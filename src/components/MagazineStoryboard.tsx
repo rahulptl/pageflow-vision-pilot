@@ -133,7 +133,7 @@ function SortablePageCard({
           </div>
           
           {/* Action buttons at bottom */}
-          <div className="flex justify-between gap-2">
+          <div className="flex justify-center gap-2">
             <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">

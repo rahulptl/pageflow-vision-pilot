@@ -412,15 +412,11 @@ export function MagazineCreatePage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{formData.articleName}</h1>
-            <p className="text-lg text-muted-foreground">{formData.magazineTitle} • {totalPages} pages</p>
+            <h1 className="text-3xl font-bold mb-2">{formData.articleName} • {totalPages} pages</h1>
           </div>
           <Button variant="outline" onClick={() => setStep('workspace')}>
             Back to Workspace
           </Button>
-        </div>
-        <div className="flex items-center gap-4 mb-4">
-          <Badge variant="secondary">{formData.magazineCategory}</Badge>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">

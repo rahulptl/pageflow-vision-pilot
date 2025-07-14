@@ -73,7 +73,7 @@ export function MagazineCreatePage() {
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
-    mutationFn: () => apiService.getLayoutRecommendations(formData.magazineTitle || 'UNKNOWN', formData.magazineCategory || 'UNKNOWN', formData.pageCount),
+    mutationFn: () => apiService.getLayoutRecommendations(formData.magazineTitle, formData.magazineCategory, formData.pageCount),
     onSuccess: async data => {
       setRecommendations(data);
 
@@ -298,6 +298,7 @@ export function MagazineCreatePage() {
     toast.success('Creating article with all pages stitched together!');
   };
   const progress = pagePlan.length > 0 ? pagePlan.filter(p => p.isCompleted && p.xmlUploaded).length / pagePlan.length * 100 : 0;
+  const totalPages = pagePlan.reduce((sum, page) => sum + (page.typeOfPage === '2 pager' ? 2 : 1), 0);
   if (step === 'workspace') {
     return <div className="container mx-auto py-8">
         <div className="mb-8">
@@ -412,7 +413,7 @@ export function MagazineCreatePage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{formData.articleName}</h1>
-            <p className="text-lg text-muted-foreground">{formData.magazineTitle}</p>
+            <p className="text-lg text-muted-foreground">{formData.magazineTitle} • {totalPages} pages</p>
           </div>
           <Button variant="outline" onClick={() => setStep('workspace')}>
             Back to Workspace
@@ -420,7 +421,6 @@ export function MagazineCreatePage() {
         </div>
         <div className="flex items-center gap-4 mb-4">
           <Badge variant="secondary">{formData.magazineCategory}</Badge>
-          <Badge variant="outline">{formData.pageCount} pages</Badge>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">

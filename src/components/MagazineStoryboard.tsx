@@ -159,45 +159,148 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
                   <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>
+                  {is2Pager && (
+                    <p className="text-sm text-muted-foreground">
+                      Select a 2-page layout or two 1-page layouts to fill this spread
+                    </p>
+                  )}
                 </DialogHeader>
                 <ScrollArea className="h-[60vh]">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                    {allLayouts
-                      .filter(layout => layout.layout_metadata?.type_of_page === page.typeOfPage)
-                      .map((layout) => (
-                      <Card 
-                        key={layout.layout_id} 
-                        className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
-                          layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
-                        }`}
-                        onClick={() => {
-                          onSwapLayout(index, layout.layout_id);
-                          setSwapDialogOpen(false);
-                        }}
-                      >
-                        <CardContent className="p-3">
-                          <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                            {layout.bounding_box_image ? (
-                              <img
-                                src={layout.bounding_box_image}
-                                alt={`Layout ${layout.layout_id}`}
-                                className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
-                              />
-                            ) : (
-                              <div className="text-xs text-center text-muted-foreground">
-                                Layout {layout.layout_id}
-                              </div>
-                            )}
+                  <div className="space-y-6 p-4">
+                    {/* For 2-pagers: Show both 2-page layouts and 1-page layouts */}
+                    {is2Pager ? (
+                      <>
+                        {/* 2-Page Layouts Section */}
+                        <div>
+                          <h3 className="text-sm font-medium mb-3">2-Page Layouts</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {allLayouts
+                              .filter(layout => layout.layout_metadata?.type_of_page === '2 pager')
+                              .map((layout) => (
+                                <Card 
+                                  key={layout.layout_id} 
+                                  className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
+                                    layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
+                                  }`}
+                                  onClick={() => {
+                                    onSwapLayout(index, layout.layout_id);
+                                    setSwapDialogOpen(false);
+                                  }}
+                                >
+                                  <CardContent className="p-3">
+                                    <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                      {layout.bounding_box_image ? (
+                                        <img
+                                          src={layout.bounding_box_image}
+                                          alt={`Layout ${layout.layout_id}`}
+                                          className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
+                                        />
+                                      ) : (
+                                        <div className="text-xs text-center text-muted-foreground">
+                                          Layout {layout.layout_id}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-center">
+                                      <div className="font-medium">#{layout.layout_id}</div>
+                                      <div className="text-muted-foreground">
+                                        {layout.layout_metadata?.layout_category}
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
                           </div>
-                          <div className="text-xs text-center">
-                            <div className="font-medium">#{layout.layout_id}</div>
-                            <div className="text-muted-foreground">
-                              {layout.layout_metadata?.layout_category}
-                            </div>
+                        </div>
+
+                        {/* 1-Page Layouts Section for 2-pagers */}
+                        <div>
+                          <h3 className="text-sm font-medium mb-3">1-Page Layouts (Choose 2 to fill spread)</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {allLayouts
+                              .filter(layout => layout.layout_metadata?.type_of_page === '1 pager')
+                              .map((layout) => (
+                                <Card 
+                                  key={layout.layout_id} 
+                                  className="cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] border-orange-200 hover:border-orange-300"
+                                  onClick={() => {
+                                    onSwapLayout(index, layout.layout_id);
+                                    setSwapDialogOpen(false);
+                                  }}
+                                >
+                                  <CardContent className="p-3">
+                                    <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                      {layout.bounding_box_image ? (
+                                        <img
+                                          src={layout.bounding_box_image}
+                                          alt={`Layout ${layout.layout_id}`}
+                                          className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
+                                        />
+                                      ) : (
+                                        <div className="text-xs text-center text-muted-foreground">
+                                          Layout {layout.layout_id}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-center">
+                                      <div className="font-medium">#{layout.layout_id}</div>
+                                      <div className="text-muted-foreground">
+                                        {layout.layout_metadata?.layout_category}
+                                      </div>
+                                      <Badge variant="outline" className="text-xs mt-1">
+                                        1-Page
+                                      </Badge>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                        </div>
+                      </>
+                    ) : (
+                      /* For 1-pagers: Show only 1-page layouts */
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">1-Page Layouts</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {allLayouts
+                            .filter(layout => layout.layout_metadata?.type_of_page === '1 pager')
+                            .map((layout) => (
+                              <Card 
+                                key={layout.layout_id} 
+                                className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
+                                  layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
+                                }`}
+                                onClick={() => {
+                                  onSwapLayout(index, layout.layout_id);
+                                  setSwapDialogOpen(false);
+                                }}
+                              >
+                                <CardContent className="p-3">
+                                  <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                    {layout.bounding_box_image ? (
+                                      <img
+                                        src={layout.bounding_box_image}
+                                        alt={`Layout ${layout.layout_id}`}
+                                        className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
+                                      />
+                                    ) : (
+                                      <div className="text-xs text-center text-muted-foreground">
+                                        Layout {layout.layout_id}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-center">
+                                    <div className="font-medium">#{layout.layout_id}</div>
+                                    <div className="text-muted-foreground">
+                                      {layout.layout_metadata?.layout_category}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </DialogContent>

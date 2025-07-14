@@ -198,7 +198,36 @@ export function MagazineCreatePage() {
         }
         
         return newPlan;
-      } else {
+      } 
+      // If swapping a 1-pager with a 2-pager
+      else if (!Array.isArray(newLayoutId) && currentPage.typeOfPage === '1 pager') {
+        const newLayout = allLayouts.find(l => l.layout_id === newLayoutId);
+        if (!newLayout) return prev;
+        
+        // Check if new layout is a 2-pager
+        if (newLayout.layout_metadata?.type_of_page === '2 pager') {
+          // Replace current 1-pager with 2-pager
+          newPlan[pageIndex] = {
+            ...currentPage,
+            typeOfPage: '2 pager',
+            layoutId: newLayoutId,
+            layout: newLayout
+          };
+          
+          // Update page numbers for all subsequent pages (shift by +1)
+          for (let i = pageIndex + 1; i < newPlan.length; i++) {
+            newPlan[i] = {
+              ...newPlan[i],
+              pageNumber: newPlan[i].pageNumber + 1
+            };
+          }
+          
+          return newPlan;
+        }
+      }
+      
+      // Regular single layout swap (same page type)
+      {
         // Regular single layout swap
         const layoutId = Array.isArray(newLayoutId) ? newLayoutId[0] : newLayoutId;
         const newLayout = allLayouts.find(l => l.layout_id === layoutId);

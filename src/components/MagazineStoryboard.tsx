@@ -127,15 +127,20 @@ function SortablePageCard({
             </div>}
         </div>
 
-        {/* Action buttons positioned in top-right */}
-        <div className="absolute top-3 right-3 flex gap-1">
-          <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
-                <RefreshCw className="h-3 w-3" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh]">
+        <div className="space-y-4">
+          <div className="text-xs text-muted-foreground">
+            Layout #{page.layoutId} - {page.layout?.layout_metadata?.layout_category}
+          </div>
+          
+          {/* Action buttons at bottom */}
+          <div className="flex justify-between gap-2">
+            <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
                   <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>
                   {is2Pager && <p className="text-sm text-muted-foreground">
@@ -361,17 +366,14 @@ function SortablePageCard({
               </DialogContent>
             </Dialog>
 
-          <Button size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Edit Page" onClick={() => onEditPage(page)}>
-            <Edit className="h-3 w-3" />
-          </Button>
-          
-          <Button variant="destructive" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Remove Page" onClick={() => onRemovePage(index)}>
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-
-        <div className="text-xs text-muted-foreground">
-          Layout #{page.layoutId} - {page.layout?.layout_metadata?.layout_category}
+            <Button size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Edit Page" onClick={() => onEditPage(page)}>
+              <Edit className="h-3 w-3" />
+            </Button>
+            
+            <Button variant="destructive" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Remove Page" onClick={() => onRemovePage(index)}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>;

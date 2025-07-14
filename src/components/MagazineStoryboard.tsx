@@ -39,7 +39,7 @@ interface PagePlan {
 interface MagazineStoryboardProps {
   pages: PagePlan[];
   allLayouts: Layout[];
-  onSwapLayout: (pageIndex: number, newLayoutId: number) => void;
+  onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
   onReorderPages: (pages: PagePlan[]) => void;
 }
@@ -48,13 +48,14 @@ interface SortablePageCardProps {
   page: PagePlan;
   index: number;
   allLayouts: Layout[];
-  onSwapLayout: (pageIndex: number, newLayoutId: number) => void;
+  onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
 }
 
 function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [selectedOnePagers, setSelectedOnePagers] = useState<number[]>([]);
+  const [layoutFilter, setLayoutFilter] = useState<'all' | '1-pager' | '2-pager'>('all');
   
   const {
     attributes,
@@ -107,9 +108,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
 
   const handleConfirmOnePagers = () => {
     if (selectedOnePagers.length === 2) {
-      // For now, use the first selected layout ID
-      // TODO: Handle creating two separate pages from the selected layouts
-      onSwapLayout(index, selectedOnePagers[0]);
+      onSwapLayout(index, selectedOnePagers);
       setSwapDialogOpen(false);
       setSelectedOnePagers([]);
     }
@@ -200,6 +199,29 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                       Select a 2-page layout or two 1-page layouts to fill this spread
                     </p>
                   )}
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant={layoutFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLayoutFilter('all')}
+                    >
+                      All Layouts
+                    </Button>
+                    <Button
+                      variant={layoutFilter === '1-pager' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLayoutFilter('1-pager')}
+                    >
+                      1-Page Only
+                    </Button>
+                    <Button
+                      variant={layoutFilter === '2-pager' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLayoutFilter('2-pager')}
+                    >
+                      2-Page Only
+                    </Button>
+                  </div>
                 </DialogHeader>
                 <ScrollArea className="h-[60vh]">
                   <div className="space-y-6 p-4 pb-20">
@@ -267,12 +289,13 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                         )}
 
                         {/* 2-Page Layouts Section */}
-                        <div>
-                          <h3 className="text-sm font-medium mb-3">2-Page Layouts</h3>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {allLayouts
-                              .filter(layout => layout.layout_metadata?.type_of_page === '2 pager')
-                              .map((layout) => (
+                        {(layoutFilter === 'all' || layoutFilter === '2-pager') && (
+                          <div>
+                            <h3 className="text-sm font-medium mb-3">2-Page Layouts</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                              {allLayouts
+                                .filter(layout => layout.layout_metadata?.type_of_page === '2 pager')
+                                .map((layout) => (
                                 <Card 
                                   key={layout.layout_id} 
                                   className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
@@ -305,22 +328,24 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                                     </div>
                                   </CardContent>
                                 </Card>
-                              ))}
+                                ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
 
                         {/* 1-Page Layouts Section for 2-pagers */}
-                        <div>
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-medium">1-Page Layouts (Choose exactly 2)</h3>
-                            <Badge variant="outline" className="text-xs">
-                              {selectedOnePagers.length}/2 selected
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {allLayouts
-                              .filter(layout => layout.layout_metadata?.type_of_page === '1 pager')
-                              .map((layout) => {
+                        {(layoutFilter === 'all' || layoutFilter === '1-pager') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="text-sm font-medium">1-Page Layouts (Choose exactly 2)</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {selectedOnePagers.length}/2 selected
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                              {allLayouts
+                                .filter(layout => layout.layout_metadata?.type_of_page === '1 pager')
+                                .map((layout) => {
                                 const isSelected = selectedOnePagers.includes(layout.layout_id);
                                 const canSelect = selectedOnePagers.length < 2 || isSelected;
                                 
@@ -368,8 +393,9 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                                   </Card>
                                 );
                               })}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </>
                     ) : (
                       /* For 1-pagers: Show only 1-page layouts */
@@ -377,7 +403,10 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                         <h3 className="text-sm font-medium mb-3">1-Page Layouts</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                           {allLayouts
-                            .filter(layout => layout.layout_metadata?.type_of_page === '1 pager')
+                            .filter(layout => 
+                              layout.layout_metadata?.type_of_page === '1 pager' &&
+                              (layoutFilter === 'all' || layoutFilter === '1-pager')
+                            )
                             .map((layout) => (
                               <Card 
                                 key={layout.layout_id} 

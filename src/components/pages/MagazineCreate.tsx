@@ -157,15 +157,60 @@ export function MagazineCreatePage() {
     setStep('form');
   };
 
-  const handleSwapLayout = (pageIndex: number, newLayoutId: number) => {
-    const newLayout = allLayouts.find(l => l.layout_id === newLayoutId);
-    if (!newLayout) return;
+  const handleSwapLayout = (pageIndex: number, newLayoutId: number | number[]) => {
+    setPagePlan(prev => {
+      const newPlan = [...prev];
+      const currentPage = newPlan[pageIndex];
+      
+      // If swapping a 2-pager with two 1-pagers
+      if (Array.isArray(newLayoutId) && currentPage.typeOfPage === '2 pager') {
+        const layout1 = allLayouts.find(l => l.layout_id === newLayoutId[0]);
+        const layout2 = allLayouts.find(l => l.layout_id === newLayoutId[1]);
+        
+        if (!layout1 || !layout2) return prev;
+        
+        // Replace current 2-pager with first 1-pager
+        newPlan[pageIndex] = {
+          ...currentPage,
+          typeOfPage: '1 pager',
+          layoutId: newLayoutId[0],
+          layout: layout1
+        };
+        
+        // Insert second 1-pager after current position
+        const secondPage: PagePlan = {
+          pageNumber: currentPage.pageNumber + 1,
+          typeOfPage: '1 pager',
+          layoutId: newLayoutId[1],
+          layout: layout2,
+          isCompleted: false,
+          xmlUploaded: false
+        };
+        
+        newPlan.splice(pageIndex + 1, 0, secondPage);
+        
+        // Update page numbers for all subsequent pages
+        for (let i = pageIndex + 2; i < newPlan.length; i++) {
+          newPlan[i] = {
+            ...newPlan[i],
+            pageNumber: newPlan[i - 1].pageNumber + (newPlan[i - 1].typeOfPage === '2 pager' ? 2 : 1)
+          };
+        }
+        
+        return newPlan;
+      } else {
+        // Regular single layout swap
+        const layoutId = Array.isArray(newLayoutId) ? newLayoutId[0] : newLayoutId;
+        const newLayout = allLayouts.find(l => l.layout_id === layoutId);
+        if (!newLayout) return prev;
 
-    setPagePlan(prev => prev.map((page, index) => 
-      index === pageIndex 
-        ? { ...page, layoutId: newLayoutId, layout: newLayout }
-        : page
-    ));
+        return newPlan.map((page, index) => 
+          index === pageIndex 
+            ? { ...page, layoutId: layoutId, layout: newLayout }
+            : page
+        );
+      }
+    });
   };
 
   const handleReorderPages = (reorderedPages: PagePlan[]) => {

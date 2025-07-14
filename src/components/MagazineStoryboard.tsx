@@ -19,7 +19,7 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import {
   useSortable,
@@ -65,15 +65,18 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition || 'transform 200ms ease',
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 50 : 'auto',
   };
 
   return (
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`relative ${isDragging ? 'z-50' : ''}`}
+      className={`relative transition-all duration-200 animate-fade-in ${
+        isDragging ? 'shadow-2xl scale-105 rotate-2' : 'hover:shadow-md'
+      }`}
     >
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
@@ -81,7 +84,8 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
             <div 
               {...attributes} 
               {...listeners}
-              className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+              className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md transition-colors duration-150 hover-scale"
+              title="Drag to reorder"
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
@@ -95,7 +99,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
           </div>
           
           {page.isCompleted && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 animate-scale-in">
               <Check className="h-3 w-3" />
               Done
             </Badge>
@@ -108,7 +112,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
             <img
               src={page.layout.bounding_box_image}
               alt={`Layout ${page.layoutId} preview`}
-              className="max-w-full max-h-full object-contain rounded"
+              className="max-w-full max-h-full object-contain rounded transition-transform duration-200 hover:scale-105"
             />
           ) : (
             <div className="text-center text-muted-foreground">
@@ -122,12 +126,12 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
           <div className="flex gap-2">
             <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" size="sm" className="flex-1 hover-scale">
                   <RefreshCw className="h-3 w-3 mr-1" />
                   Swap Layout
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh]">
+              <DialogContent className="max-w-4xl max-h-[80vh] animate-scale-in">
                 <DialogHeader>
                   <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>
                 </DialogHeader>
@@ -138,8 +142,8 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                       .map((layout) => (
                       <Card 
                         key={layout.layout_id} 
-                        className={`cursor-pointer transition-colors hover:bg-muted ${
-                          layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
+                        className={`cursor-pointer transition-all duration-200 hover:bg-muted hover-scale ${
+                          layout.layout_id === page.layoutId ? 'ring-2 ring-primary animate-scale-in' : ''
                         }`}
                         onClick={() => {
                           onSwapLayout(index, layout.layout_id);
@@ -152,7 +156,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                               <img
                                 src={layout.bounding_box_image}
                                 alt={`Layout ${layout.layout_id}`}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-contain transition-transform duration-200 hover:scale-110"
                               />
                             ) : (
                               <div className="text-xs text-center text-muted-foreground">
@@ -176,7 +180,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
 
             <Button 
               size="sm" 
-              className="flex-1"
+              className="flex-1 hover-scale"
               onClick={() => onEditPage(page)}
             >
               <Edit className="h-3 w-3 mr-1" />
@@ -195,7 +199,11 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
 
 export function MagazineStoryboard({ pages, allLayouts, onSwapLayout, onEditPage, onReorderPages }: MagazineStoryboardProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required to start drag
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -222,9 +230,9 @@ export function MagazineStoryboard({ pages, allLayouts, onSwapLayout, onEditPage
       >
         <SortableContext 
           items={pages.map(page => page.pageNumber.toString())}
-          strategy={verticalListSortingStrategy}
+          strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
             {pages.map((page, index) => (
               <SortablePageCard
                 key={page.pageNumber}

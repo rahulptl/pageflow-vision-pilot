@@ -416,12 +416,9 @@ export function MagazineStoryboard({
   return <div className="space-y-6">
       {/* Header with page counter and save button */}
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">Magazine Storyboard</h2>
-          <Badge variant="outline" className="text-sm">
-            {totalPages} {totalPages === 1 ? 'Page' : 'Pages'}
-          </Badge>
-        </div>
+        <h2 className="text-xl font-semibold">
+          Storyboard ({totalPages} {totalPages === 1 ? 'page' : 'pages'})
+        </h2>
         {onSave && (
           <Button onClick={onSave} className="flex items-center gap-2">
             <Save className="h-4 w-4" />

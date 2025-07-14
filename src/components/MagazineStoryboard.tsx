@@ -54,7 +54,6 @@ interface SortablePageCardProps {
 
 function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   
   const {
     attributes,
@@ -66,26 +65,17 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
   } = useSortable({ 
     id: page.pageNumber.toString(),
     transition: {
-      duration: 300,
+      duration: 200,
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
     }
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 300ms cubic-bezier(0.25, 1, 0.5, 1)',
-    opacity: isDragging ? 0.8 : 1,
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+    opacity: isDragging ? 0.9 : 1,
     zIndex: isDragging ? 50 : 'auto',
   };
-
-  // Trigger animation when page is moved
-  React.useEffect(() => {
-    if (transform && !isDragging) {
-      setIsAnimating(true);
-      const timer = setTimeout(() => setIsAnimating(false), 400);
-      return () => clearTimeout(timer);
-    }
-  }, [transform, isDragging]);
 
   const is2Pager = page.typeOfPage === '2 pager';
 
@@ -93,9 +83,9 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`relative transition-all duration-300 animate-fade-in ${
-        isDragging ? 'shadow-2xl scale-105 rotate-2' : 'hover:shadow-md'
-      } ${isAnimating ? 'animate-pulse' : ''} ${
+      className={`relative transition-all duration-200 ${
+        isDragging ? 'shadow-2xl scale-[1.02] rotate-1' : 'hover:shadow-md'
+      } ${
         is2Pager ? 'ring-2 ring-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20' : ''
       }`}
     >
@@ -105,7 +95,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
             <div 
               {...attributes} 
               {...listeners}
-              className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md transition-colors duration-150 hover-scale"
+              className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md transition-colors duration-150"
               title="Drag to reorder"
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
@@ -134,7 +124,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
           </div>
           
           {page.isCompleted && (
-            <Badge variant="secondary" className="gap-1 animate-scale-in">
+            <Badge variant="secondary" className="gap-1">
               <Check className="h-3 w-3" />
               Done
             </Badge>
@@ -161,12 +151,12 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
           <div className="flex gap-2">
             <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex-1 hover-scale">
+                <Button variant="outline" size="sm" className="flex-1 transition-transform duration-150 hover:scale-[1.02]">
                   <RefreshCw className="h-3 w-3 mr-1" />
                   Swap Layout
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] animate-scale-in">
+              <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
                   <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>
                 </DialogHeader>
@@ -177,8 +167,8 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                       .map((layout) => (
                       <Card 
                         key={layout.layout_id} 
-                        className={`cursor-pointer transition-all duration-200 hover:bg-muted hover-scale ${
-                          layout.layout_id === page.layoutId ? 'ring-2 ring-primary animate-scale-in' : ''
+                        className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
+                          layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
                         }`}
                         onClick={() => {
                           onSwapLayout(index, layout.layout_id);
@@ -215,7 +205,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
 
             <Button 
               size="sm" 
-              className="flex-1 hover-scale"
+              className="flex-1 transition-transform duration-150 hover:scale-[1.02]"
               onClick={() => onEditPage(page)}
             >
               <Edit className="h-3 w-3 mr-1" />

@@ -202,10 +202,70 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                   )}
                 </DialogHeader>
                 <ScrollArea className="h-[60vh]">
-                  <div className="space-y-6 p-4">
+                  <div className="space-y-6 p-4 pb-20">
                     {/* For 2-pagers: Show both 2-page layouts and 1-page layouts */}
                     {is2Pager ? (
                       <>
+                        {/* Preview section for selected 1-pagers */}
+                        {selectedOnePagers.length > 0 && (
+                          <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 rounded-lg p-4">
+                            <h3 className="text-sm font-medium mb-3 text-blue-700 dark:text-blue-300">
+                              Preview: This will create {selectedOnePagers.length === 2 ? '2 separate pages' : '1 page (need 1 more)'}
+                            </h3>
+                            <div className="flex gap-3">
+                              {selectedOnePagers.map((layoutId, idx) => {
+                                const layout = allLayouts.find(l => l.layout_id === layoutId);
+                                return (
+                                  <div key={layoutId} className="flex-1">
+                                    <Card className="border-blue-300">
+                                      <CardContent className="p-2">
+                                        <div className="aspect-square bg-muted rounded mb-1 flex items-center justify-center overflow-hidden">
+                                          {layout?.bounding_box_image ? (
+                                            <img
+                                              src={layout.bounding_box_image}
+                                              alt={`Layout ${layoutId}`}
+                                              className="w-full h-full object-contain"
+                                            />
+                                          ) : (
+                                            <div className="text-xs text-center text-muted-foreground">
+                                              Layout {layoutId}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-center">
+                                          <div className="font-medium">Page {page.pageNumber + idx}</div>
+                                          <Badge variant="secondary" className="text-xs">
+                                            Layout #{layoutId}
+                                          </Badge>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </div>
+                                );
+                              })}
+                              {selectedOnePagers.length === 1 && (
+                                <div className="flex-1">
+                                  <Card className="border-dashed border-2 border-gray-300">
+                                    <CardContent className="p-2">
+                                      <div className="aspect-square bg-gray-100 rounded mb-1 flex items-center justify-center">
+                                        <div className="text-xs text-center text-gray-400">
+                                          Select 2nd layout
+                                        </div>
+                                      </div>
+                                      <div className="text-xs text-center">
+                                        <div className="font-medium text-gray-400">Page {page.pageNumber + 1}</div>
+                                        <Badge variant="outline" className="text-xs">
+                                          Pending
+                                        </Badge>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {/* 2-Page Layouts Section */}
                         <div>
                           <h3 className="text-sm font-medium mb-3">2-Page Layouts</h3>
@@ -309,18 +369,6 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                                 );
                               })}
                           </div>
-                          
-                          {/* Confirmation button for 2 selected 1-pagers */}
-                          {selectedOnePagers.length === 2 && (
-                            <div className="mt-4 flex justify-center">
-                              <Button 
-                                onClick={handleConfirmOnePagers}
-                                className="animate-fade-in"
-                              >
-                                Confirm Selection ({selectedOnePagers.length} layouts)
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       </>
                     ) : (
@@ -336,7 +384,7 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                                 className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${
                                   layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''
                                 }`}
-                                 onClick={() => handleOnePagerClick(layout.layout_id)}
+                                onClick={() => handleOnePagerClick(layout.layout_id)}
                               >
                                 <CardContent className="p-3">
                                   <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
@@ -366,6 +414,19 @@ function SortablePageCard({ page, index, allLayouts, onSwapLayout, onEditPage }:
                     )}
                   </div>
                 </ScrollArea>
+
+                {/* Sticky confirmation button */}
+                {is2Pager && selectedOnePagers.length === 2 && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-background border-t p-4 flex justify-center">
+                    <Button 
+                      onClick={handleConfirmOnePagers}
+                      className="animate-fade-in min-w-[200px]"
+                      size="lg"
+                    >
+                      Confirm Selection ({selectedOnePagers.length} layouts)
+                    </Button>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
 

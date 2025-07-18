@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Save, X, Image as ImageIcon, FileText, Type } from "lucide-react";
+import { Upload, Save, X, Image as ImageIcon, FileText, Type, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { apiService } from "@/services/api";
 
 interface PagePlan {
   pageNumber: number;
@@ -19,7 +21,8 @@ interface PagePlan {
 
 interface LayoutEditorProps {
   page: PagePlan;
-  onSave: () => void;
+  article?: any; // Article data containing article_id
+  onSave: (updatedLayoutJson: any) => void;
   onCancel: () => void;
 }
 
@@ -49,7 +52,7 @@ interface FormField {
   imageType?: string;
 }
 
-export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
+export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorProps) {
   // Parse layout JSON to extract objects
   const formFields = useMemo(() => {
     // Use layoutJson from article_json if available, otherwise fallback to layout.layout_json
@@ -105,6 +108,10 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
     return initial;
   });
 
+  // Track uploaded image files for each field
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues(prev => ({ ...prev, [fieldId]: value }));
   };
@@ -112,6 +119,7 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
   const handleImageUpload = (fieldId: string, file: File) => {
     const url = URL.createObjectURL(file);
     setFieldValues(prev => ({ ...prev, [fieldId]: url }));
+    setUploadedFiles(prev => ({ ...prev, [fieldId]: file }));
   };
 
   const handleDrop = (fieldId: string, e: React.DragEvent) => {
@@ -143,6 +151,102 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
     });
     return grouped;
   }, [formFields]);
+
+  // Handle save with image uploads and layout update
+  const handleSave = async () => {
+    if (!article?.article_id) {
+      toast.error("Article ID not found");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Step 1: Check if all required images are uploaded
+      const imageFields = formFields.filter(field => field.type === 'image');
+      const missingImages = imageFields.filter(field => !fieldValues[field.id] && !field.content);
+      
+      if (missingImages.length > 0) {
+        toast.error("Please upload all required images before saving");
+        setIsSaving(false);
+        return;
+      }
+
+      // Step 2: Upload new images and get URLs
+      const uploadPromises: Promise<void>[] = [];
+      const newImageUrls: Record<string, string> = {};
+
+      for (const fieldId of Object.keys(uploadedFiles)) {
+        const file = uploadedFiles[fieldId];
+        uploadPromises.push(
+          apiService.uploadImage(file).then(response => {
+            newImageUrls[fieldId] = response.url;
+          })
+        );
+      }
+
+      await Promise.all(uploadPromises);
+
+      // Step 3: Construct updated layout JSON
+      const layoutData = page.layoutJson || page.layout?.layout_json;
+      if (!layoutData) {
+        toast.error("Layout data not found");
+        setIsSaving(false);
+        return;
+      }
+
+      const updatedLayoutData = JSON.parse(JSON.stringify(layoutData));
+      
+      // Update text and image content in the layout JSON
+      updatedLayoutData.document.pages.forEach((pageData: any, pageIndex: number) => {
+        if (pageData.objects) {
+          Object.keys(pageData.objects).forEach(layerName => {
+            const objects = pageData.objects[layerName];
+            objects.forEach((obj: any) => {
+              const fieldId = `${pageIndex}-${obj.id}`;
+              
+              // Update text content
+              if (obj.type === 'text' && fieldValues[fieldId] !== undefined) {
+                // Preserve HTML tags if they exist, otherwise use plain text
+                if (obj.story && obj.story.includes('<')) {
+                  // Extract the tag structure and replace content
+                  const tagMatch = obj.story.match(/^<([^>]+)>.*<\/([^>]+)>$/);
+                  if (tagMatch) {
+                    obj.story = `<${tagMatch[1]}>${fieldValues[fieldId]}</${tagMatch[2]}>`;
+                  } else {
+                    obj.story = fieldValues[fieldId];
+                  }
+                } else {
+                  obj.story = fieldValues[fieldId];
+                }
+              }
+              
+              // Update image URLs
+              if (obj.type === 'image' && newImageUrls[fieldId]) {
+                if (!obj.source) obj.source = {};
+                obj.source.url = newImageUrls[fieldId];
+              }
+            });
+          });
+        }
+      });
+
+      // Step 4: Update the article layout via PATCH API
+      await apiService.patchArticleLayout(
+        article.article_id,
+        page.layoutId.toString(),
+        updatedLayoutData
+      );
+
+      toast.success("Layout saved successfully!");
+      onSave(updatedLayoutData);
+      
+    } catch (error) {
+      console.error("Error saving layout:", error);
+      toast.error("Failed to save layout. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="container mx-auto py-8">
@@ -185,13 +289,22 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={onCancel}>
+              <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" />
                 Cancel
               </Button>
-              <Button onClick={onSave}>
-                <Save className="h-4 w-4 mr-1" />
-                Save & Continue
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-1" />
+                    Save & Continue
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -267,16 +380,23 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                                   alt={field.label}
                                   className="w-full h-40 object-cover rounded border"
                                 />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => setFieldValues(prev => ({ ...prev, [field.id]: '' }))}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Remove
-                                  </Button>
-                                </div>
+                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                                   <Button
+                                     variant="secondary"
+                                     size="sm"
+                                     onClick={() => {
+                                       setFieldValues(prev => ({ ...prev, [field.id]: '' }));
+                                       setUploadedFiles(prev => {
+                                         const updated = { ...prev };
+                                         delete updated[field.id];
+                                         return updated;
+                                       });
+                                     }}
+                                   >
+                                     <X className="h-4 w-4 mr-1" />
+                                     Remove
+                                   </Button>
+                                 </div>
                               </div>
                               <div
                                 className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"

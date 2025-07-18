@@ -269,23 +269,31 @@ export function MagazineCreatePage() {
     setEditingPage(pageWithJson);
     setStep('editing');
   };
-  const handleSaveEdit = () => {
-    // Mark page as completed and redirect
-    if (editingPage) {
-      setPagePlan(prev => prev.map(page => page.pageNumber === editingPage.pageNumber ? {
-        ...page,
-        isCompleted: true
-      } : page));
+  
+  const handleSaveEdit = (updatedLayoutJson: any) => {
+    // Update the article's layout JSON with the new data
+    if (editingPage && article) {
+      setArticle(prev => ({
+        ...prev,
+        article_json: {
+          ...prev.article_json,
+          [editingPage.layoutId.toString()]: updatedLayoutJson
+        }
+      }));
+      
+      // Mark page as completed
+      setPagePlan(prev => prev.map(page => 
+        page.pageNumber === editingPage.pageNumber ? {
+          ...page,
+          isCompleted: true,
+          layoutJson: updatedLayoutJson
+        } : page
+      ));
 
-      // Simulate redirect
-      toast.success("Redirecting to Viva...", {
-        duration: 2000
-      });
-      setTimeout(() => {
-        setStep('storyboard');
-        setActiveTab('upload');
-        setEditingPage(null);
-      }, 2000);
+      toast.success("Page completed successfully!");
+      setStep('storyboard');
+      setActiveTab('upload');
+      setEditingPage(null);
     }
   };
   const handleXmlUpload = (pageNumber: number, file: File) => {
@@ -471,7 +479,7 @@ export function MagazineCreatePage() {
       </div>;
   }
   if (step === 'editing' && editingPage) {
-    return <LayoutEditor page={editingPage} onSave={handleSaveEdit} onCancel={() => setStep('storyboard')} />;
+    return <LayoutEditor page={editingPage} article={article} onSave={handleSaveEdit} onCancel={() => setStep('storyboard')} />;
   }
   return <div className="container mx-auto py-8">
       <div className="mb-6">

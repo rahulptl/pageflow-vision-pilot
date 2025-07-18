@@ -237,6 +237,31 @@ class ApiService {
   async getImageEdit(sessionId: string): Promise<ImageEdit> {
     return this.request<ImageEdit>(`/image_edit/${sessionId}`);
   }
+
+  // Image upload API
+  async uploadImage(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/images/`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to upload image: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Patch article layout
+  async patchArticleLayout(articleId: number, layoutId: string, layoutJson: any): Promise<void> {
+    await this.request(`/articles/${articleId}/layout/${layoutId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(layoutJson),
+    });
+  }
 }
 
 export const apiService = new ApiService();

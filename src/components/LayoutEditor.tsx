@@ -371,66 +371,94 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                         <ImageIcon className="h-4 w-4" />
                         Images
                       </h4>
-                      {fields.filter(field => field.type === 'image').map((field) => (
-                        <div key={field.id} className="border rounded-lg p-4 space-y-3">
-                          <Label className="font-medium text-sm">
-                            {formatTextType(field.imageType || 'Image')}
-                          </Label>
-                          
-                          {fieldValues[field.id] ? (
-                            <div className="space-y-3">
-                              <div className="relative group">
-                                <img
-                                  src={fieldValues[field.id]}
-                                  alt={field.label}
-                                  className="w-full h-40 object-cover rounded border"
-                                />
-                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                                   <Button
-                                     variant="secondary"
-                                     size="sm"
-                                     onClick={() => {
-                                       setFieldValues(prev => ({ ...prev, [field.id]: '' }));
-                                       setUploadedFiles(prev => {
-                                         const updated = { ...prev };
-                                         delete updated[field.id];
-                                         return updated;
-                                       });
-                                     }}
-                                   >
-                                     <X className="h-4 w-4 mr-1" />
-                                     Remove
-                                   </Button>
-                                 </div>
+                      {fields.filter(field => field.type === 'image').map((field) => {
+                        const hasUploadedImage = fieldValues[field.id];
+                        const hasExistingImage = field.content && field.content.startsWith('http');
+                        const displayImage = hasUploadedImage || hasExistingImage;
+                        const imageUrl = hasUploadedImage || field.content;
+
+                        return (
+                          <div key={field.id} className="border rounded-lg p-4 space-y-3">
+                            <Label className="font-medium text-sm">
+                              {formatTextType(field.imageType || 'Image')}
+                            </Label>
+                            
+                            {displayImage ? (
+                              <div className="space-y-3">
+                                <div className="relative group">
+                                  <img
+                                    src={imageUrl}
+                                    alt={field.label}
+                                    className="w-full h-40 object-cover rounded border"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                  />
+                                  <div className="hidden bg-muted rounded border h-40 flex items-center justify-center">
+                                    <div className="text-center">
+                                      <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                      <p className="text-sm text-muted-foreground">
+                                        {formatTextType(field.imageType || 'Image')} Placeholder
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      onClick={() => {
+                                        setFieldValues(prev => ({ ...prev, [field.id]: '' }));
+                                        setUploadedFiles(prev => {
+                                          const updated = { ...prev };
+                                          delete updated[field.id];
+                                          return updated;
+                                        });
+                                      }}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      {hasUploadedImage ? 'Remove' : 'Replace'}
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div
+                                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                                  onDrop={(e) => handleDrop(field.id, e)}
+                                  onDragOver={handleDragOver}
+                                  onClick={() => document.getElementById(`file-${field.id}`)?.click()}
+                                >
+                                  <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                                  <p className="text-sm text-muted-foreground">
+                                    Drop new image or click to {hasUploadedImage ? 'replace' : 'upload'}
+                                  </p>
+                                </div>
                               </div>
-                              <div
-                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
-                                onDrop={(e) => handleDrop(field.id, e)}
-                                onDragOver={handleDragOver}
-                                onClick={() => document.getElementById(`file-${field.id}`)?.click()}
-                              >
-                                <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-                                <p className="text-sm text-muted-foreground">
-                                  Drop new image or click to replace
-                                </p>
+                            ) : (
+                              <div className="space-y-3">
+                                <div className="bg-muted rounded border h-40 flex items-center justify-center">
+                                  <div className="text-center">
+                                    <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">
+                                      {formatTextType(field.imageType || 'Image')} Placeholder
+                                    </p>
+                                  </div>
+                                </div>
+                                <div
+                                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                                  onDrop={(e) => handleDrop(field.id, e)}
+                                  onDragOver={handleDragOver}
+                                  onClick={() => document.getElementById(`file-${field.id}`)?.click()}
+                                >
+                                  <Upload className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+                                  <p className="text-sm font-medium mb-1">
+                                    Drop image here or click to upload
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatTextType(field.imageType || 'image')}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <div
-                              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
-                              onDrop={(e) => handleDrop(field.id, e)}
-                              onDragOver={handleDragOver}
-                              onClick={() => document.getElementById(`file-${field.id}`)?.click()}
-                            >
-                              <Upload className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-                              <p className="text-sm font-medium mb-1">
-                                Drop image here or click to upload
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatTextType(field.imageType || 'image')}
-                              </p>
-                            </div>
-                          )}
+                            )}
                           
                           <input
                             id={`file-${field.id}`}
@@ -443,7 +471,8 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                             }}
                           />
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>

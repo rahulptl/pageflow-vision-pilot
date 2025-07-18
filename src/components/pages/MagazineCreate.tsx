@@ -113,21 +113,39 @@ export function MagazineCreatePage() {
     }
     getRecommendationsMutation.mutate();
   };
-  const handleOpenArticle = (article: any) => {
-    setFormData({
-      articleName: article.article_title,
-      magazineTitle: article.magazine_title,
-      magazineCategory: article.magazine_category,
-      pageCount: article.page_count
-    });
-    // Set the article and create pages from it
-    setArticle(article);
-    if (article.layout_order && article.layout_order.length > 0) {
-      // We would need to create pages from the article data here
-      // For now, go to storyboard step
-      setStep('storyboard');
-    } else {
-      setStep('form');
+  const handleOpenArticle = async (article: any) => {
+    try {
+      // Fetch the full article details using the API
+      const fullArticle = await apiService.getArticle(article.article_id);
+      
+      setFormData({
+        articleName: fullArticle.article_title,
+        magazineTitle: fullArticle.magazine_title || '',
+        magazineCategory: fullArticle.magazine_category || '',
+        pageCount: fullArticle.page_count
+      });
+
+      // Set the article and create pages from it
+      setArticle(fullArticle);
+      
+      if (fullArticle.layout_order && fullArticle.layout_order.length > 0) {
+        // Fetch layout details for each layout in the order
+        const layoutDetailsPromises = fullArticle.layout_order.map(layoutId => 
+          apiService.getLayout(layoutId)
+        );
+        
+        const layouts = await Promise.all(layoutDetailsPromises);
+        
+        // Create pages from the article data
+        const pages = createPagesFromArticle(fullArticle, layouts);
+        
+        setPagePlan(pages);
+        setStep('storyboard');
+      } else {
+        setStep('form');
+      }
+    } catch (error) {
+      toast.error('Failed to load article details');
     }
   };
   const handleCreateNew = () => {

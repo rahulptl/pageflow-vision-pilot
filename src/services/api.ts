@@ -118,7 +118,9 @@ class ApiService {
   }
 
   async getArticle(articleId: number): Promise<Article> {
-    return this.request<Article>(`/articles/${articleId}`);
+    const params = new URLSearchParams();
+    params.append('article_id', articleId.toString());
+    return this.request<Article>(`/articles/?${params.toString()}`);
   }
 
   async createArticle(article: ArticleCreate): Promise<Article> {

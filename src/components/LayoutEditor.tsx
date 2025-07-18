@@ -96,7 +96,8 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     formFields.forEach(field => {
-      initial[field.id] = field.content;
+      // Only set initial value for text fields, leave image fields empty
+      initial[field.id] = field.type === 'text' ? field.content : '';
     });
     return initial;
   });

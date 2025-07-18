@@ -52,26 +52,7 @@ export function MagazineCreatePage() {
   const [editingPage, setEditingPage] = useState<PagePlan | null>(null);
   const [activeTab, setActiveTab] = useState('storyboard');
 
-  // Mock saved magazines - in real app this would come from API
-  const [savedMagazines] = useState<SavedMagazine[]>([{
-    id: '1',
-    articleName: 'Tech Weekly Issue 5',
-    magazineTitle: 'Latest AI Innovations',
-    magazineCategory: 'Technology',
-    pageCount: 12,
-    progress: 75,
-    lastModified: '2 hours ago',
-    pagePlan: []
-  }, {
-    id: '2',
-    articleName: 'Lifestyle Magazine',
-    magazineTitle: 'Summer Fashion Trends',
-    magazineCategory: 'Lifestyle',
-    pageCount: 8,
-    progress: 30,
-    lastModified: '1 day ago',
-    pagePlan: []
-  }]);
+  // No mock data - will be removed
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
@@ -132,15 +113,18 @@ export function MagazineCreatePage() {
     }
     getRecommendationsMutation.mutate();
   };
-  const handleOpenMagazine = (magazine: SavedMagazine) => {
+  const handleOpenArticle = (article: any) => {
     setFormData({
-      articleName: magazine.articleName,
-      magazineTitle: magazine.magazineTitle,
-      magazineCategory: magazine.magazineCategory,
-      pageCount: magazine.pageCount
+      articleName: article.article_title,
+      magazineTitle: article.magazine_title,
+      magazineCategory: article.magazine_category,
+      pageCount: article.page_count
     });
-    setPagePlan(magazine.pagePlan);
-    if (magazine.pagePlan.length > 0) {
+    // Set the article and create pages from it
+    setArticle(article);
+    if (article.layout_order && article.layout_order.length > 0) {
+      // We would need to create pages from the article data here
+      // For now, go to storyboard step
       setStep('storyboard');
     } else {
       setStep('form');
@@ -154,6 +138,7 @@ export function MagazineCreatePage() {
       pageCount: 10
     });
     setPagePlan([]);
+    setArticle(null);
     setStep('form');
   };
   const handleSwapLayout = (pageIndex: number, newLayoutId: number | number[]) => {
@@ -320,43 +305,47 @@ export function MagazineCreatePage() {
   };
   const progress = pagePlan.length > 0 ? pagePlan.filter(p => p.isCompleted && p.xmlUploaded).length / pagePlan.length * 100 : 0;
   const totalPages = pagePlan.reduce((sum, page) => sum + (page.typeOfPage === '2 pager' ? 2 : 1), 0);
+  // Filter articles for different sections
+  const draftArticles = articles.filter(article => article.status === 'DRAFT');
+  const publishedArticles = articles.filter(article => article.status !== 'DRAFT');
+
   if (step === 'workspace') {
     return <div className="container mx-auto py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Magazine Workspace</h1>
-          <p className="text-muted-foreground">Create new magazines or continue working on existing ones</p>
+          <h1 className="text-3xl font-bold mb-2">Article Workspace</h1>
+          <p className="text-muted-foreground">Create new articles or continue working on existing ones</p>
         </div>
 
         <div className="grid gap-8">
           {/* Create New Section */}
           <section>
-            <h2 className="text-xl font-semibold mb-4">Create New Magazine</h2>
+            <h2 className="text-xl font-semibold mb-4">Create New Article</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer" onClick={handleCreateNew}>
                 <CardContent className="flex flex-col items-center justify-center p-8 text-center">
                   <Plus className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">Create New Magazine</h3>
-                  <p className="text-sm text-muted-foreground">Start a new magazine project</p>
+                  <h3 className="font-semibold mb-2">Create New Article</h3>
+                  <p className="text-sm text-muted-foreground">Start a new article project</p>
                 </CardContent>
               </Card>
             </div>
           </section>
 
-          {/* Recent Articles Section */}
+          {/* Continue Working Section - Draft Articles */}
           <section>
-            <h2 className="text-xl font-semibold mb-4">Recent Articles</h2>
-            {articles.length === 0 ? (
+            <h2 className="text-xl font-semibold mb-4">Continue Working</h2>
+            {draftArticles.length === 0 ? (
               <Card className="p-8">
                 <div className="text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">No articles yet</h3>
-                  <p className="text-muted-foreground">Articles will appear here once created</p>
+                  <h3 className="font-semibold mb-2">No draft articles</h3>
+                  <p className="text-muted-foreground">Your work-in-progress articles will appear here</p>
                 </div>
               </Card>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {articles.map(article => (
-                  <Card key={article.article_id} className="hover:shadow-md transition-shadow">
+                {draftArticles.map(article => (
+                  <Card key={article.article_id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleOpenArticle(article)}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">{article.article_title}</CardTitle>
                       <p className="text-sm text-muted-foreground">{article.magazine_title}</p>
@@ -383,47 +372,39 @@ export function MagazineCreatePage() {
             )}
           </section>
 
-          {/* Saved Magazines Section */}
+          {/* Published Articles Section */}
           <section>
-            <h2 className="text-xl font-semibold mb-4">Continue Working</h2>
-            {savedMagazines.length === 0 ? (
+            <h2 className="text-xl font-semibold mb-4">Published Articles</h2>
+            {publishedArticles.length === 0 ? (
               <Card className="p-8">
                 <div className="text-center">
-                  <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">No saved magazines</h3>
-                  <p className="text-muted-foreground">Your work-in-progress magazines will appear here</p>
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">No published articles</h3>
+                  <p className="text-muted-foreground">Your completed articles will appear here</p>
                 </div>
               </Card>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {savedMagazines.map(magazine => (
-                  <Card key={magazine.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleOpenMagazine(magazine)}>
+                {publishedArticles.map(article => (
+                  <Card key={article.article_id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{magazine.articleName}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{magazine.magazineTitle}</p>
+                      <CardTitle className="text-lg">{article.article_title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{article.magazine_title}</p>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-2 mb-3">
-                        <Badge variant="secondary">{magazine.magazineCategory}</Badge>
-                        <Badge variant="outline">{magazine.pageCount} pages</Badge>
-                      </div>
-                      
-                      <div className="space-y-2 mb-3">
-                        <div className="flex justify-between text-sm">
-                          <span>Progress</span>
-                          <span>{magazine.progress}%</span>
-                        </div>
-                        <Progress value={magazine.progress} className="h-2" />
+                        <Badge variant="secondary">{article.magazine_category}</Badge>
+                        <Badge variant="outline">{article.page_count} pages</Badge>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span>{magazine.lastModified}</span>
+                          <span>{new Date(article.created_at).toLocaleDateString()}</span>
                         </div>
-                        <Button variant="ghost" size="sm" className="h-auto p-1">
-                          <FolderOpen className="h-4 w-4" />
-                        </Button>
+                        <Badge variant="outline" className="text-xs">
+                          {article.status}
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
@@ -438,7 +419,7 @@ export function MagazineCreatePage() {
     return <div className="container mx-auto py-8 max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle>Create New Magazine</CardTitle>
+            <CardTitle>Create New Article</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -480,7 +461,7 @@ export function MagazineCreatePage() {
                   Back to Workspace
                 </Button>
                 <Button type="submit" className="flex-1" disabled={getRecommendationsMutation.isPending}>
-                  {getRecommendationsMutation.isPending ? 'Getting Recommendations...' : 'Create Magazine Plan'}
+                  {getRecommendationsMutation.isPending ? 'Getting Recommendations...' : 'Create Article Plan'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>

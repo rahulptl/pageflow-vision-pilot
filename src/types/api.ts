@@ -36,13 +36,21 @@ export interface Article {
   article_id: number;
   article_title: string;
   page_count: number;
-  layout_pages: LayoutPage[];
+  layout_order: number[];
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  article_json: Record<string, any>;
+  magazine_title: string | null;
+  magazine_category: string | null;
+  // Legacy support
+  layout_pages?: LayoutPage[];
   magazine_name?: string;
   approximate_number_of_words?: number;
   number_of_images?: number;
   article_category?: string;
-  created_at: string;
-  created_by?: string;
 }
 
 export interface ArticleWithLayout extends Omit<Article, 'layout_pages'> {

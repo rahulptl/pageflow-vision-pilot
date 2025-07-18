@@ -12,6 +12,7 @@ interface PagePlan {
   typeOfPage: string;
   layoutId: number;
   layout?: any;
+  layoutJson?: any;
   isCompleted: boolean;
   xmlUploaded: boolean;
 }
@@ -51,10 +52,12 @@ interface FormField {
 export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
   // Parse layout JSON to extract objects
   const formFields = useMemo(() => {
-    if (!page.layout?.layout_json?.document?.pages) return [];
+    // Use layoutJson from article_json if available, otherwise fallback to layout.layout_json
+    const layoutData = page.layoutJson || page.layout?.layout_json;
+    if (!layoutData?.document?.pages) return [];
     
     const fields: FormField[] = [];
-    const pages = page.layout.layout_json.document.pages;
+    const pages = layoutData.document.pages;
     
     pages.forEach((pageData: any, pageIndex: number) => {
       if (pageData.objects) {
@@ -91,7 +94,7 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
       if (a.pageNumber !== b.pageNumber) return a.pageNumber - b.pageNumber;
       return a.objectId - b.objectId;
     });
-  }, [page.layout]);
+  }, [page.layout, page.layoutJson]);
 
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};

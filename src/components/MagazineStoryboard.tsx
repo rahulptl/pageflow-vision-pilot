@@ -16,12 +16,17 @@ interface PagePlan {
   typeOfPage: string;
   layoutId: number;
   layout?: Layout;
+  layoutJson?: any;
   isCompleted: boolean;
   xmlUploaded: boolean;
 }
 interface MagazineStoryboardProps {
   pages: PagePlan[];
   allLayouts: Layout[];
+  article?: {
+    layout_order: number[];
+    article_json: Record<string, any>;
+  };
   onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
   onReorderPages: (pages: PagePlan[]) => void;

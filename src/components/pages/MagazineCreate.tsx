@@ -115,8 +115,11 @@ export function MagazineCreatePage() {
   };
   const handleOpenArticle = async (article: any) => {
     try {
+      console.log('Opening article:', article);
+      
       // Fetch the full article details using the API
       const fullArticle = await apiService.getArticle(article.article_id);
+      console.log('Full article from API:', fullArticle);
       
       setFormData({
         articleName: fullArticle.article_title,
@@ -128,23 +131,31 @@ export function MagazineCreatePage() {
       // Set the article and create pages from it
       setArticle(fullArticle);
       
+      console.log('Article layout_order:', fullArticle.layout_order);
+      console.log('Article article_json:', fullArticle.article_json);
+      
       if (fullArticle.layout_order && fullArticle.layout_order.length > 0) {
+        console.log('Article has layout_order, fetching layouts...');
         // Fetch layout details for each layout in the order
         const layoutDetailsPromises = fullArticle.layout_order.map(layoutId => 
           apiService.getLayout(layoutId)
         );
         
         const layouts = await Promise.all(layoutDetailsPromises);
+        console.log('Fetched layouts:', layouts);
         
         // Create pages from the article data
         const pages = createPagesFromArticle(fullArticle, layouts);
+        console.log('Created pages:', pages);
         
         setPagePlan(pages);
         setStep('storyboard');
       } else {
+        console.log('Article has no layout_order, going to form step');
         setStep('form');
       }
     } catch (error) {
+      console.error('Error loading article:', error);
       toast.error('Failed to load article details');
     }
   };

@@ -110,6 +110,18 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
     setFieldValues(prev => ({ ...prev, [fieldId]: url }));
   };
 
+  const handleDrop = (fieldId: string, e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+      handleImageUpload(fieldId, files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   // Helper function to format text type labels
   const formatTextType = (textType: string) => {
     return textType
@@ -242,40 +254,65 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                           <Label className="font-medium text-sm">
                             {formatTextType(field.imageType || 'Image')}
                           </Label>
-                          <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                              {fieldValues[field.id] ? (
+                          
+                          {fieldValues[field.id] ? (
+                            <div className="space-y-3">
+                              <div className="relative group">
                                 <img
                                   src={fieldValues[field.id]}
                                   alt={field.label}
-                                  className="w-20 h-20 object-cover rounded border"
+                                  className="w-full h-40 object-cover rounded border"
                                 />
-                              ) : (
-                                <div className="w-20 h-20 bg-muted rounded border flex items-center justify-center">
-                                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 space-y-2">
-                              <div className="relative">
-                                <Input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleImageUpload(field.id, file);
-                                  }}
-                                  className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                                />
-                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                  <Upload className="h-4 w-4 text-muted-foreground" />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setFieldValues(prev => ({ ...prev, [field.id]: '' }))}
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Remove
+                                  </Button>
                                 </div>
                               </div>
+                              <div
+                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                                onDrop={(e) => handleDrop(field.id, e)}
+                                onDragOver={handleDragOver}
+                                onClick={() => document.getElementById(`file-${field.id}`)?.click()}
+                              >
+                                <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">
+                                  Drop new image or click to replace
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                              onDrop={(e) => handleDrop(field.id, e)}
+                              onDragOver={handleDragOver}
+                              onClick={() => document.getElementById(`file-${field.id}`)?.click()}
+                            >
+                              <Upload className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+                              <p className="text-sm font-medium mb-1">
+                                Drop image here or click to upload
+                              </p>
                               <p className="text-xs text-muted-foreground">
-                                Upload image for {formatTextType(field.imageType || 'image')}
+                                {formatTextType(field.imageType || 'image')}
                               </p>
                             </div>
-                          </div>
+                          )}
+                          
+                          <input
+                            id={`file-${field.id}`}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload(field.id, file);
+                            }}
+                          />
                         </div>
                       ))}
                     </div>

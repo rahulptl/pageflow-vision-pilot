@@ -110,6 +110,14 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
     setFieldValues(prev => ({ ...prev, [fieldId]: url }));
   };
 
+  // Helper function to format text type labels
+  const formatTextType = (textType: string) => {
+    return textType
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/\b\w/g, l => l.toUpperCase())
+      .trim();
+  };
+
   // Group fields by page
   const fieldsByPage = useMemo(() => {
     const grouped: Record<number, FormField[]> = {};
@@ -122,10 +130,10 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex gap-8 min-h-screen">
+      <div className="flex gap-8">
         {/* Sticky Bounding Box */}
         <div className="w-80 flex-shrink-0">
-          <div className="sticky top-8">
+          <div className="sticky top-4 h-fit">
             <Card>
             <CardHeader>
               <CardTitle>Layout Guide</CardTitle>
@@ -200,7 +208,7 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                       {fields.filter(field => field.type === 'text').map((field) => (
                         <div key={field.id} className="space-y-2">
                           <Label className="font-medium text-sm">
-                            {field.textType}
+                            {formatTextType(field.textType || 'Text')}
                           </Label>
                           {field.textType?.includes('body') || field.textType?.includes('copy') ? (
                             <Textarea
@@ -232,7 +240,7 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                       {fields.filter(field => field.type === 'image').map((field) => (
                         <div key={field.id} className="border rounded-lg p-4 space-y-3">
                           <Label className="font-medium text-sm">
-                            {field.imageType}
+                            {formatTextType(field.imageType || 'Image')}
                           </Label>
                           <div className="flex items-start gap-4">
                             <div className="flex-shrink-0">
@@ -264,7 +272,7 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                                 </div>
                               </div>
                               <p className="text-xs text-muted-foreground">
-                                Upload image for {field.imageType}
+                                Upload image for {formatTextType(field.imageType || 'image')}
                               </p>
                             </div>
                           </div>

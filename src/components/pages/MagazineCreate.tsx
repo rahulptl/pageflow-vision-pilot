@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText } from "lucide-react";
+import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText, Save } from "lucide-react";
 import { apiService } from "@/services/api";
-import { Layout, ArticleRecommendationResponse } from "@/types/api";
+import { Layout, ArticleRecommendationResponse, Article } from "@/types/api";
 import { toast } from "sonner";
 import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
@@ -47,10 +47,12 @@ export function MagazineCreatePage() {
     magazineCategory: '',
     pageCount: 10
   });
-  const [article, setArticle] = useState<ArticleRecommendationResponse | null>(null);
+  const [article, setArticle] = useState<(ArticleRecommendationResponse & { article_id?: number }) | Article | null>(null);
   const [pagePlan, setPagePlan] = useState<PagePlan[]>([]);
   const [editingPage, setEditingPage] = useState<PagePlan | null>(null);
   const [activeTab, setActiveTab] = useState('storyboard');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [originalLayoutOrder, setOriginalLayoutOrder] = useState<number[]>([]);
 
   // No mock data - will be removed
 
@@ -80,6 +82,8 @@ export function MagazineCreatePage() {
         const pages = createPagesFromArticle(articleData, layouts);
         
         setPagePlan(pages);
+        setOriginalLayoutOrder([...articleData.layout_order]); // Track original order
+        setHasUnsavedChanges(false);
         setStep('storyboard');
       } catch (error) {
         toast.error('Failed to load layout details');
@@ -171,6 +175,7 @@ export function MagazineCreatePage() {
     setStep('form');
   };
   const handleSwapLayout = (pageIndex: number, newLayoutId: number | number[]) => {
+    setHasUnsavedChanges(true);
     setPagePlan(prev => {
       const newPlan = [...prev];
       const currentPage = newPlan[pageIndex];
@@ -250,6 +255,7 @@ export function MagazineCreatePage() {
     });
   };
   const handleReorderPages = (reorderedPages: PagePlan[]) => {
+    setHasUnsavedChanges(true);
     // Update page numbers based on new order, considering 2-pagers take 2 page slots
     let currentPageNumber = 1;
     const pagesWithUpdatedNumbers = reorderedPages.map(page => {
@@ -339,6 +345,41 @@ export function MagazineCreatePage() {
       return;
     }
     toast.success('Creating article with all pages stitched together!');
+  };
+
+  // Save layout changes mutation
+  const saveChangesMutation = useMutation({
+    mutationFn: async () => {
+      if (!article) {
+        throw new Error("Article not found");
+      }
+
+      // Check if article has article_id (loaded from existing) or needs to be created first
+      const articleId = 'article_id' in article ? article.article_id : undefined;
+      
+      if (!articleId) {
+        throw new Error("Cannot save changes to article without ID");
+      }
+
+      const currentLayoutOrder = pagePlan.map(page => page.layoutId);
+      
+      return apiService.updateArticle(articleId, {
+        layout_order: currentLayoutOrder,
+        article_json: article.article_json
+      });
+    },
+    onSuccess: () => {
+      setHasUnsavedChanges(false);
+      setOriginalLayoutOrder(pagePlan.map(page => page.layoutId));
+      toast.success('Layout changes saved successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to save layout changes');
+    }
+  });
+
+  const handleSaveChanges = () => {
+    saveChangesMutation.mutate();
   };
   const progress = pagePlan.length > 0 ? pagePlan.filter(p => p.isCompleted && p.xmlUploaded).length / pagePlan.length * 100 : 0;
   const totalPages = pagePlan.reduce((sum, page) => sum + (page.typeOfPage === '2 pager' ? 2 : 1), 0);
@@ -516,9 +557,30 @@ export function MagazineCreatePage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">{formData.articleName} • {totalPages} pages</h1>
           </div>
-          <Button variant="outline" onClick={() => setStep('workspace')}>
-            Back to Workspace
-          </Button>
+          <div className="flex items-center gap-2">
+            {hasUnsavedChanges && (
+              <Button 
+                onClick={handleSaveChanges} 
+                disabled={saveChangesMutation.isPending}
+                className="gap-2"
+              >
+                {saveChangesMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setStep('workspace')}>
+              Back to Workspace
+            </Button>
+          </div>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">

@@ -128,9 +128,9 @@ class ApiService {
     });
   }
 
-  async updateArticle(articleId: number, article: ArticleCreate): Promise<Article> {
+  async updateArticle(articleId: number, article: Partial<Article>): Promise<Article> {
     return this.request<Article>(`/articles/${articleId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(article),
     });
   }

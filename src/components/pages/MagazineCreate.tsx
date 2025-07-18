@@ -363,7 +363,7 @@ export function MagazineCreatePage() {
 
       const currentLayoutOrder = pagePlan.map(page => page.layoutId);
       
-      // Build updated article_json with current layout assignments
+      // Build updated article_json by completely replacing layouts array with current pagePlan
       const updatedArticleJson = {
         ...article.article_json,
         layouts: pagePlan.map(page => ({

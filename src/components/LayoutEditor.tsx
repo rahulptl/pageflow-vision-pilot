@@ -163,10 +163,15 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
     try {
       // Step 1: Check if all required images are uploaded
       const imageFields = formFields.filter(field => field.type === 'image');
-      const missingImages = imageFields.filter(field => !fieldValues[field.id] && !field.content);
+      const missingImages = imageFields.filter(field => {
+        // Check if no file is uploaded for this field
+        const hasUploadedFile = uploadedFiles[field.id];
+        const hasExistingValidUrl = field.content && field.content.startsWith('http');
+        return !hasUploadedFile && !hasExistingValidUrl;
+      });
       
       if (missingImages.length > 0) {
-        toast.error("Please upload all required images before saving");
+        toast.error(`Please upload ${missingImages.length} missing image(s) before saving`);
         setIsSaving(false);
         return;
       }

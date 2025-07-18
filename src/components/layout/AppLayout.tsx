@@ -30,9 +30,16 @@ export function AppLayout({ isAdmin, baseRoute }: AppLayoutProps) {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             
-            {/* Articles - Admin: full CRUD, User: read/search only */}
-            <Route path="articles" element={<Articles isAdmin={isAdmin} />} />
-            <Route path="articles/:id" element={<ArticleDetails isAdmin={isAdmin} />} />
+            
+            {/* Articles - Admin: full CRUD, User: redirect to magazine creation */}
+            {isAdmin ? (
+              <>
+                <Route path="articles" element={<Articles isAdmin={isAdmin} />} />
+                <Route path="articles/:id" element={<ArticleDetails isAdmin={isAdmin} />} />
+              </>
+            ) : (
+              <Route path="articles" element={<Navigate to="/user/magazines/create" replace />} />
+            )}
             
             {/* Magazines - Admin: full CRUD, User: create only */}
             <Route path="magazines" element={<MagazineForm />} />

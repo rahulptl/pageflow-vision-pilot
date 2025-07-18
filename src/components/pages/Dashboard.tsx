@@ -19,6 +19,11 @@ export function Dashboard() {
     queryFn: () => apiService.getRuns(),
   });
 
+  const { data: articles = [], isLoading: articlesLoading } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => apiService.getArticles(),
+  });
+
   // Calculate stats
   const totalLayouts = layouts.length;
   const recentRuns = runs.filter(run => {
@@ -40,7 +45,11 @@ export function Dashboard() {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  if (layoutsLoading || runsLoading) {
+  const recentArticles = articles
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
+
+  if (layoutsLoading || runsLoading || articlesLoading) {
     return (
       <div className="content-container py-8">
         <div className="animate-pulse space-y-8">
@@ -123,7 +132,7 @@ export function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Activity */}
         <Card className="lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -171,6 +180,61 @@ export function Dashboard() {
                     </div>
                     <Badge variant="secondary" className="bg-primary/10 text-primary">
                       Level {layout.layout_json?.merge_level || 2}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Articles */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Articles</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">Latest magazine articles</p>
+            </div>
+            <Link to="/admin/articles">
+              <Button variant="outline" size="sm" className="gap-2">
+                View All
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {recentArticles.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">No articles yet</h3>
+                <p className="text-muted-foreground mb-6">Create your first article to get started</p>
+                <Link to="/admin/articles">
+                  <Button>Browse Articles</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentArticles.map((article) => (
+                  <Link
+                    key={article.article_id}
+                    to={`/admin/articles/${article.article_id}`}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:bg-muted/50 hover:border-border transition-all duration-200 group"
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-secondary/10 to-secondary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <FileText className="w-6 h-6 text-secondary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {article.article_title}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {article.magazine_title} • {formatShortDate(article.created_at)}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="bg-secondary/10 text-secondary">
+                      {article.page_count} pages
                     </Badge>
                   </Link>
                 ))}

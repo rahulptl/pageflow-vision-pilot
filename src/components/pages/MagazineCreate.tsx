@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar } from "lucide-react";
 import { apiService } from "@/services/api";
-import { Layout, LayoutRecommendation } from "@/types/api";
+import { Layout, ArticleRecommendationResponse } from "@/types/api";
 import { toast } from "sonner";
 import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
+import { createPagesFromArticle } from "@/utils/articleHelpers";
 interface MagazineFormData {
   articleName: string;
   magazineTitle: string;
@@ -34,6 +35,7 @@ interface PagePlan {
   typeOfPage: string;
   layoutId: number;
   layout?: Layout;
+  layoutJson?: any;
   isCompleted: boolean;
   xmlUploaded: boolean;
 }
@@ -45,7 +47,7 @@ export function MagazineCreatePage() {
     magazineCategory: '',
     pageCount: 10
   });
-  const [recommendations, setRecommendations] = useState<LayoutRecommendation[]>([]);
+  const [article, setArticle] = useState<ArticleRecommendationResponse | null>(null);
   const [pagePlan, setPagePlan] = useState<PagePlan[]>([]);
   const [editingPage, setEditingPage] = useState<PagePlan | null>(null);
   const [activeTab, setActiveTab] = useState('storyboard');
@@ -79,22 +81,24 @@ export function MagazineCreatePage() {
       formData.pageCount,
       formData.articleName
     ),
-    onSuccess: async data => {
-      setRecommendations(data);
+    onSuccess: async (articleData) => {
+      setArticle(articleData);
 
-      // Fetch layout details for each recommendation
-      const layoutDetailsPromises = data.map(rec => apiService.getLayout(rec.layout_id));
+      // Fetch layout details for each layout in the order
+      const layoutDetailsPromises = articleData.layout_order.map(layoutId => 
+        apiService.getLayout(layoutId)
+      );
+      
       try {
         const layouts = await Promise.all(layoutDetailsPromises);
-        const planWithLayouts: PagePlan[] = data.map((rec, index) => ({
-          pageNumber: rec.page_number,
-          typeOfPage: rec.type_of_page,
-          layoutId: rec.layout_id,
-          layout: layouts[index],
-          isCompleted: false,
-          xmlUploaded: false
-        }));
-        setPagePlan(planWithLayouts);
+        
+        // Create a map of layout_id to layout for easy lookup
+        const layoutMap = new Map(layouts.map(layout => [layout.layout_id, layout]));
+        
+        // Create pages from the article data
+        const pages = createPagesFromArticle(articleData, layouts);
+        
+        setPagePlan(pages);
         setStep('storyboard');
       } catch (error) {
         toast.error('Failed to load layout details');
@@ -265,7 +269,12 @@ export function MagazineCreatePage() {
     });
   };
   const handleEditPage = (page: PagePlan) => {
-    setEditingPage(page);
+    // Ensure the page has the layout JSON from the article
+    const pageWithJson = {
+      ...page,
+      layoutJson: article?.article_json[page.layoutId.toString()]
+    };
+    setEditingPage(pageWithJson);
     setStep('editing');
   };
   const handleSaveEdit = () => {
@@ -439,7 +448,7 @@ export function MagazineCreatePage() {
         </TabsList>
 
         <TabsContent value="storyboard">
-          <MagazineStoryboard pages={pagePlan} allLayouts={allLayouts} onSwapLayout={handleSwapLayout} onEditPage={handleEditPage} onReorderPages={handleReorderPages} onRemovePage={handleRemovePage} />
+          <MagazineStoryboard pages={pagePlan} allLayouts={allLayouts} article={article} onSwapLayout={handleSwapLayout} onEditPage={handleEditPage} onReorderPages={handleReorderPages} onRemovePage={handleRemovePage} />
         </TabsContent>
 
         <TabsContent value="upload">

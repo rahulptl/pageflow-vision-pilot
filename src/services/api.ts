@@ -1,5 +1,5 @@
 
-import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse, LayoutRecommendation } from '@/types/api';
+import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse, LayoutRecommendation, ArticleRecommendationResponse } from '@/types/api';
 import { ImageEdit } from '@/types/imageGeneration';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -173,7 +173,7 @@ class ApiService {
     pageCount: number,
     articleTitle: string = "Draft Article",
     createdBy?: string
-  ): Promise<LayoutRecommendation[]> {
+  ): Promise<ArticleRecommendationResponse> {
     const params = new URLSearchParams({
       magazine_title: magazineTitle,
       magazine_category: magazineCategory, 
@@ -183,7 +183,7 @@ class ApiService {
     if (createdBy) {
       params.append('created_by', createdBy);
     }
-    return this.request<LayoutRecommendation[]>(`/articles/recommend?${params}`);
+    return this.request<ArticleRecommendationResponse>(`/articles/recommend?${params}`);
   }
 
   // Image Generation APIs

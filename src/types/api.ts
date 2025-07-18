@@ -102,3 +102,15 @@ export interface LayoutRecommendation {
   type_of_page: string;
   layout_id: number;
 }
+
+// New API response type for article recommendations
+export interface ArticleRecommendationResponse {
+  article_title: string;
+  page_count: number;
+  layout_order: number[];
+  created_by: string | null;
+  updated_by: string | null;
+  magazine_title: string;
+  magazine_category: string;
+  article_json: Record<string, any>;
+}

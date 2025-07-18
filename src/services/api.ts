@@ -167,12 +167,22 @@ class ApiService {
   }
 
   // Recommendation API
-  async getLayoutRecommendations(magazineName: string, articleCategory: string, pageCount: number): Promise<LayoutRecommendation[]> {
+  async getLayoutRecommendations(
+    magazineTitle: string, 
+    magazineCategory: string, 
+    pageCount: number,
+    articleTitle: string = "Draft Article",
+    createdBy?: string
+  ): Promise<LayoutRecommendation[]> {
     const params = new URLSearchParams({
-      magazine_name: magazineName,
-      article_category: articleCategory, 
-      page_count: pageCount.toString()
+      magazine_title: magazineTitle,
+      magazine_category: magazineCategory, 
+      page_count: pageCount.toString(),
+      article_title: articleTitle
     });
+    if (createdBy) {
+      params.append('created_by', createdBy);
+    }
     return this.request<LayoutRecommendation[]>(`/articles/recommend?${params}`);
   }
 

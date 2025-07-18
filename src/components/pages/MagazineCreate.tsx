@@ -73,7 +73,12 @@ export function MagazineCreatePage() {
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
-    mutationFn: () => apiService.getLayoutRecommendations(formData.magazineTitle, formData.magazineCategory, formData.pageCount),
+    mutationFn: () => apiService.getLayoutRecommendations(
+      formData.magazineTitle, 
+      formData.magazineCategory, 
+      formData.pageCount,
+      formData.articleName
+    ),
     onSuccess: async data => {
       setRecommendations(data);
 

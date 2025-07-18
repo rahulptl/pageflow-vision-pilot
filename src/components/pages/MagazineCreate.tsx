@@ -363,9 +363,22 @@ export function MagazineCreatePage() {
 
       const currentLayoutOrder = pagePlan.map(page => page.layoutId);
       
+      // Build updated article_json with current layout assignments
+      const updatedArticleJson = {
+        ...article.article_json,
+        layouts: pagePlan.map(page => ({
+          layout_id: page.layoutId,
+          page_number: page.pageNumber,
+          type_of_page: page.typeOfPage,
+          layout_json: page.layout?.layout_json || {},
+          isCompleted: page.isCompleted,
+          xmlUploaded: page.xmlUploaded
+        }))
+      };
+      
       return apiService.updateArticle(articleId, {
         layout_order: currentLayoutOrder,
-        article_json: article.article_json
+        article_json: updatedArticleJson
       });
     },
     onSuccess: () => {

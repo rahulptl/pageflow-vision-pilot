@@ -122,10 +122,11 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex gap-8">
+      <div className="flex gap-8 min-h-screen">
         {/* Sticky Bounding Box */}
-        <div className="w-80 sticky top-8 self-start">
-          <Card>
+        <div className="w-80 flex-shrink-0">
+          <div className="sticky top-8">
+            <Card>
             <CardHeader>
               <CardTitle>Layout Guide</CardTitle>
               <p className="text-sm text-muted-foreground">Reference for content placement</p>
@@ -146,6 +147,7 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
               )}
             </CardContent>
           </Card>
+          </div>
         </div>
 
         {/* Content Editor */}
@@ -197,8 +199,8 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                       </h4>
                       {fields.filter(field => field.type === 'text').map((field) => (
                         <div key={field.id} className="space-y-2">
-                          <Label className="capitalize font-medium text-sm">
-                            {field.textType?.replace(/([A-Z])/g, ' $1').trim()}
+                          <Label className="font-medium text-sm">
+                            {field.textType}
                           </Label>
                           {field.textType?.includes('body') || field.textType?.includes('copy') ? (
                             <Textarea
@@ -229,32 +231,39 @@ export function LayoutEditor({ page, onSave, onCancel }: LayoutEditorProps) {
                       </h4>
                       {fields.filter(field => field.type === 'image').map((field) => (
                         <div key={field.id} className="border rounded-lg p-4 space-y-3">
-                          <Label className="capitalize font-medium text-sm">
-                            {field.imageType?.replace(/([A-Z])/g, ' $1').trim()}
+                          <Label className="font-medium text-sm">
+                            {field.imageType}
                           </Label>
-                          <div className="flex items-center gap-4">
-                            {fieldValues[field.id] ? (
-                              <img
-                                src={fieldValues[field.id]}
-                                alt={field.label}
-                                className="w-20 h-20 object-cover rounded border"
-                              />
-                            ) : (
-                              <div className="w-20 h-20 bg-muted rounded border flex items-center justify-center">
-                                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              {fieldValues[field.id] ? (
+                                <img
+                                  src={fieldValues[field.id]}
+                                  alt={field.label}
+                                  className="w-20 h-20 object-cover rounded border"
+                                />
+                              ) : (
+                                <div className="w-20 h-20 bg-muted rounded border flex items-center justify-center">
+                                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <div className="relative">
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleImageUpload(field.id, file);
+                                  }}
+                                  className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                  <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
                               </div>
-                            )}
-                            <div className="flex-1">
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleImageUpload(field.id, file);
-                                }}
-                                className="w-full"
-                              />
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground">
                                 Upload image for {field.imageType}
                               </p>
                             </div>

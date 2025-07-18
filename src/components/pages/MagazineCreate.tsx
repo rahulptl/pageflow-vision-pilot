@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar } from "lucide-react";
+import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText } from "lucide-react";
 import { apiService } from "@/services/api";
 import { Layout, ArticleRecommendationResponse } from "@/types/api";
 import { toast } from "sonner";
@@ -107,6 +107,13 @@ export function MagazineCreatePage() {
     onError: () => {
       toast.error('Failed to get layout recommendations');
     }
+  });
+
+  // Get all articles
+  const { data: articles = [] } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => apiService.getArticles(),
+    enabled: step === 'workspace'
   });
 
   // Get all layouts for swapping
@@ -320,47 +327,110 @@ export function MagazineCreatePage() {
           <p className="text-muted-foreground">Create new magazines or continue working on existing ones</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {/* Create New Magazine Card */}
-          <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer" onClick={handleCreateNew}>
-            <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-              <Plus className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold mb-2">Create New Magazine</h3>
-              <p className="text-sm text-muted-foreground">Start a new magazine project</p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-8">
+          {/* Create New Section */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Create New Magazine</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer" onClick={handleCreateNew}>
+                <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+                  <Plus className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="font-semibold mb-2">Create New Magazine</h3>
+                  <p className="text-sm text-muted-foreground">Start a new magazine project</p>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
 
-          {/* Existing Magazines */}
-          {savedMagazines.map(magazine => <Card key={magazine.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleOpenMagazine(magazine)}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{magazine.articleName}</CardTitle>
-                <p className="text-sm text-muted-foreground">{magazine.magazineTitle}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="secondary">{magazine.magazineCategory}</Badge>
-                  <Badge variant="outline">{magazine.pageCount} pages</Badge>
+          {/* Recent Articles Section */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Recent Articles</h2>
+            {articles.length === 0 ? (
+              <Card className="p-8">
+                <div className="text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">No articles yet</h3>
+                  <p className="text-muted-foreground">Articles will appear here once created</p>
                 </div>
-                
-                <div className="space-y-2 mb-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Progress</span>
-                    <span>{magazine.progress}%</span>
-                  </div>
-                  <Progress value={magazine.progress} className="h-2" />
+              </Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {articles.map(article => (
+                  <Card key={article.article_id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{article.article_title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{article.magazine_title}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="secondary">{article.magazine_category}</Badge>
+                        <Badge variant="outline">{article.page_count} pages</Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(article.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {article.status}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Saved Magazines Section */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Continue Working</h2>
+            {savedMagazines.length === 0 ? (
+              <Card className="p-8">
+                <div className="text-center">
+                  <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">No saved magazines</h3>
+                  <p className="text-muted-foreground">Your work-in-progress magazines will appear here</p>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>{magazine.lastModified}</span>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-auto p-1">
-                    <FolderOpen className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>)}
+              </Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {savedMagazines.map(magazine => (
+                  <Card key={magazine.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleOpenMagazine(magazine)}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{magazine.articleName}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{magazine.magazineTitle}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="secondary">{magazine.magazineCategory}</Badge>
+                        <Badge variant="outline">{magazine.pageCount} pages</Badge>
+                      </div>
+                      
+                      <div className="space-y-2 mb-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress</span>
+                          <span>{magazine.progress}%</span>
+                        </div>
+                        <Progress value={magazine.progress} className="h-2" />
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{magazine.lastModified}</span>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-auto p-1">
+                          <FolderOpen className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>;
   }

@@ -49,7 +49,7 @@ export function MagazineCreatePage() {
     articleName: '',
     magazineTitle: '',
     magazineCategory: '',
-    pageCount: 10
+    pageCount: 1
   });
   const [article, setArticle] = useState<(ArticleRecommendationResponse & { article_id?: number }) | Article | null>(null);
   const [pagePlan, setPagePlan] = useState<PagePlan[]>([]);
@@ -236,7 +236,7 @@ export function MagazineCreatePage() {
       articleName: '',
       magazineTitle: '',
       magazineCategory: '',
-      pageCount: 10
+      pageCount: 1
     });
     setPagePlan([]);
     setArticle(null);
@@ -706,7 +706,7 @@ export function MagazineCreatePage() {
                 <Label htmlFor="pageCount">Number of Pages</Label>
                 <Input id="pageCount" type="number" min="1" max="50" value={formData.pageCount} onChange={e => setFormData(prev => ({
                 ...prev,
-                pageCount: parseInt(e.target.value) || 10
+                pageCount: parseInt(e.target.value) || 1
               }))} />
               </div>
               

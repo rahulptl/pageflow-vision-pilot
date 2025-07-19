@@ -249,96 +249,171 @@ export function MagazineCreatePage() {
     setArticle(null);
     setStep('form');
   };
-  const handleSwapLayout = (pageIndex: number, newLayoutId: number | number[]) => {
+  const handleSwapLayout = async (pageIndex: number, newLayoutId: number | number[]) => {
     setHasUnsavedChanges(true);
-    setPagePlan(prev => {
-      const newPlan = [...prev];
-      const currentPage = newPlan[pageIndex];
-
-      // If swapping a 2-pager with two 1-pagers
-      if (Array.isArray(newLayoutId) && currentPage.typeOfPage === '2 pager') {
-        const layout1 = allLayouts.find(l => l.layout_id === newLayoutId[0]);
-        const layout2 = allLayouts.find(l => l.layout_id === newLayoutId[1]);
-        if (!layout1 || !layout2) return prev;
-
-        // Replace current 2-pager with first 1-pager
-        newPlan[pageIndex] = {
-          ...currentPage,
-          typeOfPage: '1 pager',
-          layoutId: newLayoutId[0],
-          layout: layout1,
-          boundingBoxImage: layout1.bounding_box_image || undefined,
-          updatedAt: new Date().toISOString()
-        };
-
-        // Insert second 1-pager after current position
-        const now = new Date().toISOString();
-        const secondPage: PagePlan = {
-          pageNumber: currentPage.pageNumber + 1,
-          typeOfPage: '1 pager',
-          layoutId: newLayoutId[1],
-          layout: layout2,
-          isCompleted: false,
-          xmlUploaded: false,
-          pageUid: crypto.randomUUID(),
-          boundingBoxImage: layout2.bounding_box_image || undefined,
-          createdAt: now,
-          updatedAt: now
-        };
-        newPlan.splice(pageIndex + 1, 0, secondPage);
-
-        // Update page numbers for all subsequent pages
-        for (let i = pageIndex + 2; i < newPlan.length; i++) {
-          newPlan[i] = {
-            ...newPlan[i],
-            pageNumber: newPlan[i - 1].pageNumber + (newPlan[i - 1].typeOfPage === '2 pager' ? 2 : 1)
-          };
+    
+    try {
+      // Fetch layout JSON for the new layout(s)
+      const fetchLayoutJson = async (layoutId: number) => {
+        try {
+          const layoutDetails = await apiService.getLayout(layoutId);
+          return layoutDetails.layout_json || {};
+        } catch (error) {
+          console.error(`Failed to fetch layout JSON for layout ${layoutId}:`, error);
+          return {};
         }
-        return newPlan;
-      }
-      // If swapping a 1-pager with a 2-pager
-      else if (!Array.isArray(newLayoutId) && currentPage.typeOfPage === '1 pager') {
-        const newLayout = allLayouts.find(l => l.layout_id === newLayoutId);
-        if (!newLayout) return prev;
+      };
 
-        // Check if new layout is a 2-pager
-        if (newLayout.layout_metadata?.type_of_page === '2 pager') {
-          // Replace current 1-pager with 2-pager
+      setPagePlan(prev => {
+        const newPlan = [...prev];
+        const currentPage = newPlan[pageIndex];
+
+        // If swapping a 2-pager with two 1-pagers
+        if (Array.isArray(newLayoutId) && currentPage.typeOfPage === '2 pager') {
+          const layout1 = allLayouts.find(l => l.layout_id === newLayoutId[0]);
+          const layout2 = allLayouts.find(l => l.layout_id === newLayoutId[1]);
+          if (!layout1 || !layout2) return prev;
+
+          // Fetch layout JSON for both layouts
+          Promise.all([
+            fetchLayoutJson(newLayoutId[0]),
+            fetchLayoutJson(newLayoutId[1])
+          ]).then(([layoutJson1, layoutJson2]) => {
+            setPagePlan(current => {
+              const updated = [...current];
+              // Update the first page
+              if (updated[pageIndex]) {
+                updated[pageIndex] = {
+                  ...updated[pageIndex],
+                  layoutJson: layoutJson1
+                };
+              }
+              // Update the second page if it exists
+              if (updated[pageIndex + 1] && updated[pageIndex + 1].layoutId === newLayoutId[1]) {
+                updated[pageIndex + 1] = {
+                  ...updated[pageIndex + 1],
+                  layoutJson: layoutJson2
+                };
+              }
+              return updated;
+            });
+          });
+
+          // Replace current 2-pager with first 1-pager
           newPlan[pageIndex] = {
             ...currentPage,
-            typeOfPage: '2 pager',
-            layoutId: newLayoutId,
-            layout: newLayout,
-            boundingBoxImage: newLayout.bounding_box_image || undefined,
+            typeOfPage: '1 pager',
+            layoutId: newLayoutId[0],
+            layout: layout1,
+            layoutJson: {}, // Will be updated by the Promise above
+            boundingBoxImage: layout1.bounding_box_image || undefined,
             updatedAt: new Date().toISOString()
           };
 
-          // Update page numbers for all subsequent pages (shift by +1)
-          for (let i = pageIndex + 1; i < newPlan.length; i++) {
+          // Insert second 1-pager after current position
+          const now = new Date().toISOString();
+          const secondPage: PagePlan = {
+            pageNumber: currentPage.pageNumber + 1,
+            typeOfPage: '1 pager',
+            layoutId: newLayoutId[1],
+            layout: layout2,
+            layoutJson: {}, // Will be updated by the Promise above
+            isCompleted: false,
+            xmlUploaded: false,
+            pageUid: crypto.randomUUID(),
+            boundingBoxImage: layout2.bounding_box_image || undefined,
+            createdAt: now,
+            updatedAt: now
+          };
+          newPlan.splice(pageIndex + 1, 0, secondPage);
+
+          // Update page numbers for all subsequent pages
+          for (let i = pageIndex + 2; i < newPlan.length; i++) {
             newPlan[i] = {
               ...newPlan[i],
-              pageNumber: newPlan[i].pageNumber + 1
+              pageNumber: newPlan[i - 1].pageNumber + (newPlan[i - 1].typeOfPage === '2 pager' ? 2 : 1)
             };
           }
           return newPlan;
         }
-      }
+        // If swapping a 1-pager with a 2-pager
+        else if (!Array.isArray(newLayoutId) && currentPage.typeOfPage === '1 pager') {
+          const newLayout = allLayouts.find(l => l.layout_id === newLayoutId);
+          if (!newLayout) return prev;
 
-      // Regular single layout swap (same page type)
-      {
-        // Regular single layout swap
-        const layoutId = Array.isArray(newLayoutId) ? newLayoutId[0] : newLayoutId;
-        const newLayout = allLayouts.find(l => l.layout_id === layoutId);
-        if (!newLayout) return prev;
-        return newPlan.map((page, index) => index === pageIndex ? {
-          ...page,
-          layoutId: layoutId,
-          layout: newLayout,
-          boundingBoxImage: newLayout.bounding_box_image || undefined,
-          updatedAt: new Date().toISOString()
-        } : page);
-      }
-    });
+          // Check if new layout is a 2-pager
+          if (newLayout.layout_metadata?.type_of_page === '2 pager') {
+            // Fetch layout JSON for the new layout
+            fetchLayoutJson(newLayoutId).then(layoutJson => {
+              setPagePlan(current => {
+                const updated = [...current];
+                if (updated[pageIndex]) {
+                  updated[pageIndex] = {
+                    ...updated[pageIndex],
+                    layoutJson
+                  };
+                }
+                return updated;
+              });
+            });
+
+            // Replace current 1-pager with 2-pager
+            newPlan[pageIndex] = {
+              ...currentPage,
+              typeOfPage: '2 pager',
+              layoutId: newLayoutId,
+              layout: newLayout,
+              layoutJson: {}, // Will be updated by the Promise above
+              boundingBoxImage: newLayout.bounding_box_image || undefined,
+              updatedAt: new Date().toISOString()
+            };
+
+            // Update page numbers for all subsequent pages (shift by +1)
+            for (let i = pageIndex + 1; i < newPlan.length; i++) {
+              newPlan[i] = {
+                ...newPlan[i],
+                pageNumber: newPlan[i].pageNumber + 1
+              };
+            }
+            return newPlan;
+          }
+        }
+
+        // Regular single layout swap (same page type)
+        {
+          // Regular single layout swap
+          const layoutId = Array.isArray(newLayoutId) ? newLayoutId[0] : newLayoutId;
+          const newLayout = allLayouts.find(l => l.layout_id === layoutId);
+          if (!newLayout) return prev;
+          
+          // Fetch layout JSON for the new layout
+          fetchLayoutJson(layoutId).then(layoutJson => {
+            setPagePlan(current => {
+              const updated = [...current];
+              if (updated[pageIndex]) {
+                updated[pageIndex] = {
+                  ...updated[pageIndex],
+                  layoutJson
+                };
+              }
+              return updated;
+            });
+          });
+
+          return newPlan.map((page, index) => index === pageIndex ? {
+            ...page,
+            layoutId: layoutId,
+            layout: newLayout,
+            layoutJson: {}, // Will be updated by the Promise above
+            boundingBoxImage: newLayout.bounding_box_image || undefined,
+            updatedAt: new Date().toISOString()
+          } : page);
+        }
+      });
+    } catch (error) {
+      console.error('Error swapping layout:', error);
+      toast.error('Failed to swap layout');
+    }
   };
   const handleReorderPages = (reorderedPages: PagePlan[]) => {
     setHasUnsavedChanges(true);

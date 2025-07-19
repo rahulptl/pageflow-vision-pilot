@@ -473,7 +473,10 @@ export function MagazineCreatePage() {
         article_json
       });
     },
-    onSuccess: () => {
+    onSuccess: (updatedArticle) => {
+      console.log("🎯 Save successful, updating article state with:", updatedArticle);
+      // Update the article state with the returned data from API
+      setArticle(updatedArticle);
       setHasUnsavedChanges(false);
       setOriginalLayoutOrder(pagePlan.map(page => page.layoutId));
       toast.success('Layout changes saved successfully!');

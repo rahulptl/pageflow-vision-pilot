@@ -151,21 +151,52 @@ export function MagazineCreatePage() {
       }
       
       if (layoutOrder && layoutOrder.length > 0) {
-        console.log('Article has layout_order, fetching layouts...');
-        // Fetch layout details for each layout in the order
-        const layoutDetailsPromises = layoutOrder.map(layoutId => 
-          apiService.getLayout(layoutId)
-        );
+        console.log('Article has layout_order, using article_json data...');
         
-        const layouts = await Promise.all(layoutDetailsPromises);
-        console.log('Fetched layouts:', layouts);
-        
-        // Create pages from the article data
-        const pages = createPagesFromArticle(fullArticle, layouts);
-        console.log('Created pages:', pages);
-        
-        setPagePlan(pages);
-        setStep('storyboard');
+        // Check if article_json contains layout information
+        if (Array.isArray(fullArticle.article_json) && fullArticle.article_json.length > 0) {
+          console.log('Using layout information from article_json');
+          
+          // Create mock layout objects from article_json data
+          const layouts = fullArticle.article_json.map(pageData => ({
+            layout_id: pageData.layout_id,
+            layout_metadata: {
+              type_of_page: pageData.type_of_page
+            },
+            layout_json: pageData.layout_json,
+            page_image: null,
+            bounding_box_image: pageData.bounding_box_image,
+            created_by: null,
+            updated_by: null,
+            created_at: pageData.created_at,
+            updated_at: pageData.updated_at
+          }));
+          
+          console.log('Created layouts from article_json:', layouts);
+          
+          // Create pages from the article data
+          const pages = createPagesFromArticle(fullArticle, layouts);
+          console.log('Created pages:', pages);
+          
+          setPagePlan(pages);
+          setStep('storyboard');
+        } else {
+          // Fallback: fetch layout details if article_json doesn't have the data
+          console.log('Article_json missing layout data, fetching from database...');
+          const layoutDetailsPromises = layoutOrder.map(layoutId => 
+            apiService.getLayout(layoutId)
+          );
+          
+          const layouts = await Promise.all(layoutDetailsPromises);
+          console.log('Fetched layouts from database:', layouts);
+          
+          // Create pages from the article data
+          const pages = createPagesFromArticle(fullArticle, layouts);
+          console.log('Created pages:', pages);
+          
+          setPagePlan(pages);
+          setStep('storyboard');
+        }
       } else {
         console.log('Article has no layout_order, going to form step');
         setStep('form');
@@ -335,13 +366,26 @@ export function MagazineCreatePage() {
         // Update local state with the returned article data
         setArticle(updatedArticle);
         
-        // Recreate pages from the updated article
-        const layoutOrder = updatedArticle.layout_order || [];
-        const layouts = await Promise.all(
-          layoutOrder.map(layoutId => apiService.getLayout(layoutId))
-        );
-        const pages = createPagesFromArticle(updatedArticle, layouts);
-        setPagePlan(pages);
+        // Recreate pages from the updated article using article_json data instead of querying DB
+        if (Array.isArray(updatedArticle.article_json) && updatedArticle.article_json.length > 0) {
+          // Create layout objects from article_json data
+          const layouts = updatedArticle.article_json.map(pageData => ({
+            layout_id: pageData.layout_id,
+            layout_metadata: {
+              type_of_page: pageData.type_of_page
+            },
+            layout_json: pageData.layout_json,
+            page_image: null,
+            bounding_box_image: pageData.bounding_box_image,
+            created_by: null,
+            updated_by: null,
+            created_at: pageData.created_at,
+            updated_at: pageData.updated_at
+          }));
+          
+          const pages = createPagesFromArticle(updatedArticle, layouts);
+          setPagePlan(pages);
+        }
 
         toast.success('Page saved successfully!');
         setStep('storyboard');

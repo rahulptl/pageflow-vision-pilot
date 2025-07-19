@@ -328,47 +328,42 @@ export function MagazineCreatePage() {
     setStep('editing');
   };
   
-  const handleSaveEdit = (updatedLayoutJson: any) => {
+  const handleSaveEdit = async (updatedLayoutJson: any) => {
     // Update the page plan and article's layout JSON with the new data
     if (editingPage && article) {
-      // Mark page as completed and update layout JSON
-      setPagePlan(prev => prev.map(page => 
-        page.pageNumber === editingPage.pageNumber ? {
-          ...page,
-          isCompleted: true,
-          layoutJson: updatedLayoutJson,
-          updatedAt: new Date().toISOString()
-        } : page
-      ));
+      try {
+        // Check if article has article_id
+        const articleId = 'article_id' in article ? article.article_id : undefined;
+        
+        if (!articleId) {
+          throw new Error("Cannot save page edit without article ID");
+        }
 
-      // Update article structure based on current format
-      if (Array.isArray(article.article_json)) {
-        // New array format
-        setArticle(prev => ({
-          ...prev,
-          article_json: prev.article_json.map((pageData: any) => 
-            pageData.layout_id === editingPage.layoutId ? {
-              ...pageData,
-              layout_json: updatedLayoutJson,
-              updated_at: new Date().toISOString()
-            } : pageData
-          )
-        }));
-      } else {
-        // Legacy object format
-        setArticle(prev => ({
-          ...prev,
-          article_json: {
-            ...prev.article_json,
-            [editingPage.layoutId.toString()]: updatedLayoutJson
-          }
-        }));
+        // Use the new PATCH endpoint to update individual page
+        const updatedArticle = await apiService.patchPageLayout(
+          articleId, 
+          editingPage.pageUid, 
+          updatedLayoutJson
+        );
+
+        // Update local state with the returned article data
+        setArticle(updatedArticle);
+        
+        // Recreate pages from the updated article
+        const layouts = await Promise.all(
+          updatedArticle.layout_order?.map(layoutId => apiService.getLayout(layoutId)) || []
+        );
+        const pages = createPagesFromArticle(updatedArticle, layouts);
+        setPagePlan(pages);
+
+        toast.success('Page saved successfully!');
+        setStep('storyboard');
+        setActiveTab('upload');
+        setEditingPage(null);
+      } catch (error) {
+        console.error('Error saving page:', error);
+        toast.error('Failed to save page changes');
       }
-
-      toast.success("Page completed successfully!");
-      setStep('storyboard');
-      setActiveTab('upload');
-      setEditingPage(null);
     }
   };
   const handleXmlUpload = (pageNumber: number, file: File) => {

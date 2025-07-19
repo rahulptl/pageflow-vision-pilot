@@ -17,6 +17,10 @@ interface PagePlan {
   layoutJson?: any;
   isCompleted: boolean;
   xmlUploaded: boolean;
+  pageUid: string;
+  boundingBoxImage?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface LayoutEditorProps {
@@ -236,9 +240,9 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
       });
 
       // Step 4: Update the article layout via PATCH API
-      await apiService.patchArticleLayout(
+      await apiService.patchPageLayout(
         article.article_id,
-        page.layoutId.toString(),
+        page.pageUid,
         updatedLayoutData
       );
 

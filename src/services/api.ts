@@ -255,9 +255,9 @@ class ApiService {
     return response.json();
   }
 
-  // Patch article layout
-  async patchArticleLayout(articleId: number, layoutId: string, layoutJson: any): Promise<void> {
-    await this.request(`/articles/${articleId}/layout/${layoutId}`, {
+  // Patch individual page layout
+  async patchPageLayout(articleId: number, pageUid: string, layoutJson: any): Promise<Article> {
+    return this.request<Article>(`/articles/${articleId}/page/${pageUid}`, {
       method: 'PATCH',
       body: JSON.stringify(layoutJson),
     });

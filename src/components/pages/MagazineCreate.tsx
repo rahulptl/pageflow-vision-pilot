@@ -453,13 +453,15 @@ export function MagazineCreatePage() {
     setPagePlan(pagesWithUpdatedNumbers);
   };
   const handleRemovePage = (pageIndex: number) => {
+    setHasUnsavedChanges(true); // Mark as having unsaved changes
+    
     setPagePlan(prev => {
       const newPlan = [...prev];
       newPlan.splice(pageIndex, 1);
 
       // Update page numbers for all subsequent pages
       let currentPageNumber = 1;
-      return newPlan.map(page => {
+      const updatedPlan = newPlan.map(page => {
         const updatedPage = {
           ...page,
           pageNumber: currentPageNumber
@@ -471,6 +473,23 @@ export function MagazineCreatePage() {
         }
         return updatedPage;
       });
+
+      // Update article page_count after page removal
+      const newTotalPages = updatedPlan.reduce((total, page) => {
+        return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+      }, 0);
+      
+      setArticle(currentArticle => {
+        if (currentArticle) {
+          return {
+            ...currentArticle,
+            page_count: newTotalPages
+          };
+        }
+        return currentArticle;
+      });
+
+      return updatedPlan;
     });
   };
   const handleEditPage = (page: PagePlan) => {

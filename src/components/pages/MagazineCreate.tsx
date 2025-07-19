@@ -403,6 +403,30 @@ export function MagazineCreatePage() {
           } : page);
         }
       });
+      
+      // Update article page_count after layout swap
+      setTimeout(() => {
+        setPagePlan(currentPages => {
+          // Calculate new total page count
+          const newTotalPages = currentPages.reduce((total, page) => {
+            return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+          }, 0);
+          
+          // Update article with new page count
+          setArticle(currentArticle => {
+            if (currentArticle) {
+              return {
+                ...currentArticle,
+                page_count: newTotalPages
+              };
+            }
+            return currentArticle;
+          });
+          
+          return currentPages;
+        });
+      }, 100); // Small delay to ensure page plan is updated first
+      
     } catch (error) {
       console.error('Error swapping layout:', error);
       toast.error('Failed to swap layout');

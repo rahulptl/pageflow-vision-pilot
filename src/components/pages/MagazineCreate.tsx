@@ -80,10 +80,28 @@ export function MagazineCreatePage() {
       console.log("✅ Recommendation API Success:", articleData);
       setArticle(articleData);
 
-      console.log("🔄 Fetching layout details for:", articleData.layout_order);
+      // Check if we have the new article structure with article_json array
+      if (!articleData.article_json || !Array.isArray(articleData.article_json)) {
+        console.error("❌ Invalid article structure - missing or invalid article_json");
+        toast.error('Invalid article structure received from API');
+        return;
+      }
+
+      console.log("🔄 Processing article_json:", articleData.article_json);
       
-      // Fetch layout details for each layout in the order
-      const layoutDetailsPromises = articleData.layout_order.map(layoutId => {
+      // Extract layout IDs from the article_json array
+      const layoutIds = articleData.article_json.map(pageData => pageData.layout_id).filter(Boolean);
+      console.log("🔄 Extracted layout IDs:", layoutIds);
+      
+      if (layoutIds.length === 0) {
+        console.error("❌ No layout IDs found in article_json");
+        toast.error('No layouts found in article data');
+        return;
+      }
+
+      // Fetch layout details for each unique layout ID
+      const uniqueLayoutIds = [...new Set(layoutIds)];
+      const layoutDetailsPromises = uniqueLayoutIds.map(layoutId => {
         console.log("📦 Fetching layout:", layoutId);
         return apiService.getLayout(layoutId).catch(error => {
           console.error(`❌ Failed to fetch layout ${layoutId}:`, error);
@@ -105,16 +123,15 @@ export function MagazineCreatePage() {
           return;
         }
         
-        // Create a map of layout_id to layout for easy lookup
-        const layoutMap = new Map(validLayouts.map(layout => [layout.layout_id, layout]));
-        
-        // Create pages from the article data
+        // Create pages from the article data using the new structure
         console.log("🏗️ Creating pages from article data");
         const pages = createPagesFromArticle(articleData, validLayouts);
         console.log("🏗️ Created pages:", pages);
         
         setPagePlan(pages);
-        setOriginalLayoutOrder([...articleData.layout_order]); // Track original order
+        // For the new structure, extract layout order from article_json
+        const layoutOrder = articleData.article_json.map(pageData => pageData.layout_id);
+        setOriginalLayoutOrder([...layoutOrder]); // Track original order
         setHasUnsavedChanges(false);
         console.log("🎯 Setting step to storyboard");
         setStep('storyboard');

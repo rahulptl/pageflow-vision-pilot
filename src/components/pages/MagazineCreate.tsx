@@ -329,7 +329,7 @@ export function MagazineCreatePage() {
   };
   
   const handleSaveEdit = async (updatedArticle: any) => {
-    // Update local state with the returned article data from LayoutEditor
+    console.log("🚀 DEBUGGING: handleSaveEdit called with:", updatedArticle);
     if (editingPage && updatedArticle) {
       try {
         // Update local state with the returned article data

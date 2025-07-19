@@ -19,6 +19,13 @@ export interface ArticleSearchParams {
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    
+    // Debug: Log all API requests 
+    console.log("🚀 API REQUEST:", options?.method || 'GET', url);
+    if (options?.body) {
+      console.log("🚀 REQUEST BODY:", options.body);
+    }
+    
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -257,6 +264,11 @@ class ApiService {
 
   // Patch individual page layout
   async patchPageLayout(articleId: number, pageUid: string, layoutJson: any): Promise<Article> {
+    console.log("🚀 API DEBUG: patchPageLayout called with:");
+    console.log("articleId:", articleId);
+    console.log("pageUid:", pageUid);
+    console.log("URL will be:", `/articles/${articleId}/page/${pageUid}`);
+    
     return this.request<Article>(`/articles/${articleId}/page/${pageUid}`, {
       method: 'PATCH',
       body: JSON.stringify(layoutJson),

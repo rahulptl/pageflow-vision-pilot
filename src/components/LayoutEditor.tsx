@@ -240,6 +240,11 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
       });
 
       // Step 4: Update the article layout via PATCH API using page_uid
+      console.log("🚀 DEBUGGING: About to call patchPageLayout with:");
+      console.log("article_id:", article.article_id);
+      console.log("page.pageUid:", page.pageUid);
+      console.log("updatedLayoutData:", updatedLayoutData);
+      
       const updatedArticle = await apiService.patchPageLayout(
         article.article_id,
         page.pageUid,

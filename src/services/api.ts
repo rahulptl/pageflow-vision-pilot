@@ -190,7 +190,9 @@ class ApiService {
     if (createdBy) {
       params.append('created_by', createdBy);
     }
-    return this.request<ArticleRecommendationResponse>(`/articles/recommend?${params}`);
+    return this.request<ArticleRecommendationResponse>(`/articles/recommend?${params}`, {
+      method: 'POST'
+    });
   }
 
   // Image Generation APIs

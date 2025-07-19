@@ -13,7 +13,7 @@ import { Layout, ArticleRecommendationResponse, Article } from "@/types/api";
 import { toast } from "sonner";
 import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
-import { createPagesFromArticle } from "@/utils/articleHelpers";
+import { createPagesFromArticle, updateArticleFromPages } from "@/utils/articleHelpers";
 interface MagazineFormData {
   articleName: string;
   magazineTitle: string;
@@ -38,6 +38,10 @@ interface PagePlan {
   layoutJson?: any;
   isCompleted: boolean;
   xmlUploaded: boolean;
+  pageUid: string;
+  boundingBoxImage?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 export function MagazineCreatePage() {
   const [step, setStep] = useState<'workspace' | 'form' | 'storyboard' | 'editing'>('workspace');
@@ -195,13 +199,18 @@ export function MagazineCreatePage() {
         };
 
         // Insert second 1-pager after current position
+        const now = new Date().toISOString();
         const secondPage: PagePlan = {
           pageNumber: currentPage.pageNumber + 1,
           typeOfPage: '1 pager',
           layoutId: newLayoutId[1],
           layout: layout2,
           isCompleted: false,
-          xmlUploaded: false
+          xmlUploaded: false,
+          pageUid: crypto.randomUUID(),
+          boundingBoxImage: layout2.bounding_box_image || undefined,
+          createdAt: now,
+          updatedAt: now
         };
         newPlan.splice(pageIndex + 1, 0, secondPage);
 
@@ -296,34 +305,57 @@ export function MagazineCreatePage() {
     });
   };
   const handleEditPage = (page: PagePlan) => {
-    // Ensure the page has the layout JSON from the article
+    // For new structure, layoutJson is already in the page
+    // For legacy structure, try to get it from article_json
+    let layoutJson = page.layoutJson;
+    if (!layoutJson && article && typeof article.article_json === 'object' && !Array.isArray(article.article_json)) {
+      layoutJson = article.article_json[page.layoutId.toString()];
+    }
+    
     const pageWithJson = {
       ...page,
-      layoutJson: article?.article_json[page.layoutId.toString()]
+      layoutJson: layoutJson
     };
     setEditingPage(pageWithJson);
     setStep('editing');
   };
   
   const handleSaveEdit = (updatedLayoutJson: any) => {
-    // Update the article's layout JSON with the new data
+    // Update the page plan and article's layout JSON with the new data
     if (editingPage && article) {
-      setArticle(prev => ({
-        ...prev,
-        article_json: {
-          ...prev.article_json,
-          [editingPage.layoutId.toString()]: updatedLayoutJson
-        }
-      }));
-      
-      // Mark page as completed
+      // Mark page as completed and update layout JSON
       setPagePlan(prev => prev.map(page => 
         page.pageNumber === editingPage.pageNumber ? {
           ...page,
           isCompleted: true,
-          layoutJson: updatedLayoutJson
+          layoutJson: updatedLayoutJson,
+          updatedAt: new Date().toISOString()
         } : page
       ));
+
+      // Update article structure based on current format
+      if (Array.isArray(article.article_json)) {
+        // New array format
+        setArticle(prev => ({
+          ...prev,
+          article_json: prev.article_json.map((pageData: any) => 
+            pageData.layout_id === editingPage.layoutId ? {
+              ...pageData,
+              layout_json: updatedLayoutJson,
+              updated_at: new Date().toISOString()
+            } : pageData
+          )
+        }));
+      } else {
+        // Legacy object format
+        setArticle(prev => ({
+          ...prev,
+          article_json: {
+            ...prev.article_json,
+            [editingPage.layoutId.toString()]: updatedLayoutJson
+          }
+        }));
+      }
 
       toast.success("Page completed successfully!");
       setStep('storyboard');
@@ -361,24 +393,12 @@ export function MagazineCreatePage() {
         throw new Error("Cannot save changes to article without ID");
       }
 
-      const currentLayoutOrder = pagePlan.map(page => page.layoutId);
-      
-      // Build updated article_json by completely replacing layouts array with current pagePlan
-      const updatedArticleJson = {
-        ...article.article_json,
-        layouts: pagePlan.map(page => ({
-          layout_id: page.layoutId,
-          page_number: page.pageNumber,
-          type_of_page: page.typeOfPage,
-          layout_json: page.layout?.layout_json || {},
-          isCompleted: page.isCompleted,
-          xmlUploaded: page.xmlUploaded
-        }))
-      };
+      // Use the helper function to get properly formatted data
+      const { layout_order, article_json } = updateArticleFromPages(pagePlan);
       
       return apiService.updateArticle(articleId, {
-        layout_order: currentLayoutOrder,
-        article_json: updatedArticleJson
+        layout_order,
+        article_json
       });
     },
     onSuccess: () => {

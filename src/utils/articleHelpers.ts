@@ -8,11 +8,15 @@ interface PagePlan {
   layoutJson?: any;
   isCompleted: boolean;
   xmlUploaded: boolean;
+  pageUid: string;
+  boundingBoxImage?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Article {
   layout_order: number[];
-  article_json: Record<string, any>;
+  article_json: any; // Can be either Array<PageData> or Record<string, any>
 }
 
 /**
@@ -25,27 +29,60 @@ export function createPagesFromArticle(
   const pages: PagePlan[] = [];
   let currentPageNumber = 1;
 
-  article.layout_order.forEach((layoutId) => {
-    // Find the layout details
-    const layout = allLayouts.find(l => l.layout_id === layoutId);
-    const layoutJson = article.article_json[layoutId.toString()];
-    
-    // Determine if it's a 1-pager or 2-pager
-    const typeOfPage = layout?.layout_metadata?.type_of_page || '1 pager';
-    
-    pages.push({
-      pageNumber: currentPageNumber,
-      typeOfPage,
-      layoutId,
-      layout,
-      layoutJson,
-      isCompleted: false,
-      xmlUploaded: false
-    });
+  // If article_json is an array, use it directly for ordering
+  if (Array.isArray(article.article_json)) {
+    article.article_json.forEach((pageData) => {
+      // Find the layout details
+      const layout = allLayouts.find(l => l.layout_id === pageData.layout_id);
+      
+      pages.push({
+        pageNumber: currentPageNumber,
+        typeOfPage: pageData.type_of_page || '1 pager',
+        layoutId: pageData.layout_id,
+        layout,
+        layoutJson: pageData.layout_json,
+        isCompleted: false,
+        xmlUploaded: false,
+        pageUid: pageData.page_uid,
+        boundingBoxImage: pageData.bounding_box_image,
+        createdAt: pageData.created_at,
+        updatedAt: pageData.updated_at
+      });
 
-    // Increment page number based on layout type
-    currentPageNumber += typeOfPage === '2 pager' ? 2 : 1;
-  });
+      // Increment page number based on layout type
+      currentPageNumber += pageData.type_of_page === '2 pager' ? 2 : 1;
+    });
+  } else {
+    // Fallback: use layout_order for legacy format
+    article.layout_order.forEach((layoutId) => {
+      // Find the layout details
+      const layout = allLayouts.find(l => l.layout_id === layoutId);
+      const layoutJson = typeof article.article_json === 'object' && !Array.isArray(article.article_json) 
+        ? article.article_json[layoutId.toString()] 
+        : {};
+      
+      // Determine if it's a 1-pager or 2-pager
+      const typeOfPage = layout?.layout_metadata?.type_of_page || '1 pager';
+      
+      const now = new Date().toISOString();
+      pages.push({
+        pageNumber: currentPageNumber,
+        typeOfPage,
+        layoutId,
+        layout,
+        layoutJson,
+        isCompleted: false,
+        xmlUploaded: false,
+        pageUid: crypto.randomUUID(),
+        boundingBoxImage: layout?.bounding_box_image,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      // Increment page number based on layout type
+      currentPageNumber += typeOfPage === '2 pager' ? 2 : 1;
+    });
+  }
 
   return pages;
 }
@@ -55,15 +92,21 @@ export function createPagesFromArticle(
  */
 export function updateArticleFromPages(
   pages: PagePlan[]
-): { layout_order: number[]; article_json: Record<string, any> } {
+): { layout_order: number[]; article_json: Array<any> } {
   const layout_order: number[] = [];
-  const article_json: Record<string, any> = {};
+  const article_json: Array<any> = [];
 
   pages.forEach(page => {
     layout_order.push(page.layoutId);
-    if (page.layoutJson) {
-      article_json[page.layoutId.toString()] = page.layoutJson;
-    }
+    article_json.push({
+      page_uid: page.pageUid,
+      layout_id: page.layoutId,
+      type_of_page: page.typeOfPage,
+      layout_json: page.layoutJson || {},
+      bounding_box_image: page.boundingBoxImage,
+      created_at: page.createdAt,
+      updated_at: new Date().toISOString()
+    });
   });
 
   return { layout_order, article_json };

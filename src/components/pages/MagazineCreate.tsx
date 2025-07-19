@@ -142,10 +142,18 @@ export function MagazineCreatePage() {
       console.log('Article layout_order:', fullArticle.layout_order);
       console.log('Article article_json:', fullArticle.article_json);
       
-      if (fullArticle.layout_order && fullArticle.layout_order.length > 0) {
+      // Infer layout_order from article_json if missing
+      let layoutOrder = fullArticle.layout_order;
+      if ((!layoutOrder || layoutOrder.length === 0) && Array.isArray(fullArticle.article_json) && fullArticle.article_json.length > 0) {
+        console.log('Inferring layout_order from article_json');
+        layoutOrder = fullArticle.article_json.map(page => page.layout_id);
+        console.log('Inferred layout_order:', layoutOrder);
+      }
+      
+      if (layoutOrder && layoutOrder.length > 0) {
         console.log('Article has layout_order, fetching layouts...');
         // Fetch layout details for each layout in the order
-        const layoutDetailsPromises = fullArticle.layout_order.map(layoutId => 
+        const layoutDetailsPromises = layoutOrder.map(layoutId => 
           apiService.getLayout(layoutId)
         );
         

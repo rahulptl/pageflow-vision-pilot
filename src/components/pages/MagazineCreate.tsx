@@ -576,11 +576,21 @@ export function MagazineCreatePage() {
         throw new Error("Cannot save changes to article without ID");
       }
 
-      // Use the helper function to get properly formatted data
-      const { layout_order, article_json } = updateArticleFromPages(pagePlan);
+      // Calculate the current page count
+      const currentPageCount = pagePlan.reduce((total, page) => {
+        return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+      }, 0);
+
+      // Get the article_json from pages
+      const { article_json } = updateArticleFromPages(pagePlan);
       
+      console.log("🚀 Sending update with:", {
+        page_count: currentPageCount,
+        article_json
+      });
+
       return apiService.updateArticle(articleId, {
-        layout_order,
+        page_count: currentPageCount,
         article_json
       });
     },

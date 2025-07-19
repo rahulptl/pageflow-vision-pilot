@@ -239,15 +239,15 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
         }
       });
 
-      // Step 4: Update the article layout via PATCH API
-      await apiService.patchPageLayout(
+      // Step 4: Update the article layout via PATCH API using page_uid
+      const updatedArticle = await apiService.patchPageLayout(
         article.article_id,
         page.pageUid,
         updatedLayoutData
       );
 
       toast.success("Layout saved successfully!");
-      onSave(updatedLayoutData);
+      onSave(updatedArticle);
       
     } catch (error) {
       console.error("Error saving layout:", error);

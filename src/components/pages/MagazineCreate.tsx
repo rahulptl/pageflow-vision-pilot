@@ -328,30 +328,17 @@ export function MagazineCreatePage() {
     setStep('editing');
   };
   
-  const handleSaveEdit = async (updatedLayoutJson: any) => {
-    // Update the page plan and article's layout JSON with the new data
-    if (editingPage && article) {
+  const handleSaveEdit = async (updatedArticle: any) => {
+    // Update local state with the returned article data from LayoutEditor
+    if (editingPage && updatedArticle) {
       try {
-        // Check if article has article_id
-        const articleId = 'article_id' in article ? article.article_id : undefined;
-        
-        if (!articleId) {
-          throw new Error("Cannot save page edit without article ID");
-        }
-
-        // Use the new PATCH endpoint to update individual page
-        const updatedArticle = await apiService.patchPageLayout(
-          articleId, 
-          editingPage.pageUid, 
-          updatedLayoutJson
-        );
-
         // Update local state with the returned article data
         setArticle(updatedArticle);
         
         // Recreate pages from the updated article
+        const layoutOrder = updatedArticle.layout_order || [];
         const layouts = await Promise.all(
-          updatedArticle.layout_order?.map(layoutId => apiService.getLayout(layoutId)) || []
+          layoutOrder.map(layoutId => apiService.getLayout(layoutId))
         );
         const pages = createPagesFromArticle(updatedArticle, layouts);
         setPagePlan(pages);
@@ -361,8 +348,8 @@ export function MagazineCreatePage() {
         setActiveTab('upload');
         setEditingPage(null);
       } catch (error) {
-        console.error('Error saving page:', error);
-        toast.error('Failed to save page changes');
+        console.error('Error processing saved page:', error);
+        toast.error('Failed to process saved page changes');
       }
     }
   };

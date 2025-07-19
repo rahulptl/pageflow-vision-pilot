@@ -80,30 +80,53 @@ export function MagazineCreatePage() {
       console.log("✅ Recommendation API Success:", articleData);
       setArticle(articleData);
 
+      console.log("🔄 Fetching layout details for:", articleData.layout_order);
+      
       // Fetch layout details for each layout in the order
-      const layoutDetailsPromises = articleData.layout_order.map(layoutId => 
-        apiService.getLayout(layoutId)
-      );
+      const layoutDetailsPromises = articleData.layout_order.map(layoutId => {
+        console.log("📦 Fetching layout:", layoutId);
+        return apiService.getLayout(layoutId).catch(error => {
+          console.error(`❌ Failed to fetch layout ${layoutId}:`, error);
+          return null; // Return null for failed layouts instead of breaking everything
+        });
+      });
       
       try {
         const layouts = await Promise.all(layoutDetailsPromises);
+        console.log("📦 All layouts fetched:", layouts);
+        
+        // Filter out any null layouts (failed fetches)
+        const validLayouts = layouts.filter(layout => layout !== null);
+        console.log("📦 Valid layouts:", validLayouts);
+        
+        if (validLayouts.length === 0) {
+          console.error("❌ No valid layouts found");
+          toast.error('No valid layouts found for this article');
+          return;
+        }
         
         // Create a map of layout_id to layout for easy lookup
-        const layoutMap = new Map(layouts.map(layout => [layout.layout_id, layout]));
+        const layoutMap = new Map(validLayouts.map(layout => [layout.layout_id, layout]));
         
         // Create pages from the article data
-        const pages = createPagesFromArticle(articleData, layouts);
+        console.log("🏗️ Creating pages from article data");
+        const pages = createPagesFromArticle(articleData, validLayouts);
+        console.log("🏗️ Created pages:", pages);
         
         setPagePlan(pages);
         setOriginalLayoutOrder([...articleData.layout_order]); // Track original order
         setHasUnsavedChanges(false);
+        console.log("🎯 Setting step to storyboard");
         setStep('storyboard');
+        console.log("✅ Successfully transitioned to storyboard");
       } catch (error) {
-        toast.error('Failed to load layout details');
+        console.error("❌ Error in layout processing:", error);
+        toast.error('Failed to load layout details: ' + error.message);
       }
     },
-    onError: () => {
-      toast.error('Failed to get layout recommendations');
+    onError: (error) => {
+      console.error("❌ Recommendation mutation error:", error);
+      toast.error('Failed to get layout recommendations: ' + error.message);
     }
   });
 

@@ -87,59 +87,35 @@ export function MagazineCreatePage() {
         return;
       }
 
-      console.log("🔄 Processing article_json:", articleData.article_json);
+      console.log("🔄 Using article_json data directly:", articleData.article_json);
       
-      // Extract layout IDs from the article_json array
-      const layoutIds = articleData.article_json.map(pageData => pageData.layout_id).filter(Boolean);
-      console.log("🔄 Extracted layout IDs:", layoutIds);
+      // Create mock layout objects from article_json data (same as draft article handling)
+      const layouts = articleData.article_json.map(pageData => ({
+        layout_id: pageData.layout_id,
+        layout_metadata: {
+          type_of_page: pageData.type_of_page
+        },
+        layout_json: pageData.layout_json,
+        page_image: null,
+        bounding_box_image: pageData.bounding_box_image,
+        created_by: null,
+        updated_by: null,
+        created_at: pageData.created_at,
+        updated_at: pageData.updated_at
+      }));
       
-      if (layoutIds.length === 0) {
-        console.error("❌ No layout IDs found in article_json");
-        toast.error('No layouts found in article data');
-        return;
-      }
-
-      // Fetch layout details for each unique layout ID
-      const uniqueLayoutIds = [...new Set(layoutIds)];
-      const layoutDetailsPromises = uniqueLayoutIds.map(layoutId => {
-        console.log("📦 Fetching layout:", layoutId);
-        return apiService.getLayout(layoutId).catch(error => {
-          console.error(`❌ Failed to fetch layout ${layoutId}:`, error);
-          return null; // Return null for failed layouts instead of breaking everything
-        });
-      });
+      console.log("🏗️ Creating pages from article data directly");
+      const pages = createPagesFromArticle(articleData, layouts);
+      console.log("🏗️ Created pages:", pages);
       
-      try {
-        const layouts = await Promise.all(layoutDetailsPromises);
-        console.log("📦 All layouts fetched:", layouts);
-        
-        // Filter out any null layouts (failed fetches)
-        const validLayouts = layouts.filter(layout => layout !== null);
-        console.log("📦 Valid layouts:", validLayouts);
-        
-        if (validLayouts.length === 0) {
-          console.error("❌ No valid layouts found");
-          toast.error('No valid layouts found for this article');
-          return;
-        }
-        
-        // Create pages from the article data using the new structure
-        console.log("🏗️ Creating pages from article data");
-        const pages = createPagesFromArticle(articleData, validLayouts);
-        console.log("🏗️ Created pages:", pages);
-        
-        setPagePlan(pages);
-        // For the new structure, extract layout order from article_json
-        const layoutOrder = articleData.article_json.map(pageData => pageData.layout_id);
-        setOriginalLayoutOrder([...layoutOrder]); // Track original order
-        setHasUnsavedChanges(false);
-        console.log("🎯 Setting step to storyboard");
-        setStep('storyboard');
-        console.log("✅ Successfully transitioned to storyboard");
-      } catch (error) {
-        console.error("❌ Error in layout processing:", error);
-        toast.error('Failed to load layout details: ' + error.message);
-      }
+      setPagePlan(pages);
+      // Extract layout order from article_json
+      const layoutOrder = articleData.article_json.map(pageData => pageData.layout_id);
+      setOriginalLayoutOrder([...layoutOrder]);
+      setHasUnsavedChanges(false);
+      console.log("🎯 Setting step to storyboard");
+      setStep('storyboard');
+      console.log("✅ Successfully transitioned to storyboard");
     },
     onError: (error) => {
       console.error("❌ Recommendation mutation error:", error);

@@ -26,6 +26,14 @@ class ApiService {
       console.log("🚀 REQUEST BODY:", options.body);
     }
     
+    // Special logging for articles endpoints
+    if (endpoint.includes('/articles/')) {
+      console.log("🔍 ARTICLES ENDPOINT ANALYSIS:");
+      console.log("  Raw endpoint:", endpoint);
+      console.log("  Method:", options?.method || 'GET');
+      console.log("  Is recommend?", endpoint.includes('/recommend'));
+    }
+    
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -35,6 +43,11 @@ class ApiService {
     });
 
     if (!response.ok) {
+      console.error("❌ API REQUEST FAILED:");
+      console.error("  URL:", url);
+      console.error("  Status:", response.status, response.statusText);
+      const errorText = await response.text();
+      console.error("  Error body:", errorText);
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
@@ -182,17 +195,39 @@ class ApiService {
     createdBy?: string
   ): Promise<ArticleRecommendationResponse> {
     const params = new URLSearchParams({
+      article_title: articleTitle,
       magazine_title: magazineTitle,
       magazine_category: magazineCategory, 
-      page_count: pageCount.toString(),
-      article_title: articleTitle
+      page_count: pageCount.toString()
     });
     if (createdBy) {
       params.append('created_by', createdBy);
     }
-    return this.request<ArticleRecommendationResponse>(`/articles/recommend?${params}`, {
-      method: 'POST'
+    
+    // Use a direct POST to avoid routing conflicts
+    const fullUrl = `${API_BASE_URL}/articles/recommend?${params}`;
+    console.log("🚀 DIRECT RECOMMENDATION API CALL:");
+    console.log("  Full URL:", fullUrl);
+    console.log("  Method: POST");
+    console.log("  Params:", Object.fromEntries(params));
+    
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ RECOMMENDATION API FAILED:");
+      console.error("  URL:", fullUrl);
+      console.error("  Status:", response.status, response.statusText);
+      console.error("  Error body:", errorText);
+      throw new Error(`Recommendation API failed: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // Image Generation APIs

@@ -62,13 +62,22 @@ export function MagazineCreatePage() {
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
-    mutationFn: () => apiService.getLayoutRecommendations(
-      formData.magazineTitle, 
-      formData.magazineCategory, 
-      formData.pageCount,
-      formData.articleName
-    ),
+    mutationFn: () => {
+      console.log("🔥 CALLING getLayoutRecommendations with:");
+      console.log("  magazineTitle:", formData.magazineTitle);
+      console.log("  magazineCategory:", formData.magazineCategory);
+      console.log("  pageCount:", formData.pageCount);
+      console.log("  articleName:", formData.articleName);
+      
+      return apiService.getLayoutRecommendations(
+        formData.magazineTitle, 
+        formData.magazineCategory, 
+        formData.pageCount,
+        formData.articleName
+      );
+    },
     onSuccess: async (articleData) => {
+      console.log("✅ Recommendation API Success:", articleData);
       setArticle(articleData);
 
       // Fetch layout details for each layout in the order

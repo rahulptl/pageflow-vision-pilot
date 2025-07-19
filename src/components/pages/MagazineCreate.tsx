@@ -234,7 +234,9 @@ export function MagazineCreatePage() {
           ...currentPage,
           typeOfPage: '1 pager',
           layoutId: newLayoutId[0],
-          layout: layout1
+          layout: layout1,
+          boundingBoxImage: layout1.bounding_box_image || undefined,
+          updatedAt: new Date().toISOString()
         };
 
         // Insert second 1-pager after current position
@@ -274,7 +276,9 @@ export function MagazineCreatePage() {
             ...currentPage,
             typeOfPage: '2 pager',
             layoutId: newLayoutId,
-            layout: newLayout
+            layout: newLayout,
+            boundingBoxImage: newLayout.bounding_box_image || undefined,
+            updatedAt: new Date().toISOString()
           };
 
           // Update page numbers for all subsequent pages (shift by +1)
@@ -297,7 +301,9 @@ export function MagazineCreatePage() {
         return newPlan.map((page, index) => index === pageIndex ? {
           ...page,
           layoutId: layoutId,
-          layout: newLayout
+          layout: newLayout,
+          boundingBoxImage: newLayout.bounding_box_image || undefined,
+          updatedAt: new Date().toISOString()
         } : page);
       }
     });

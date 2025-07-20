@@ -16,6 +16,7 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
   const adminNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/" },
     { icon: FileText, label: "Layouts", href: "/admin/layouts" },
+    { icon: Plus, label: "Create Layout", href: "/admin/layouts/create" },
     { icon: Plus, label: "Generate Layout", href: "/admin/generate" },
     { icon: File, label: "Articles", href: "/admin/articles" },
     { icon: BookOpen, label: "Magazines", href: "/admin/magazines" },

@@ -12,6 +12,7 @@ import { ArticleCreatePage } from "@/components/pages/ArticleCreate";
 import { MagazineForm } from "@/components/MagazineForm";
 import { MagazineCreatePage } from "@/components/pages/MagazineCreate";
 import { ImageGeneration } from "@/components/pages/ImageGeneration";
+import { LayoutCreate } from "@/components/pages/LayoutCreate";
 
 interface AppLayoutProps {
   isAdmin: boolean;
@@ -52,6 +53,7 @@ export function AppLayout({ isAdmin, baseRoute }: AppLayoutProps) {
             {isAdmin && (
               <>
                 <Route path="layouts" element={<LayoutBrowser />} />
+                <Route path="layouts/create" element={<LayoutCreate />} />
                 <Route path="layouts/:id" element={<LayoutDetails />} />
                 <Route path="generate" element={<GenerateLayout />} />
                 <Route path="articles/create" element={<ArticleCreatePage />} />

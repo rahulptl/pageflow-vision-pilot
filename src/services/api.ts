@@ -107,6 +107,42 @@ class ApiService {
     });
   }
 
+  // Layout Creation
+  async createLayout(data: {
+    layout_json: File;
+    page_image: File;
+    created_by?: string;
+    magazine_title?: string;
+    magazine_category?: string;
+    type_of_page: "1 pager" | "2 pager";
+  }): Promise<Layout> {
+    const formData = new FormData();
+    formData.append('layout_json', data.layout_json);
+    formData.append('page_image', data.page_image);
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (data.created_by) params.append('created_by', data.created_by);
+    if (data.magazine_title) params.append('magazine_title', data.magazine_title);
+    if (data.magazine_category) params.append('magazine_category', data.magazine_category);
+    params.append('type_of_page', data.type_of_page);
+
+    const endpoint = `/layouts/?${params.toString()}`;
+    
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header - let browser set it for FormData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to create layout: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return response.json();
+  }
+
   async getRuns(): Promise<LayoutRun[]> {
     return this.request<LayoutRun[]>('/runs/');
   }

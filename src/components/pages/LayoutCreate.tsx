@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/services/api";
-import { Upload, FileText, Image, Plus } from "lucide-react";
+import { Upload, Plus } from "lucide-react";
 
 interface CreateLayoutFormData {
   layout_json: File | null;
@@ -55,8 +56,7 @@ export function LayoutCreate() {
     },
   });
 
-  const handleFileChange = (field: "layout_json" | "page_image") => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+  const handleFileChange = (field: "layout_json" | "page_image") => (file: File | null) => {
     setFormData((prev) => ({ ...prev, [field]: file }));
   };
 
@@ -96,48 +96,24 @@ export function LayoutCreate() {
               {/* File Uploads */}
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Layout JSON File */}
-                <div className="space-y-2">
-                  <Label htmlFor="layout-json" className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Layout JSON File *
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="layout-json"
-                      type="file"
-                      accept=".json"
-                      onChange={handleFileChange("layout_json")}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                  </div>
-                  {formData.layout_json && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected: {formData.layout_json.name}
-                    </p>
-                  )}
-                </div>
+                <FileUpload
+                  onFileSelect={handleFileChange("layout_json")}
+                  accept={{ 'application/json': ['.json'] }}
+                  fileType="json"
+                  selectedFile={formData.layout_json}
+                  title="Layout JSON File *"
+                  description="Upload the layout configuration file"
+                />
 
                 {/* Page Image */}
-                <div className="space-y-2">
-                  <Label htmlFor="page-image" className="flex items-center gap-2">
-                    <Image className="w-4 h-4" />
-                    Page Image *
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="page-image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange("page_image")}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                  </div>
-                  {formData.page_image && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected: {formData.page_image.name}
-                    </p>
-                  )}
-                </div>
+                <FileUpload
+                  onFileSelect={handleFileChange("page_image")}
+                  accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] }}
+                  fileType="image"
+                  selectedFile={formData.page_image}
+                  title="Page Image *"
+                  description="Upload the page preview image"
+                />
               </div>
 
               {/* Layout Type */}

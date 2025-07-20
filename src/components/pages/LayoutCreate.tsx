@@ -20,6 +20,15 @@ interface CreateLayoutFormData {
   type_of_page: "1 pager" | "2 pager";
 }
 
+interface CreateLayoutApiData {
+  layout_json: any;
+  page_image: File;
+  created_by: string;
+  magazine_title: string;
+  magazine_category: string;
+  type_of_page: "1 pager" | "2 pager";
+}
+
 export function LayoutCreate() {
   const [formData, setFormData] = useState<CreateLayoutFormData>({
     layout_json: null,
@@ -38,7 +47,26 @@ export function LayoutCreate() {
       if (!data.layout_json || !data.page_image) {
         throw new Error("Both JSON file and page image are required");
       }
-      return apiService.createLayout(data);
+      
+      // Read the layout file content and parse as JSON
+      const layoutContent = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = () => reject(new Error("Failed to read layout file"));
+        reader.readAsText(data.layout_json!);
+      });
+      
+      let parsedLayout;
+      try {
+        parsedLayout = JSON.parse(layoutContent);
+      } catch (error) {
+        throw new Error("Invalid JSON format in layout file");
+      }
+      
+      return apiService.createLayout({
+        ...data,
+        layout_json: parsedLayout
+      });
     },
     onSuccess: (result) => {
       toast({
@@ -98,11 +126,14 @@ export function LayoutCreate() {
                 {/* Layout JSON File */}
                 <FileUpload
                   onFileSelect={handleFileChange("layout_json")}
-                  accept={{ 'application/json': ['.json'] }}
+                  accept={{ 
+                    'application/json': ['.json', '.vjson'],
+                    'text/plain': ['.vjson'] 
+                  }}
                   fileType="json"
                   selectedFile={formData.layout_json}
-                  title="Layout JSON File *"
-                  description="Upload the layout configuration file"
+                  title="Layout JSON/VJSON File *"
+                  description="Upload the layout configuration file (.json or .vjson)"
                 />
 
                 {/* Page Image */}

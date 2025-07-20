@@ -109,7 +109,7 @@ class ApiService {
 
   // Layout Creation
   async createLayout(data: {
-    layout_json: File;
+    layout_json: any;
     page_image: File;
     created_by?: string;
     magazine_title?: string;
@@ -117,7 +117,12 @@ class ApiService {
     type_of_page: "1 pager" | "2 pager";
   }): Promise<Layout> {
     const formData = new FormData();
-    formData.append('layout_json', data.layout_json);
+    
+    // Create a JSON blob for the layout_json
+    const layoutBlob = new Blob([JSON.stringify(data.layout_json)], { 
+      type: 'application/json' 
+    });
+    formData.append('layout_json', layoutBlob, 'layout.json');
     formData.append('page_image', data.page_image);
     
     // Build query parameters

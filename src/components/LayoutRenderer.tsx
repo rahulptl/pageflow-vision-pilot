@@ -94,9 +94,13 @@ export const LayoutRenderer: React.FC<Props> = ({
   const viewWidth = isSpread ? pageSize.width * 2 : pageSize.width;
   const viewHeight = pageSize.height;
 
+  // Use actual dimensions from layout if width/height not provided
+  const actualWidth = width || viewWidth;
+  const actualHeight = height || viewHeight;
+
   return (
-    <div className={`bg-white rounded border overflow-hidden ${className}`} style={{ width, height: height || (width * (viewHeight / viewWidth)) }}>
-      <svg width="100%" height="100%" viewBox={`0 0 ${viewWidth} ${viewHeight}`}>
+    <div className={`bg-white rounded border overflow-hidden ${className}`} style={{ width: actualWidth, height: actualHeight }}>
+      <svg width={actualWidth} height={actualHeight} viewBox={`0 0 ${viewWidth} ${viewHeight}`} preserveAspectRatio="xMidYMid meet">
         {/* Draw page backgrounds side by side */}
         {pages.map((page, pageIndex) => {
           const xOffset = isSpread ? pageIndex * pageSize.width : 0;

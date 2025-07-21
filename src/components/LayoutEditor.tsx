@@ -278,21 +278,19 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
             <DialogTitle>Layout Guide</DialogTitle>
             <p className="text-sm text-muted-foreground">Reference for content placement</p>
           </DialogHeader>
-          <div className="flex justify-center items-center p-4 overflow-auto">
+          <div className="flex justify-center items-start p-4 overflow-auto">
             {page.layoutJson ? (
-              <div className="border rounded-lg overflow-hidden bg-white max-w-full max-h-[70vh]">
+              <div className="border rounded-lg overflow-auto bg-white">
                 <LayoutRenderer 
                   layoutJson={page.layoutJson}
-                  width={800}
-                  className="w-full h-auto"
+                  className="w-auto h-auto"
                 />
               </div>
             ) : page.layout?.layout_json ? (
-              <div className="border rounded-lg overflow-hidden bg-white max-w-full max-h-[70vh]">
+              <div className="border rounded-lg overflow-auto bg-white">
                 <LayoutRenderer 
                   layoutJson={page.layout.layout_json}
-                  width={800}
-                  className="w-full h-auto"
+                  className="w-auto h-auto"
                 />
               </div>
             ) : (
@@ -311,6 +309,7 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
               <h1 className="text-2xl font-bold">Edit Page {page.pageNumber}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline">{page.typeOfPage}</Badge>
+                <Badge variant="secondary">Layout #{page.layoutId}</Badge>
               </div>
             </div>
             <div className="flex gap-2">

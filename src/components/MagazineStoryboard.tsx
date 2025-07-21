@@ -118,6 +118,7 @@ function SortablePageCard({
               <h3 className="font-medium">
                 {is2Pager ? `Pages ${page.pageNumber}-${page.pageNumber + 1}` : `Page ${page.pageNumber}`}
               </h3>
+              <p className="text-sm text-muted-foreground">Layout #{page.layoutId}</p>
             </div>
           </div>
           

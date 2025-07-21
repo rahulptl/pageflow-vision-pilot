@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit, RefreshCw, Check, GripVertical, Trash2, Save } from "lucide-react";
 import { Layout } from "@/types/api";
+import { LayoutRenderer } from "@/components/LayoutRenderer";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -127,10 +128,25 @@ function SortablePageCard({
 
         {/* Layout Preview */}
         <div className="mb-4 bg-muted rounded-lg p-2 min-h-[120px] flex items-center justify-center">
-          {page.layout?.bounding_box_image ? <img src={page.layout.bounding_box_image} alt={`Layout ${page.layoutId} preview`} className="max-w-full max-h-full object-contain rounded transition-transform duration-200 hover:scale-105" /> : <div className="text-center text-muted-foreground">
+          {page.layoutJson ? (
+            <LayoutRenderer 
+              layoutJson={page.layoutJson} 
+              width={100} 
+              height={120}
+              className="transition-transform duration-200 hover:scale-105"
+            />
+          ) : page.layout?.bounding_box_image ? (
+            <img 
+              src={page.layout.bounding_box_image} 
+              alt={`Layout ${page.layoutId} preview`} 
+              className="max-w-full max-h-full object-contain rounded transition-transform duration-200 hover:scale-105" 
+            />
+          ) : (
+            <div className="text-center text-muted-foreground">
               <div className="text-lg font-medium">Layout {page.layoutId}</div>
               <div className="text-sm">Preview not available</div>
-            </div>}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -179,11 +195,21 @@ function SortablePageCard({
                           return <div key={layoutId} className="flex-1">
                                     <Card className="border-blue-300">
                                       <CardContent className="p-2">
-                                        <div className="aspect-square bg-muted rounded mb-1 flex items-center justify-center overflow-hidden">
-                                          {layout?.bounding_box_image ? <img src={layout.bounding_box_image} alt={`Layout ${layoutId}`} className="w-full h-full object-contain" /> : <div className="text-xs text-center text-muted-foreground">
-                                              Layout {layoutId}
-                                            </div>}
-                                        </div>
+                                         <div className="aspect-square bg-muted rounded mb-1 flex items-center justify-center overflow-hidden">
+                                           {layout?.layout_json ? (
+                                             <LayoutRenderer 
+                                               layoutJson={layout.layout_json} 
+                                               width={80} 
+                                               className="w-full h-full object-contain" 
+                                             />
+                                           ) : layout?.bounding_box_image ? (
+                                             <img src={layout.bounding_box_image} alt={`Layout ${layoutId}`} className="w-full h-full object-contain" />
+                                           ) : (
+                                             <div className="text-xs text-center text-muted-foreground">
+                                               Layout {layoutId}
+                                             </div>
+                                           )}
+                                         </div>
                                         <div className="text-xs text-center">
                                           <div className="font-medium">Page {page.pageNumber + idx}</div>
                                           <Badge variant="secondary" className="text-xs">
@@ -223,11 +249,21 @@ function SortablePageCard({
                           setSwapDialogOpen(false);
                         }}>
                                   <CardContent className="p-3">
-                                    <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                                      {layout.bounding_box_image ? <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" /> : <div className="text-xs text-center text-muted-foreground">
-                                          Layout {layout.layout_id}
-                                        </div>}
-                                    </div>
+                                     <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                       {layout.layout_json ? (
+                                         <LayoutRenderer 
+                                           layoutJson={layout.layout_json} 
+                                           width={80} 
+                                           className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
+                                         />
+                                       ) : layout.bounding_box_image ? (
+                                         <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
+                                       ) : (
+                                         <div className="text-xs text-center text-muted-foreground">
+                                           Layout {layout.layout_id}
+                                         </div>
+                                       )}
+                                     </div>
                                     <div className="text-xs text-center">
                                       <div className="font-medium">#{layout.layout_id}</div>
                                       <div className="text-muted-foreground">
@@ -253,14 +289,24 @@ function SortablePageCard({
                           const canSelect = selectedOnePagers.length < 2 || isSelected;
                           return <Card key={layout.layout_id} className={`cursor-pointer transition-all duration-200 hover:scale-[1.02] ${isSelected ? 'ring-2 ring-orange-500 bg-orange-50/50 border-orange-300' : canSelect ? 'hover:bg-muted border-orange-200/50 hover:border-orange-300' : 'opacity-50 cursor-not-allowed border-gray-200'}`} onClick={() => canSelect && handleOnePagerClick(layout.layout_id)}>
                                     <CardContent className="p-3">
-                                      <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden relative">
-                                        {layout.bounding_box_image ? <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" /> : <div className="text-xs text-center text-muted-foreground">
-                                            Layout {layout.layout_id}
-                                          </div>}
-                                        {isSelected && <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                                            {selectedOnePagers.indexOf(layout.layout_id) + 1}
-                                          </div>}
-                                      </div>
+                                       <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden relative">
+                                         {layout.layout_json ? (
+                                           <LayoutRenderer 
+                                             layoutJson={layout.layout_json} 
+                                             width={80} 
+                                             className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
+                                           />
+                                         ) : layout.bounding_box_image ? (
+                                           <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
+                                         ) : (
+                                           <div className="text-xs text-center text-muted-foreground">
+                                             Layout {layout.layout_id}
+                                           </div>
+                                         )}
+                                         {isSelected && <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                             {selectedOnePagers.indexOf(layout.layout_id) + 1}
+                                           </div>}
+                                       </div>
                                       <div className="text-xs text-center">
                                         <div className="font-medium">#{layout.layout_id}</div>
                                         <div className="text-muted-foreground">
@@ -285,15 +331,21 @@ function SortablePageCard({
                               {allLayouts.filter(layout => layout.layout_metadata?.type_of_page === '1 pager').map(layout => (
                                 <Card key={layout.layout_id} className={`cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02] ${layout.layout_id === page.layoutId ? 'ring-2 ring-primary' : ''}`} onClick={() => handleOnePagerClick(layout.layout_id)}>
                                   <CardContent className="p-3">
-                                    <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                                      {layout.bounding_box_image ? (
-                                        <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
-                                      ) : (
-                                        <div className="text-xs text-center text-muted-foreground">
-                                          Layout {layout.layout_id}
-                                        </div>
-                                      )}
-                                    </div>
+                                     <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                       {layout.layout_json ? (
+                                         <LayoutRenderer 
+                                           layoutJson={layout.layout_json} 
+                                           width={80} 
+                                           className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
+                                         />
+                                       ) : layout.bounding_box_image ? (
+                                         <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
+                                       ) : (
+                                         <div className="text-xs text-center text-muted-foreground">
+                                           Layout {layout.layout_id}
+                                         </div>
+                                       )}
+                                     </div>
                                     <div className="text-xs text-center">
                                       <div className="font-medium">#{layout.layout_id}</div>
                                       <div className="text-muted-foreground">
@@ -335,15 +387,21 @@ function SortablePageCard({
                                   setSwapDialogOpen(false);
                                 }}>
                                   <CardContent className="p-3">
-                                    <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                                      {layout.bounding_box_image ? (
-                                        <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
-                                      ) : (
-                                        <div className="text-xs text-center text-muted-foreground">
-                                          Layout {layout.layout_id}
-                                        </div>
-                                      )}
-                                    </div>
+                                     <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                       {layout.layout_json ? (
+                                         <LayoutRenderer 
+                                           layoutJson={layout.layout_json} 
+                                           width={80} 
+                                           className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
+                                         />
+                                       ) : layout.bounding_box_image ? (
+                                         <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
+                                       ) : (
+                                         <div className="text-xs text-center text-muted-foreground">
+                                           Layout {layout.layout_id}
+                                         </div>
+                                       )}
+                                     </div>
                                     <div className="text-xs text-center">
                                       <div className="font-medium">#{layout.layout_id}</div>
                                       <div className="text-muted-foreground">

@@ -291,14 +291,14 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
             return (
               <div className="relative bg-white rounded-lg shadow-xl border">
                 {/* Header with controls */}
-                <div className="flex items-center justify-between p-4 border-b bg-white rounded-t-lg">
+                {/* <div className="flex items-center justify-between p-4 border-b bg-white rounded-t-lg">
                   <div>
                     <h3 className="text-lg font-semibold">Layout Guide</h3>
                     <p className="text-sm text-muted-foreground">Reference for content placement</p>
                   </div>
                   
                   {/* Zoom Controls */}
-                  <div className="flex items-center gap-4">
+                  {/* <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <label htmlFor="zoom-select" className="text-sm text-muted-foreground">Zoom:</label>
                       <select
@@ -311,16 +311,16 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                           <option key={v} value={v}>{v}%</option>
                         ))}
                       </select>
-                    </div>
+                    </div> */}
                     
-                    <button
+                    {/* <button
                       onClick={() => setShowLayoutGuideModal(false)}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <X className="h-5 w-5" />
                     </button>
-                  </div>
-                </div>
+                  </div> */}
+                {/* </div> */} */}
 
                 {/* Layout Content */}
                 <div 

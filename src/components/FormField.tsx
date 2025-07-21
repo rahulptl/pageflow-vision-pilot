@@ -293,6 +293,15 @@ export const FormField: React.FC<FormFieldProps> = ({
           ))}
         </div>
       )}
+      
+      {/* Text length overflow warning */}
+      {config.type === 'string' && config.maxChars && (
+        typeof value === 'string' && value.length > config.maxChars
+      ) && (
+        <div className="p-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+          ⚠️ Text will be overflown in the layout when rendered. Consider shortening your content.
+        </div>
+      )}
     </div>
   );
 }; 

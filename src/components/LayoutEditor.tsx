@@ -476,24 +476,9 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                             {hasUploadedImage || hasExistingImage ? (
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-sm text-muted-foreground">
-                                    {hasUploadedImage ? 'New image uploaded' : 'Using existing image'}
+                                  <span className="text-sm text-green-600 font-medium">
+                                    {hasUploadedImage ? `✓ New image uploaded` : 'Using existing image'}
                                   </span>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setFieldValues(prev => ({ ...prev, [field.id]: '' }));
-                                      setUploadedFiles(prev => {
-                                        const updated = { ...prev };
-                                        delete updated[field.id];
-                                        return updated;
-                                      });
-                                    }}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    {hasUploadedImage ? 'Remove' : 'Replace'}
-                                  </Button>
                                 </div>
                                 <div
                                   className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"

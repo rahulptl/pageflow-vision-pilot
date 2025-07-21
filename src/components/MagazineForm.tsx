@@ -12,6 +12,7 @@ import { useToast } from '../hooks/use-toast';
 import { apiService } from '../services/api';
 import { TemplateRequest, ArticleWithLayout } from '../types/api';
 import { ArticleSelectionDialog } from './articles/ArticleSelectionDialog';
+import { Plus } from 'lucide-react';
 
 interface MagazineFormProps {
   isAdmin?: boolean;
@@ -759,6 +760,25 @@ export const MagazineForm: React.FC<MagazineFormProps> = ({ isAdmin = false }) =
                 />
               );
             })}
+          </div>
+
+          {/* Add More Fields Button */}
+          <div className="text-center py-6">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                toast({
+                  title: "New layout required",
+                  description: "A new layout must be selected as the current one doesn't support more elements.",
+                  variant: "destructive"
+                });
+              }}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add More Fields
+            </Button>
           </div>
 
           {/* Submit Section */}

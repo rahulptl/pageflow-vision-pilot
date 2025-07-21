@@ -135,7 +135,7 @@ export const LayoutRenderer: React.FC<Props> = ({
                     height={geom.height}
                     fill="none"
                     stroke={getColor()}
-                    strokeWidth={0.8}
+                    strokeWidth={1.5}
                     transform={`matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e + xOffset}, ${t.f})`}
                     opacity={0.8}
                   />

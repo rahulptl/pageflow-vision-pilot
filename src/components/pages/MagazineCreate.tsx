@@ -851,19 +851,12 @@ export function MagazineCreatePage() {
                           Edited
                         </Badge>}
                       
-                      {page.xmlUploaded ? <Badge variant="default" className="gap-1">
+                       {page.isCompleted ? <Badge variant="default" className="gap-1">
                           <Check className="h-3 w-3" />
-                          XML Uploaded
-                        </Badge> : <div className="flex items-center gap-2">
-                          <Input type="file" accept=".xml" className="w-auto" onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) handleXmlUpload(page.pageNumber, file);
-                    }} />
-                          <Button variant="outline" size="sm">
-                            <Upload className="h-4 w-4 mr-1" />
-                            Upload XML
-                          </Button>
-                        </div>}
+                          Ready
+                        </Badge> : <Badge variant="outline">
+                          Pending
+                        </Badge>}
                     </div>
                   </div>
                 </Card>)}

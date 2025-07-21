@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Upload, Save, X, Image as ImageIcon, FileText, Type, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { LayoutRenderer } from "@/components/LayoutRenderer";
@@ -116,6 +117,8 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
   // Track uploaded image files for each field
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'text' | 'image'>('text');
+  const [showLayoutGuideModal, setShowLayoutGuideModal] = useState(false);
 
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues(prev => ({ ...prev, [fieldId]: value }));
@@ -263,57 +266,59 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
     }
   };
 
-  return (
-    <div className="container mx-auto py-8">
-      <div className="flex gap-8">
-        {/* Sticky Bounding Box */}
-        <div className="w-80 flex-shrink-0">
-          <div className="sticky top-4 h-fit">
-            <Card>
-            <CardHeader>
-              <CardTitle>Layout Guide</CardTitle>
-              <p className="text-sm text-muted-foreground">Reference for content placement</p>
-            </CardHeader>
-            <CardContent>
-              {page.layoutJson ? (
-                <div className="border rounded-lg overflow-hidden bg-white">
-                  <LayoutRenderer 
-                    layoutJson={page.layoutJson}
-                    width={300}
-                    height={400}
-                    className="w-full"
-                  />
-                </div>
-              ) : page.layout?.layout_json ? (
-                <div className="border rounded-lg overflow-hidden bg-white">
-                  <LayoutRenderer 
-                    layoutJson={page.layout.layout_json}
-                    width={300}
-                    height={400}
-                    className="w-full"
-                  />
-                </div>
-              ) : (
-                <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                  <p className="text-muted-foreground">No layout guide available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          </div>
-        </div>
+  const textFields = formFields.filter(field => field.type === 'text');
+  const imageFields = formFields.filter(field => field.type === 'image');
 
-        {/* Content Editor */}
-        <div className="flex-1 space-y-6">
+  return (
+    <>
+      {/* Layout Guide Modal */}
+      <Dialog open={showLayoutGuideModal} onOpenChange={setShowLayoutGuideModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Layout Guide</DialogTitle>
+            <p className="text-sm text-muted-foreground">Reference for content placement</p>
+          </DialogHeader>
+          <div className="flex justify-center p-4">
+            {page.layoutJson ? (
+              <div className="border rounded-lg overflow-hidden bg-white">
+                <LayoutRenderer 
+                  layoutJson={page.layoutJson}
+                  width={600}
+                  height={800}
+                  className="w-full"
+                />
+              </div>
+            ) : page.layout?.layout_json ? (
+              <div className="border rounded-lg overflow-hidden bg-white">
+                <LayoutRenderer 
+                  layoutJson={page.layout.layout_json}
+                  width={600}
+                  height={800}
+                  className="w-full"
+                />
+              </div>
+            ) : (
+              <div className="h-96 bg-muted rounded-lg flex items-center justify-center">
+                <p className="text-muted-foreground">No layout guide available</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="container mx-auto py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Edit Page {page.pageNumber}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline">{page.typeOfPage}</Badge>
-                <Badge variant="secondary">Layout #{page.layoutId}</Badge>
               </div>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowLayoutGuideModal(true)}>
+                View Layout Guide
+              </Button>
               <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" />
                 Cancel
@@ -334,32 +339,51 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
             </div>
           </div>
 
-          {/* Form Fields by Page */}
-          {Object.keys(fieldsByPage).length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">No editable content found in this layout</p>
-              </CardContent>
-            </Card>
-          ) : (
-            Object.entries(fieldsByPage).map(([pageNumber, fields]) => (
-              <Card key={pageNumber}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Page {pageNumber} Content
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Text Fields */}
-                  {fields.filter(field => field.type === 'text').length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <Type className="h-4 w-4" />
-                        Text Content
-                      </h4>
-                      {fields.filter(field => field.type === 'text').map((field) => (
+          {/* Step Navigation */}
+          <div className="flex items-center gap-4 border-b pb-4">
+            <Button 
+              variant={currentStep === 'text' ? 'default' : 'outline'} 
+              onClick={() => setCurrentStep('text')}
+              className="gap-2"
+            >
+              <Type className="h-4 w-4" />
+              Step 1: Text Content ({textFields.length})
+            </Button>
+            <Button 
+              variant={currentStep === 'image' ? 'default' : 'outline'} 
+              onClick={() => setCurrentStep('image')}
+              className="gap-2"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Step 2: Images ({imageFields.length})
+            </Button>
+          </div>
+
+          {/* Step Content */}
+          {currentStep === 'text' ? (
+            // Text Fields Step
+            textFields.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <Type className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No text content found in this layout</p>
+                </CardContent>
+              </Card>
+            ) : (
+              Object.entries(fieldsByPage).map(([pageNumber, fields]) => {
+                const pageTextFields = fields.filter(field => field.type === 'text');
+                if (pageTextFields.length === 0) return null;
+                
+                return (
+                  <Card key={pageNumber}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Type className="h-5 w-5" />
+                        Page {pageNumber} - Text Content
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {pageTextFields.map((field) => (
                         <div key={field.id} className="space-y-2">
                           <Label className="font-medium text-sm">
                             {formatTextType(field.textType || 'Text')}
@@ -381,21 +405,37 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                           )}
                         </div>
                       ))}
-                    </div>
-                  )}
-
-                  {/* Image Fields */}
-                  {fields.filter(field => field.type === 'image').length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4" />
-                        Images
-                      </h4>
-                      {fields.filter(field => field.type === 'image').map((field) => {
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )
+          ) : (
+            // Image Fields Step
+            imageFields.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No images found in this layout</p>
+                </CardContent>
+              </Card>
+            ) : (
+              Object.entries(fieldsByPage).map(([pageNumber, fields]) => {
+                const pageImageFields = fields.filter(field => field.type === 'image');
+                if (pageImageFields.length === 0) return null;
+                
+                return (
+                  <Card key={pageNumber}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5" />
+                        Page {pageNumber} - Images
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {pageImageFields.map((field) => {
                         const hasUploadedImage = fieldValues[field.id];
                         const hasExistingImage = field.content && field.content.startsWith('http');
-                        const displayImage = hasUploadedImage || hasExistingImage;
-                        const imageUrl = hasUploadedImage || field.content;
 
                         return (
                           <div key={field.id} className="border rounded-lg p-4 space-y-3">
@@ -403,43 +443,27 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                               {formatTextType(field.imageType || 'Image')}
                             </Label>
                             
-                            {displayImage ? (
+                            {hasUploadedImage || hasExistingImage ? (
                               <div className="space-y-3">
-                                <div className="relative group">
-                                  <img
-                                    src={imageUrl}
-                                    alt={field.label}
-                                    className="w-full h-40 object-cover rounded border"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm text-muted-foreground">
+                                    {hasUploadedImage ? 'New image uploaded' : 'Using existing image'}
+                                  </span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setFieldValues(prev => ({ ...prev, [field.id]: '' }));
+                                      setUploadedFiles(prev => {
+                                        const updated = { ...prev };
+                                        delete updated[field.id];
+                                        return updated;
+                                      });
                                     }}
-                                  />
-                                  <div className="hidden bg-muted rounded border h-40 flex items-center justify-center">
-                                    <div className="text-center">
-                                      <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                                      <p className="text-sm text-muted-foreground">
-                                        {formatTextType(field.imageType || 'Image')} Placeholder
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      onClick={() => {
-                                        setFieldValues(prev => ({ ...prev, [field.id]: '' }));
-                                        setUploadedFiles(prev => {
-                                          const updated = { ...prev };
-                                          delete updated[field.id];
-                                          return updated;
-                                        });
-                                      }}
-                                    >
-                                      <X className="h-4 w-4 mr-1" />
-                                      {hasUploadedImage ? 'Remove' : 'Replace'}
-                                    </Button>
-                                  </div>
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    {hasUploadedImage ? 'Remove' : 'Replace'}
+                                  </Button>
                                 </div>
                                 <div
                                   className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
@@ -489,18 +513,18 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                               const file = e.target.files?.[0];
                               if (file) handleImageUpload(field.id, file);
                             }}
-                          />
-                        </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+                           />
+                         </div>
+                         );
+                       })}
+                     </CardContent>
+                   </Card>
+                 );
+               })
+             )
+           )}
+         </div>
+       </div>
+     </>
+   );
+ }

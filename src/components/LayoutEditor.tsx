@@ -272,28 +272,68 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
   return (
     <>
       {/* Layout Guide Modal */}
+      import { useState } from 'react';
+
       <Dialog open={showLayoutGuideModal} onOpenChange={setShowLayoutGuideModal}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] w-auto">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-6">
           <DialogHeader>
-            <DialogTitle>Layout Guide</DialogTitle>
-            <p className="text-sm text-muted-foreground">Reference for content placement</p>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <DialogTitle>Layout Guide</DialogTitle>
+                <p className="text-sm text-muted-foreground">Reference for content placement</p>
+              </div>
+      
+              {/* Zoom Selector */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="zoom-select" className="text-sm text-muted-foreground">Zoom:</label>
+                <select
+                  id="zoom-select"
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  {[25, 50, 75, 100].map((v) => (
+                    <option key={v} value={v}>{v}%</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="flex justify-center items-start p-4 overflow-auto">
-            {page.layoutJson ? (
-              <div className="border rounded-lg overflow-auto bg-white">
-                <LayoutRenderer 
-                  layoutJson={page.layoutJson}
-                  className="w-auto h-auto"
-                />
-              </div>
-            ) : page.layout?.layout_json ? (
-              <div className="border rounded-lg overflow-auto bg-white">
-                <LayoutRenderer 
-                  layoutJson={page.layout.layout_json}
-                  className="w-auto h-auto"
-                />
-              </div>
-            ) : (
+      
+          <div className="flex justify-center items-start overflow-auto">
+            {page.layoutJson || page.layout?.layout_json ? (() => {
+              const layoutData = page.layoutJson || page.layout?.layout_json;
+              const pageSize = layoutData?.document?.settings?.pageSize || { width: 612, height: 792 };
+              const numPages = layoutData?.document?.pages?.length || 1;
+              const isSpread = numPages === 2;
+      
+              const totalWidth = isSpread ? pageSize.width * 2 : pageSize.width;
+              const totalHeight = pageSize.height;
+      
+              // Zoom state (default 100%)
+              const [zoom, setZoom] = useState(100);
+              const scale = zoom / 100;
+      
+              return (
+                <div className="border rounded-lg bg-white shadow-md overflow-auto">
+                  <div
+                    style={{
+                      width: totalWidth,
+                      height: totalHeight,
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    <LayoutRenderer
+                      layoutJson={layoutData}
+                      width={totalWidth}
+                      height={totalHeight}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              );
+            })() : (
               <div className="h-96 bg-muted rounded-lg flex items-center justify-center">
                 <p className="text-muted-foreground">No layout guide available</p>
               </div>
@@ -301,6 +341,7 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
           </div>
         </DialogContent>
       </Dialog>
+
 
       <div className="container mx-auto py-8">
         <div className="max-w-4xl mx-auto space-y-6">

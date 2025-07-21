@@ -24,13 +24,9 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
             </Button>
           )}
           
-          <div className="relative max-w-md hidden sm:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search layouts..."
-              className="pl-10 bg-muted/50 border-0 focus-visible:ring-1 h-9 w-64"
-            />
-          </div>
+          <h1 className="text-xl font-semibold text-foreground">
+            Intelligent Layout Design
+          </h1>
         </div>
 
         <div className="flex items-center gap-2">

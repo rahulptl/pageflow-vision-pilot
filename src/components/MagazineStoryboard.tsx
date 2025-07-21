@@ -474,13 +474,30 @@ export function MagazineStoryboard({
           <div className="text-sm text-muted-foreground">
             Total pages: {totalPages}
           </div>
+          {onSave && (
+            <Button onClick={onSave} className="gap-2">
+              <Save className="h-4 w-4" />
+              Save Magazine
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
+          {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} onRemovePage={onRemovePage} />)}
+          
+          {/* Add Page Card - Always visible after last page */}
           {onAddPage && (
             <Dialog open={addPageDialogOpen} onOpenChange={setAddPageDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Page
-                </Button>
+                <Card className="cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] border-dashed border-2 border-muted-foreground/30 bg-muted/20">
+                  <CardContent className="p-4 h-full flex flex-col items-center justify-center min-h-[200px]">
+                    <Plus className="h-12 w-12 text-muted-foreground mb-2" />
+                    <p className="text-sm font-medium text-muted-foreground">Add Page</p>
+                  </CardContent>
+                </Card>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
@@ -533,20 +550,7 @@ export function MagazineStoryboard({
               </DialogContent>
             </Dialog>
           )}
-          {onSave && (
-            <Button onClick={onSave} className="gap-2">
-              <Save className="h-4 w-4" />
-              Save Magazine
-            </Button>
-          )}
         </div>
-      </div>
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
-            {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} onRemovePage={onRemovePage} />)}
-          </div>
         </SortableContext>
       </DndContext>
     </div>;

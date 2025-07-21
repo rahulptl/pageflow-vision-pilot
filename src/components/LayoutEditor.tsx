@@ -273,28 +273,26 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
     <>
       {/* Layout Guide Modal */}
       <Dialog open={showLayoutGuideModal} onOpenChange={setShowLayoutGuideModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-[90vw] max-h-[90vh] w-auto">
           <DialogHeader>
             <DialogTitle>Layout Guide</DialogTitle>
             <p className="text-sm text-muted-foreground">Reference for content placement</p>
           </DialogHeader>
-          <div className="flex justify-center p-4">
+          <div className="flex justify-center items-center p-4 overflow-auto">
             {page.layoutJson ? (
-              <div className="border rounded-lg overflow-hidden bg-white">
+              <div className="border rounded-lg overflow-hidden bg-white max-w-full max-h-[70vh]">
                 <LayoutRenderer 
                   layoutJson={page.layoutJson}
-                  width={600}
-                  height={800}
-                  className="w-full"
+                  width={800}
+                  className="w-full h-auto"
                 />
               </div>
             ) : page.layout?.layout_json ? (
-              <div className="border rounded-lg overflow-hidden bg-white">
+              <div className="border rounded-lg overflow-hidden bg-white max-w-full max-h-[70vh]">
                 <LayoutRenderer 
                   layoutJson={page.layout.layout_json}
-                  width={600}
-                  height={800}
-                  className="w-full"
+                  width={800}
+                  className="w-full h-auto"
                 />
               </div>
             ) : (

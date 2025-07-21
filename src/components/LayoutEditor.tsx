@@ -119,6 +119,7 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
   const [isSaving, setIsSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState<'text' | 'image'>('text');
   const [showLayoutGuideModal, setShowLayoutGuideModal] = useState(false);
+  const [zoom, setZoom] = useState(100);
 
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues(prev => ({ ...prev, [fieldId]: value }));
@@ -272,8 +273,6 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
   return (
     <>
       {/* Layout Guide Modal */}
-      import { useState } from 'react';
-
       <Dialog open={showLayoutGuideModal} onOpenChange={setShowLayoutGuideModal}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-6">
           <DialogHeader>
@@ -309,9 +308,6 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
       
               const totalWidth = isSpread ? pageSize.width * 2 : pageSize.width;
               const totalHeight = pageSize.height;
-      
-              // Zoom state (default 100%)
-              const [zoom, setZoom] = useState(100);
               const scale = zoom / 100;
       
               return (

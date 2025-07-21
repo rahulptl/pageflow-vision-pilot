@@ -73,10 +73,18 @@ export const LayoutRenderer: React.FC<Props> = ({
   height,
   className = "" 
 }) => {
+  if (!layoutJson) {
+    return (
+      <div className={`flex items-center justify-center bg-muted rounded ${className}`} style={{ width, height: height || width * 1.3 }}>
+        <span className="text-xs text-muted-foreground">No layout data</span>
+      </div>
+    );
+  }
+  
   if (!layoutJson?.document?.pages) {
     return (
       <div className={`flex items-center justify-center bg-muted rounded ${className}`} style={{ width, height: height || width * 1.3 }}>
-        <span className="text-xs text-muted-foreground">Invalid layout</span>
+        <span className="text-xs text-muted-foreground">Invalid layout structure</span>
       </div>
     );
   }

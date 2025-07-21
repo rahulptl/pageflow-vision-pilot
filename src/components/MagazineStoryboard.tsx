@@ -135,16 +135,17 @@ function SortablePageCard({
               height={120}
               className="transition-transform duration-200 hover:scale-105"
             />
-          ) : page.layout?.bounding_box_image ? (
-            <img 
-              src={page.layout.bounding_box_image} 
-              alt={`Layout ${page.layoutId} preview`} 
-              className="max-w-full max-h-full object-contain rounded transition-transform duration-200 hover:scale-105" 
+          ) : page.layout?.layout_json ? (
+            <LayoutRenderer 
+              layoutJson={page.layout.layout_json} 
+              width={100} 
+              height={120}
+              className="transition-transform duration-200 hover:scale-105"
             />
           ) : (
             <div className="text-center text-muted-foreground">
               <div className="text-lg font-medium">Layout {page.layoutId}</div>
-              <div className="text-sm">Preview not available</div>
+              <div className="text-sm">No layout data available</div>
             </div>
           )}
         </div>
@@ -202,8 +203,6 @@ function SortablePageCard({
                                                width={80} 
                                                className="w-full h-full object-contain" 
                                              />
-                                           ) : layout?.bounding_box_image ? (
-                                             <img src={layout.bounding_box_image} alt={`Layout ${layoutId}`} className="w-full h-full object-contain" />
                                            ) : (
                                              <div className="text-xs text-center text-muted-foreground">
                                                Layout {layoutId}
@@ -256,8 +255,6 @@ function SortablePageCard({
                                            width={80} 
                                            className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
                                          />
-                                       ) : layout.bounding_box_image ? (
-                                         <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
                                        ) : (
                                          <div className="text-xs text-center text-muted-foreground">
                                            Layout {layout.layout_id}
@@ -296,13 +293,11 @@ function SortablePageCard({
                                              width={80} 
                                              className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
                                            />
-                                         ) : layout.bounding_box_image ? (
-                                           <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
-                                         ) : (
-                                           <div className="text-xs text-center text-muted-foreground">
-                                             Layout {layout.layout_id}
-                                           </div>
-                                         )}
+                                          ) : (
+                                            <div className="text-xs text-center text-muted-foreground">
+                                              Layout {layout.layout_id}
+                                            </div>
+                                          )}
                                          {isSelected && <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                                              {selectedOnePagers.indexOf(layout.layout_id) + 1}
                                            </div>}
@@ -338,13 +333,11 @@ function SortablePageCard({
                                            width={80} 
                                            className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
                                          />
-                                       ) : layout.bounding_box_image ? (
-                                         <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
-                                       ) : (
-                                         <div className="text-xs text-center text-muted-foreground">
-                                           Layout {layout.layout_id}
-                                         </div>
-                                       )}
+                                        ) : (
+                                          <div className="text-xs text-center text-muted-foreground">
+                                            Layout {layout.layout_id}
+                                          </div>
+                                        )}
                                      </div>
                                     <div className="text-xs text-center">
                                       <div className="font-medium">#{layout.layout_id}</div>
@@ -394,13 +387,11 @@ function SortablePageCard({
                                            width={80} 
                                            className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
                                          />
-                                       ) : layout.bounding_box_image ? (
-                                         <img src={layout.bounding_box_image} alt={`Layout ${layout.layout_id}`} className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" />
-                                       ) : (
-                                         <div className="text-xs text-center text-muted-foreground">
-                                           Layout {layout.layout_id}
-                                         </div>
-                                       )}
+                                        ) : (
+                                          <div className="text-xs text-center text-muted-foreground">
+                                            Layout {layout.layout_id}
+                                          </div>
+                                        )}
                                      </div>
                                     <div className="text-xs text-center">
                                       <div className="font-medium">#{layout.layout_id}</div>

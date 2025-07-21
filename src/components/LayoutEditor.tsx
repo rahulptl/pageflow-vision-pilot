@@ -274,67 +274,96 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
     <>
       {/* Layout Guide Modal */}
       <Dialog open={showLayoutGuideModal} onOpenChange={setShowLayoutGuideModal}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-6">
-          <DialogHeader>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <DialogTitle>Layout Guide</DialogTitle>
-                <p className="text-sm text-muted-foreground">Reference for content placement</p>
-              </div>
-      
-              {/* Zoom Selector */}
-              <div className="flex items-center gap-2">
-                <label htmlFor="zoom-select" className="text-sm text-muted-foreground">Zoom:</label>
-                <select
-                  id="zoom-select"
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="border rounded px-2 py-1 text-sm"
+        <DialogContent className="p-0 border-0 bg-transparent shadow-none max-w-none max-h-none w-auto h-auto">
+          {page.layoutJson || page.layout?.layout_json ? (() => {
+            const layoutData = page.layoutJson || page.layout?.layout_json;
+            const pageSize = layoutData?.document?.settings?.pageSize || { width: 612, height: 792 };
+            const numPages = layoutData?.document?.pages?.length || 1;
+            const isSpread = numPages === 2;
+
+            const totalWidth = isSpread ? pageSize.width * 2 : pageSize.width;
+            const totalHeight = pageSize.height;
+            const scale = zoom / 100;
+
+            const scaledWidth = totalWidth * scale;
+            const scaledHeight = totalHeight * scale;
+
+            return (
+              <div className="relative bg-white rounded-lg shadow-xl border">
+                {/* Header with controls */}
+                <div className="flex items-center justify-between p-4 border-b bg-white rounded-t-lg">
+                  <div>
+                    <h3 className="text-lg font-semibold">Layout Guide</h3>
+                    <p className="text-sm text-muted-foreground">Reference for content placement</p>
+                  </div>
+                  
+                  {/* Zoom Controls */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="zoom-select" className="text-sm text-muted-foreground">Zoom:</label>
+                      <select
+                        id="zoom-select"
+                        value={zoom}
+                        onChange={(e) => setZoom(Number(e.target.value))}
+                        className="border rounded px-2 py-1 text-sm"
+                      >
+                        {[25, 50, 75, 100, 125, 150].map((v) => (
+                          <option key={v} value={v}>{v}%</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <button
+                      onClick={() => setShowLayoutGuideModal(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Layout Content */}
+                <div 
+                  className="p-4 bg-gray-50 rounded-b-lg flex justify-center items-center"
+                  style={{
+                    width: Math.max(scaledWidth + 32, 400), // Add padding and min width
+                    height: scaledHeight + 32, // Add padding
+                  }}
                 >
-                  {[25, 50, 75, 100].map((v) => (
-                    <option key={v} value={v}>{v}%</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </DialogHeader>
-      
-          <div className="flex justify-center items-start overflow-auto">
-            {page.layoutJson || page.layout?.layout_json ? (() => {
-              const layoutData = page.layoutJson || page.layout?.layout_json;
-              const pageSize = layoutData?.document?.settings?.pageSize || { width: 612, height: 792 };
-              const numPages = layoutData?.document?.pages?.length || 1;
-              const isSpread = numPages === 2;
-      
-              const totalWidth = isSpread ? pageSize.width * 2 : pageSize.width;
-              const totalHeight = pageSize.height;
-              const scale = zoom / 100;
-      
-              return (
-                <div className="border rounded-lg bg-white shadow-md overflow-auto">
                   <div
                     style={{
                       width: totalWidth,
                       height: totalHeight,
                       transform: `scale(${scale})`,
-                      transformOrigin: 'top left',
+                      transformOrigin: 'center center',
                     }}
                   >
                     <LayoutRenderer
                       layoutJson={layoutData}
                       width={totalWidth}
                       height={totalHeight}
-                      className="w-full h-full"
+                      className="bg-white shadow-md"
                     />
                   </div>
                 </div>
-              );
-            })() : (
+              </div>
+            );
+          })() : (
+            <div className="bg-white rounded-lg p-8 shadow-xl border">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Layout Guide</h3>
+                <button
+                  onClick={() => setShowLayoutGuideModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
               <div className="h-96 bg-muted rounded-lg flex items-center justify-center">
                 <p className="text-muted-foreground">No layout guide available</p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

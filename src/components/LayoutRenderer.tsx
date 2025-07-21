@@ -6,19 +6,19 @@ interface GeometryRect {
 }
 
 interface Transform {
-  a: number; // x-scale
-  b: number; // y-skew
-  c: number; // x-skew  
-  d: number; // y-scale
-  e: number; // x-translate
-  f: number; // y-translate
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
 }
 
 interface LayoutObject {
   id: number;
   type: 'text' | 'image';
-  geometry: string; // "x y width height" - but we only use width/height
-  transform: string; // "a b c d e f" matrix - e,f are actual x,y positions
+  geometry: string;
+  transform: string;
   textType?: string;
   imageType?: string;
 }
@@ -31,61 +31,56 @@ interface LayoutPage {
 }
 
 interface Props {
-  layoutJson: any; // More flexible to handle various JSON structures
+  layoutJson: any;
   width?: number;
   height?: number;
   className?: string;
 }
 
-// Parse geometry to get only width and height (ignore x,y from geometry)
 const parseGeometry = (geometry: string): GeometryRect => {
   const parts = geometry.split(' ').map(Number);
-  // geometry format: "x y width height" but we only need width/height
-  return { 
-    width: parts[2] || 0, 
-    height: parts[3] || 0 
+  return {
+    width: parts[2] || 0,
+    height: parts[3] || 0
   };
 };
 
-// Parse transform matrix
 const parseTransform = (transform: string): Transform => {
   const [a, b, c, d, e, f] = transform.split(' ').map(Number);
-  return { a: a || 1, b: b || 0, c: c || 0, d: d || 1, e: e || 0, f: f || 0 };
+  return {
+    a: a ?? 1,
+    b: b ?? 0,
+    c: c ?? 0,
+    d: d ?? 1,
+    e: e ?? 0,
+    f: f ?? 0
+  };
 };
 
 const getAllObjects = (page: LayoutPage): LayoutObject[] => {
   const allObjects: LayoutObject[] = [];
-  
-  // Iterate through all object groups dynamically (not hardcoded to Background/Foreground)
   if (page.objects) {
-    Object.values(page.objects).forEach(objectGroup => {
-      if (Array.isArray(objectGroup)) {
-        allObjects.push(...objectGroup);
+    Object.values(page.objects).forEach(group => {
+      if (Array.isArray(group)) {
+        allObjects.push(...group);
       }
     });
   }
-  
   return allObjects;
 };
 
-export const LayoutRenderer: React.FC<Props> = ({ 
-  layoutJson, 
-  width = 150, 
+export const LayoutRenderer: React.FC<Props> = ({
+  layoutJson,
+  width = 612,
   height,
-  className = "" 
+  className = ""
 }) => {
-  if (!layoutJson) {
-    return (
-      <div className={`flex items-center justify-center bg-muted rounded ${className}`} style={{ width, height: height || width * 1.3 }}>
-        <span className="text-xs text-muted-foreground">No layout data</span>
-      </div>
-    );
-  }
-  
   if (!layoutJson?.document?.pages) {
     return (
       <div className={`flex items-center justify-center bg-muted rounded ${className}`} style={{ width, height: height || width * 1.3 }}>
-        <span className="text-xs text-muted-foreground">Invalid layout structure</span>
+        <span className="text-xs text-muted-foreground">
+          {layoutJson ? 'Invalid layout structure' : 'No layout data'}
+        </span>
       </div>
     );
   }
@@ -93,68 +88,40 @@ export const LayoutRenderer: React.FC<Props> = ({
   const document = layoutJson.document;
   const pages = document.pages;
   const pageSize = document.settings?.pageSize || { width: 612, height: 792 };
-  
-  const numPages = pages.length;
-  const isSpread = numPages === 2;
-  
-  // Calculate dimensions based on page size from JSON
-  const aspectRatio = pageSize.height / pageSize.width;
-  let svgWidth, svgHeight;
-  
-  if (height) {
-    // If height is specified, use it
-    svgWidth = width;
-    svgHeight = height;
-  } else if (isSpread) {
-    // For spreads, pages are side by side
-    svgWidth = width;
-    svgHeight = (width / 2) * aspectRatio;
-  } else {
-    // For single pages
-    svgWidth = width;
-    svgHeight = width * aspectRatio;
-  }
-  
-  // Calculate scale to fit content properly
-  const scale = isSpread 
-    ? (svgWidth / 2) / pageSize.width
-    : svgWidth / pageSize.width;
+  const isSpread = pages.length === 2;
+
+  // SVG viewport dimensions
+  const viewWidth = isSpread ? pageSize.width * 2 : pageSize.width;
+  const viewHeight = pageSize.height;
 
   return (
-    <div className={`bg-white rounded border overflow-hidden ${className}`} style={{ width: svgWidth, height: svgHeight }}>
-      <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
+    <div className={`bg-white rounded border overflow-hidden ${className}`} style={{ width, height: height || (width * (viewHeight / viewWidth)) }}>
+      <svg width="100%" height="100%" viewBox={`0 0 ${viewWidth} ${viewHeight}`}>
+        {/* Draw page backgrounds side by side */}
         {pages.map((page, pageIndex) => {
-          const xTranslate = isSpread ? pageIndex * (width / numPages) : 0;
-          const yTranslate = isSpread ? 0 : pageIndex * (pageSize.height * scale);
-          
+          const xOffset = isSpread ? pageIndex * pageSize.width : 0;
           const allObjects = getAllObjects(page);
-          
+
           return (
-            <g key={pageIndex} transform={`translate(${xTranslate}, ${yTranslate}) scale(${scale})`}>
-              {/* Page background */}
+            <g key={pageIndex}>
               <rect
+                x={xOffset}
+                y={0}
                 width={pageSize.width}
                 height={pageSize.height}
                 fill="white"
                 stroke="#e5e7eb"
-                strokeWidth={1 / scale}
               />
-              
-              {/* Render objects */}
               {allObjects.map((obj) => {
                 const geom = parseGeometry(obj.geometry);
-                const transform = parseTransform(obj.transform);
-                
-                // Get color based on object type - flexible, not hardcoded
-                const getObjectColor = () => {
-                  if (obj.type === 'text') {
-                    return '#e74c3c'; // red for all text types
-                  } else if (obj.type === 'image') {
-                    return '#3498db'; // blue for all image types
-                  }
-                  return '#6b7280'; // gray fallback for unknown types
+                const t = parseTransform(obj.transform);
+
+                const getColor = () => {
+                  if (obj.type === 'text') return '#e74c3c';
+                  if (obj.type === 'image') return '#3498db';
+                  return '#6b7280';
                 };
-                
+
                 return (
                   <rect
                     key={obj.id}
@@ -163,9 +130,9 @@ export const LayoutRenderer: React.FC<Props> = ({
                     width={geom.width}
                     height={geom.height}
                     fill="none"
-                    stroke={getObjectColor()}
-                    strokeWidth={1 / scale}
-                    transform={`matrix(${transform.a}, ${transform.b}, ${transform.c}, ${transform.d}, ${transform.e}, ${transform.f})`}
+                    stroke={getColor()}
+                    strokeWidth={0.8}
+                    transform={`matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e + xOffset}, ${t.f})`}
                     opacity={0.8}
                   />
                 );
@@ -178,12 +145,12 @@ export const LayoutRenderer: React.FC<Props> = ({
   );
 };
 
-// Simplified version for thumbnails
-export const LayoutThumbnail: React.FC<Props> = ({ layoutJson, width = 80, className = "" }) => {
+// Optional: Thumbnail version
+export const LayoutThumbnail: React.FC<Props> = ({ layoutJson, width = 120, className = "" }) => {
   return (
-    <LayoutRenderer 
-      layoutJson={layoutJson} 
-      width={width} 
+    <LayoutRenderer
+      layoutJson={layoutJson}
+      width={width}
       height={width * 1.3}
       className={className}
     />

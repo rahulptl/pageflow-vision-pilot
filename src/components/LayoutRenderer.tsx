@@ -1,26 +1,24 @@
 import React from 'react';
 
 interface GeometryRect {
-  x: number;
-  y: number;
   width: number;
   height: number;
 }
 
 interface Transform {
-  a: number;
-  b: number;
-  c: number;
-  d: number;
-  e: number;
-  f: number;
+  a: number; // x-scale
+  b: number; // y-skew
+  c: number; // x-skew  
+  d: number; // y-scale
+  e: number; // x-translate
+  f: number; // y-translate
 }
 
 interface LayoutObject {
   id: number;
   type: 'text' | 'image';
-  geometry: string; // "x y width height"
-  transform: string; // "a b c d e f" matrix
+  geometry: string; // "x y width height" - but we only use width/height
+  transform: string; // "a b c d e f" matrix - e,f are actual x,y positions
   textType?: string;
   imageType?: string;
 }
@@ -32,18 +30,6 @@ interface LayoutPage {
   };
 }
 
-interface LayoutJson {
-  document: {
-    settings: {
-      pageSize: {
-        width: number;
-        height: number;
-      };
-    };
-    pages: LayoutPage[];
-  };
-}
-
 interface Props {
   layoutJson: any; // More flexible to handle various JSON structures
   width?: number;
@@ -51,14 +37,20 @@ interface Props {
   className?: string;
 }
 
+// Parse geometry to get only width and height (ignore x,y from geometry)
 const parseGeometry = (geometry: string): GeometryRect => {
-  const [x, y, width, height] = geometry.split(' ').map(Number);
-  return { x, y, width, height };
+  const parts = geometry.split(' ').map(Number);
+  // geometry format: "x y width height" but we only need width/height
+  return { 
+    width: parts[2] || 0, 
+    height: parts[3] || 0 
+  };
 };
 
+// Parse transform matrix
 const parseTransform = (transform: string): Transform => {
   const [a, b, c, d, e, f] = transform.split(' ').map(Number);
-  return { a, b, c, d, e, f };
+  return { a: a || 1, b: b || 0, c: c || 0, d: d || 1, e: e || 0, f: f || 0 };
 };
 
 const getAllObjects = (page: LayoutPage): LayoutObject[] => {
@@ -156,8 +148,8 @@ export const LayoutRenderer: React.FC<Props> = ({
                 return (
                   <rect
                     key={obj.id}
-                    x={geom.x}
-                    y={geom.y}
+                    x={0}
+                    y={0}
                     width={geom.width}
                     height={geom.height}
                     fill="none"

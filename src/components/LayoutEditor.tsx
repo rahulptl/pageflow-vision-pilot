@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, Save, X, Image as ImageIcon, FileText, Type, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
+import { LayoutRenderer } from "@/components/LayoutRenderer";
 
 interface PagePlan {
   pageNumber: number;
@@ -274,12 +275,22 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
               <p className="text-sm text-muted-foreground">Reference for content placement</p>
             </CardHeader>
             <CardContent>
-              {page.layout?.bounding_box_image ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <img
-                    src={page.layout.bounding_box_image}
-                    alt="Layout bounding box"
-                    className="w-full h-auto"
+              {page.layoutJson ? (
+                <div className="border rounded-lg overflow-hidden bg-white">
+                  <LayoutRenderer 
+                    layoutJson={page.layoutJson}
+                    width={300}
+                    height={400}
+                    className="w-full"
+                  />
+                </div>
+              ) : page.layout?.layout_json ? (
+                <div className="border rounded-lg overflow-hidden bg-white">
+                  <LayoutRenderer 
+                    layoutJson={page.layout.layout_json}
+                    width={300}
+                    height={400}
+                    className="w-full"
                   />
                 </div>
               ) : (

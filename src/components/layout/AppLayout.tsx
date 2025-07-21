@@ -24,9 +24,9 @@ export function AppLayout({ isAdmin, baseRoute }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex w-full">
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} isAdmin={isAdmin} />
+      {isAdmin && <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} isAdmin={isAdmin} />}
       <div className="flex-1 flex flex-col">
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} showMenuButton={isAdmin} />
         <main className="flex-1 overflow-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />

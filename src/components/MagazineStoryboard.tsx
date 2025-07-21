@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit, RefreshCw, Check, GripVertical, Trash2, Save } from "lucide-react";
+import { Edit, RefreshCw, Check, GripVertical, Trash2, Save, Plus } from "lucide-react";
 import { Layout } from "@/types/api";
 import { LayoutRenderer } from "@/components/LayoutRenderer";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -32,6 +32,7 @@ interface MagazineStoryboardProps {
   onEditPage: (page: PagePlan) => void;
   onReorderPages: (pages: PagePlan[]) => void;
   onRemovePage: (pageIndex: number) => void;
+  onAddPage?: (layoutId: number) => void;
   onSave?: () => void;
 }
 interface SortablePageCardProps {
@@ -126,20 +127,23 @@ function SortablePageCard({
             </Badge>}
         </div>
 
-        {/* Layout Preview */}
-        <div className="mb-4 bg-muted rounded-lg p-2 min-h-[120px] flex items-center justify-center">
+        {/* Layout Preview - Clickable */}
+        <div 
+          className="mb-4 bg-muted rounded-lg p-2 min-h-[200px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-muted/80"
+          onClick={() => onEditPage(page)}
+        >
           {page.layoutJson ? (
             <LayoutRenderer 
               layoutJson={page.layoutJson} 
-              width={100} 
-              height={120}
+              width={200} 
+              height={200}
               className="transition-transform duration-200 hover:scale-105"
             />
           ) : page.layout?.layout_json ? (
             <LayoutRenderer 
               layoutJson={page.layout.layout_json} 
-              width={100} 
-              height={120}
+              width={200} 
+              height={200}
               className="transition-transform duration-200 hover:scale-105"
             />
           ) : (
@@ -151,16 +155,13 @@ function SortablePageCard({
         </div>
 
         <div className="space-y-4">
-          <div className="text-xs text-muted-foreground">
-            Layout #{page.layoutId} - {page.layout?.layout_metadata?.layout_category}
-          </div>
           
           {/* Action buttons at bottom - fixed height container for uniform alignment */}
-          <div className="flex justify-center gap-2 h-8 items-center">
+          <div className="flex justify-center gap-1 h-6 items-center">
             <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
-                  <RefreshCw className="h-3 w-3" />
+                <Button variant="outline" size="sm" className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
+                  <RefreshCw className="h-2.5 w-2.5" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh]">
@@ -421,12 +422,8 @@ function SortablePageCard({
               </DialogContent>
             </Dialog>
 
-            <Button size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Edit Page" onClick={() => onEditPage(page)}>
-              <Edit className="h-3 w-3" />
-            </Button>
-            
-            <Button variant="destructive" size="sm" className="h-8 w-8 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Remove Page" onClick={() => onRemovePage(index)}>
-              <Trash2 className="h-3 w-3" />
+            <Button variant="destructive" size="sm" className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" onClick={() => onRemovePage(index)} title="Remove Page">
+              <Trash2 className="h-2.5 w-2.5" />
             </Button>
           </div>
         </div>
@@ -440,8 +437,10 @@ export function MagazineStoryboard({
   onEditPage,
   onReorderPages,
   onRemovePage,
+  onAddPage,
   onSave
 }: MagazineStoryboardProps) {
+  const [addPageDialogOpen, setAddPageDialogOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: {
       distance: 8 // 8px movement required to start drag
@@ -475,6 +474,65 @@ export function MagazineStoryboard({
           <div className="text-sm text-muted-foreground">
             Total pages: {totalPages}
           </div>
+          {onAddPage && (
+            <Dialog open={addPageDialogOpen} onOpenChange={setAddPageDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Page
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle>Select Layout for New Page</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="h-[60vh]">
+                  <div className="space-y-6 p-4">
+                    <div>
+                      <h3 className="text-sm font-medium mb-3">Available Layouts</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {allLayouts.map(layout => (
+                          <Card 
+                            key={layout.layout_id} 
+                            className="cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02]"
+                            onClick={() => {
+                              onAddPage(layout.layout_id);
+                              setAddPageDialogOpen(false);
+                            }}
+                          >
+                            <CardContent className="p-3">
+                              <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                {layout.layout_json ? (
+                                  <LayoutRenderer 
+                                    layoutJson={layout.layout_json} 
+                                    width={80} 
+                                    className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
+                                  />
+                                ) : (
+                                  <div className="text-xs text-center text-muted-foreground">
+                                    Layout {layout.layout_id}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-xs text-center">
+                                <div className="font-medium">#{layout.layout_id}</div>
+                                <div className="text-muted-foreground">
+                                  {layout.layout_metadata?.layout_category}
+                                </div>
+                                <Badge variant="outline" className="text-xs mt-1">
+                                  {layout.layout_metadata?.type_of_page || '1-Page'}
+                                </Badge>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+          )}
           {onSave && (
             <Button onClick={onSave} className="gap-2">
               <Save className="h-4 w-4" />
@@ -486,7 +544,7 @@ export function MagazineStoryboard({
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 transition-all duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
             {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} onRemovePage={onRemovePage} />)}
           </div>
         </SortableContext>

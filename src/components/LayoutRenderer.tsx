@@ -54,9 +54,18 @@ const parseTransform = (transform: string): Transform => {
 };
 
 const getAllObjects = (page: LayoutPage): LayoutObject[] => {
-  const backgroundObjects = page.objects.Background || [];
-  const foregroundObjects = page.objects.Foreground || [];
-  return [...backgroundObjects, ...foregroundObjects];
+  const allObjects: LayoutObject[] = [];
+  
+  // Iterate through all object groups dynamically (not hardcoded to Background/Foreground)
+  if (page.objects) {
+    Object.values(page.objects).forEach(objectGroup => {
+      if (Array.isArray(objectGroup)) {
+        allObjects.push(...objectGroup);
+      }
+    });
+  }
+  
+  return allObjects;
 };
 
 export const LayoutRenderer: React.FC<Props> = ({ 
@@ -86,17 +95,30 @@ export const LayoutRenderer: React.FC<Props> = ({
   const pageSize = document.settings?.pageSize || { width: 612, height: 792 };
   
   const numPages = pages.length;
-  const isSpread = numPages > 1;
+  const isSpread = numPages === 2;
   
-  // Calculate scale and dimensions
+  // Calculate dimensions based on page size from JSON
+  const aspectRatio = pageSize.height / pageSize.width;
+  let svgWidth, svgHeight;
+  
+  if (height) {
+    // If height is specified, use it
+    svgWidth = width;
+    svgHeight = height;
+  } else if (isSpread) {
+    // For spreads, pages are side by side
+    svgWidth = width;
+    svgHeight = (width / 2) * aspectRatio;
+  } else {
+    // For single pages
+    svgWidth = width;
+    svgHeight = width * aspectRatio;
+  }
+  
+  // Calculate scale to fit content properly
   const scale = isSpread 
-    ? (width / numPages) / pageSize.width
-    : width / pageSize.width;
-    
-  const svgWidth = width;
-  const svgHeight = height || (isSpread 
-    ? pageSize.height * scale 
-    : pageSize.height * numPages * scale);
+    ? (svgWidth / 2) / pageSize.width
+    : svgWidth / pageSize.width;
 
   return (
     <div className={`bg-white rounded border overflow-hidden ${className}`} style={{ width: svgWidth, height: svgHeight }}>
@@ -123,26 +145,14 @@ export const LayoutRenderer: React.FC<Props> = ({
                 const geom = parseGeometry(obj.geometry);
                 const transform = parseTransform(obj.transform);
                 
-                // Get color based on object type
+                // Get color based on object type - flexible, not hardcoded
                 const getObjectColor = () => {
                   if (obj.type === 'text') {
-                    // Different colors for different text types
-                    switch (obj.textType) {
-                      case 'headline': return '#dc2626'; // red-600
-                      case 'body copy': return '#ea580c'; // orange-600
-                      case 'caption': return '#d97706'; // amber-600
-                      case 'byline': return '#ca8a04'; // yellow-600
-                      default: return '#e74c3c'; // default red for text
-                    }
+                    return '#e74c3c'; // red for all text types
                   } else if (obj.type === 'image') {
-                    // Different colors for different image types
-                    switch (obj.imageType) {
-                      case 'feature image': return '#2563eb'; // blue-600
-                      case 'inline image': return '#7c3aed'; // violet-600
-                      default: return '#3498db'; // default blue for images
-                    }
+                    return '#3498db'; // blue for all image types
                   }
-                  return '#6b7280'; // gray-500 fallback
+                  return '#6b7280'; // gray fallback for unknown types
                 };
                 
                 return (

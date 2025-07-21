@@ -468,9 +468,25 @@ export function MagazineStoryboard({
   }, 0);
   
   return <div className="space-y-6">
+      {/* Top navigation bar */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h2 className="text-2xl font-bold">Magazine Storyboard</h2>
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Total pages: {totalPages}
+          </div>
+          {onSave && (
+            <Button onClick={onSave} className="gap-2">
+              <Save className="h-4 w-4" />
+              Save Magazine
+            </Button>
+          )}
+        </div>
+      </div>
+
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 transition-all duration-200">
             {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} onRemovePage={onRemovePage} />)}
           </div>
         </SortableContext>

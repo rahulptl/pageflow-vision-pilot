@@ -543,8 +543,8 @@ export function MagazineStoryboard({
     <div className="space-y-6">
       {/* Top navigation bar */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className={`text-2xl font-bold transition-all duration-300 ${
-          isSwapRecommending ? 'animate-pulse text-blue-600' : ''
+        <h2 className={`text-2xl font-bold transition-all duration-500 ${
+          isSwapRecommending ? 'animate-pulse-slow text-blue-600' : ''
         }`}>
           Magazine Storyboard
           {isPublished && <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-800">View Only</Badge>}
@@ -601,7 +601,7 @@ export function MagazineStoryboard({
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-500 ${
-          isSwapRecommending ? 'animate-fade-in opacity-70' : ''
+          isSwapRecommending ? 'animate-fade-in opacity-80 scale-[0.98]' : 'opacity-100 scale-100'
         }`}>
             {pages.map((page, index) => (
               <SortablePageCard 

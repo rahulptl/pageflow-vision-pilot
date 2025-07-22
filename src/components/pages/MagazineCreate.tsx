@@ -138,6 +138,15 @@ export function MagazineCreatePage() {
 
   const handleRegenerateRecommendations = () => {
     const articleId = article && 'article_id' in article ? article.article_id : undefined;
+    
+    // Calculate current page count from pagePlan instead of using formData.pageCount
+    const currentPageCount = pagePlan.reduce((total, page) => {
+      return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+    }, 0);
+    
+    // Update formData with current page count
+    setFormData(prev => ({ ...prev, pageCount: currentPageCount }));
+    
     setIsRegenerating(true);
     getRecommendationsMutation.mutate({ rank: currentRank + 1, articleId });
   };
@@ -518,20 +527,28 @@ export function MagazineCreatePage() {
         return updatedPage;
       });
 
-      // Update article page_count after page removal
-      const newTotalPages = updatedPlan.reduce((total, page) => {
+      // Calculate new page count after removal
+      const newPageCount = updatedPlan.reduce((total, page) => {
         return total + (page.typeOfPage === '2 pager' ? 2 : 1);
       }, 0);
       
-      setArticle(currentArticle => {
-        if (currentArticle) {
-          return {
-            ...currentArticle,
-            page_count: newTotalPages
-          };
-        }
-        return currentArticle;
-      });
+      // Update formData with new page count
+      setTimeout(() => {
+        setFormData(current => ({ ...current, pageCount: newPageCount }));
+      }, 0);
+
+      // Update article page_count after page removal
+      setTimeout(() => {
+        setArticle(currentArticle => {
+          if (currentArticle) {
+            return {
+              ...currentArticle,
+              page_count: newPageCount
+            };
+          }
+          return currentArticle;
+        });
+      }, 0);
 
       return updatedPlan;
     });

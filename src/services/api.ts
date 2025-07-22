@@ -252,7 +252,7 @@ class ApiService {
     }
     
     // Use GET method with correct v1 endpoint
-    const fullUrl = `${API_BASE_URL}/v1/articles/recommend?${params}`;
+    const fullUrl = `${API_BASE_URL}/articles/recommend?${params}`;
     console.log("🚀 RECOMMENDATION API CALL:");
     console.log("  Full URL:", fullUrl);
     console.log("  Method: GET");

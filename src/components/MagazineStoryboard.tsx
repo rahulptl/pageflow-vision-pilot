@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit, RefreshCw, Check, GripVertical, Trash2, Save, Plus } from "lucide-react";
 import { Layout } from "@/types/api";
@@ -483,16 +484,6 @@ export function MagazineStoryboard({
           <div className="text-sm text-muted-foreground">
             Total pages: {totalPages}
           </div>
-          {onRegenerateRecommendations && (
-            <Button 
-              onClick={onRegenerateRecommendations}
-              variant="outline" 
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              New Recommendations
-            </Button>
-          )}
           {onSave && (
             <Button onClick={onSave} className="gap-2">
               <Save className="h-4 w-4" />
@@ -501,6 +492,37 @@ export function MagazineStoryboard({
           )}
         </div>
       </div>
+
+      {/* New Recommendations Button - Repositioned below title */}
+      {onRegenerateRecommendations && (
+        <div className="flex justify-center">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="gap-2 border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-950"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Generate New Recommendations
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Generate New Recommendations?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will generate a completely new set of layout recommendations. Any edits you've made to the current layouts will be overwritten and replaced. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onRegenerateRecommendations}>
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>

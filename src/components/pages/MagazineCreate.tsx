@@ -509,6 +509,11 @@ export function MagazineCreatePage() {
     });
   };
   const handleEditPage = (page: PagePlan) => {
+    // Don't allow editing for published articles
+    if (article && 'status' in article && article.status !== 'DRAFT') {
+      toast.error("This article is published and cannot be edited");
+      return;
+    }
     // For new structure, layoutJson is already in the page
     // For legacy structure, try to get it from article_json
     let layoutJson = page.layoutJson;

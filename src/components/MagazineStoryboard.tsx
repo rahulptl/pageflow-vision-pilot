@@ -13,6 +13,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
 interface PagePlan {
   pageNumber: number;
   typeOfPage: string;
@@ -22,6 +23,7 @@ interface PagePlan {
   isCompleted: boolean;
   xmlUploaded: boolean;
 }
+
 interface MagazineStoryboardProps {
   pages: PagePlan[];
   allLayouts: Layout[];
@@ -29,6 +31,7 @@ interface MagazineStoryboardProps {
     layout_order: number[];
     article_json: Record<string, any>;
     article_id?: number;
+    status?: string;
   };
   onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
@@ -40,6 +43,7 @@ interface MagazineStoryboardProps {
   magazineTitle?: string;
   magazineCategory?: string;
 }
+
 interface SortablePageCardProps {
   page: PagePlan;
   index: number;
@@ -47,19 +51,23 @@ interface SortablePageCardProps {
   onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
   onRemovePage: (pageIndex: number) => void;
+  isPublished?: boolean;
 }
+
 function SortablePageCard({
   page,
   index,
   allLayouts,
   onSwapLayout,
   onEditPage,
-  onRemovePage
+  onRemovePage,
+  isPublished = false
 }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [swapWarningOpen, setSwapWarningOpen] = useState(false);
   const [selectedOnePagers, setSelectedOnePagers] = useState<number[]>([]);
   const [layoutFilter, setLayoutFilter] = useState<'all' | '1-pager' | '2-pager'>('all');
+  
   const {
     attributes,
     listeners,
@@ -74,12 +82,14 @@ function SortablePageCard({
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
     }
   });
+  
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
     opacity: isDragging ? 0.9 : 1,
     zIndex: isDragging ? 50 : 'auto'
   };
+  
   const is2Pager = page.typeOfPage === '2 pager';
 
   // Reset selection when dialog opens/closes
@@ -88,6 +98,7 @@ function SortablePageCard({
       setSelectedOnePagers([]);
     }
   }, [swapDialogOpen]);
+
   const handleOnePagerClick = (layoutId: number) => {
     if (is2Pager) {
       // For 2-pagers, allow selecting up to 2 one-pagers
@@ -105,6 +116,7 @@ function SortablePageCard({
       setSwapDialogOpen(false);
     }
   };
+
   const handleConfirmOnePagers = () => {
     if (selectedOnePagers.length === 2) {
       onSwapLayout(index, selectedOnePagers);
@@ -112,32 +124,41 @@ function SortablePageCard({
       setSelectedOnePagers([]);
     }
   };
-  return <Card ref={setNodeRef} style={style} className={`relative transition-all duration-200 ${isDragging ? 'shadow-2xl scale-[1.02] rotate-1' : 'hover:shadow-md'} ${is2Pager ? 'ring-2 ring-gray-400/30 bg-gray-50/50 dark:bg-gray-900/30' : ''}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
+
+  return (
+    <Card ref={setNodeRef} style={style} className={`relative overflow-hidden transition-all duration-200 hover:shadow-md ${
+      isDragging ? 'shadow-xl' : ''
+    } ${isPublished ? 'border-amber-200 bg-amber-50/30' : ''}`}>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md transition-colors duration-150" title="Drag to reorder">
+            {isPublished && <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800">Published</Badge>}
+            <div {...attributes} {...listeners} className={`${isPublished ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} p-1 hover:bg-muted rounded-md transition-colors duration-150`} title={isPublished ? 'View Only' : 'Drag to reorder'}>
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
             
             <div>
-              <h3 className="font-medium">
+              <h3 className="font-medium text-sm">
                 {is2Pager ? `Pages ${page.pageNumber}-${page.pageNumber + 1}` : `Page ${page.pageNumber}`}
               </h3>
-              <p className="text-sm text-muted-foreground">Layout #{page.layoutId}</p>
+              <p className="text-xs text-muted-foreground">Layout #{page.layoutId}</p>
             </div>
           </div>
           
-          {page.isCompleted && <Badge variant="secondary" className="gap-1">
+          {page.isCompleted && (
+            <Badge variant="secondary" className="gap-1">
               <Check className="h-3 w-3" />
               Done
-            </Badge>}
+            </Badge>
+          )}
         </div>
 
-        {/* Layout Preview - Clickable */}
+        {/* Layout Preview - Clickable only if not published */}
         <div 
-          className="mb-4 bg-muted rounded-lg p-2 min-h-[200px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-muted/80"
-          onClick={() => onEditPage(page)}
+          className={`mb-4 bg-muted rounded-lg p-2 min-h-[200px] flex items-center justify-center transition-all duration-200 ${
+            isPublished ? 'cursor-default' : 'cursor-pointer hover:bg-muted/80'
+          }`}
+          onClick={() => !isPublished && onEditPage(page)}
         >
           {page.layoutJson ? (
             <LayoutRenderer 
@@ -160,43 +181,43 @@ function SortablePageCard({
             </div>
           )}
         </div>
+        
+        {/* Action buttons at bottom - only show if not published */}
+        <div className="flex justify-center gap-1 h-6 items-center">
+          {!isPublished && (
+            <>
+              {/* Swap Layout Warning Dialog */}
+              <AlertDialog open={swapWarningOpen} onOpenChange={setSwapWarningOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
+                    <RefreshCw className="h-2.5 w-2.5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-base">Swap Layout?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-sm">
+                      Any content edits for this page will be lost. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {
+                      setSwapWarningOpen(false);
+                      setSwapDialogOpen(true);
+                    }}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
-        <div className="space-y-4">
-          
-          {/* Action buttons at bottom - fixed height container for uniform alignment */}
-          <div className="flex justify-center gap-1 h-6 items-center">
-            {/* Swap Layout Warning Dialog */}
-            <AlertDialog open={swapWarningOpen} onOpenChange={setSwapWarningOpen}>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
-                  <RefreshCw className="h-2.5 w-2.5" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="max-w-md">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-base">Swap Layout?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-sm">
-                    Any content edits for this page will be lost. This cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => {
-                    setSwapWarningOpen(false);
-                    setSwapDialogOpen(true);
-                  }}>
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            {/* Actual Swap Dialog */}
-            <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
-              <DialogContent className="max-w-4xl max-h-[80vh]">
-                <DialogHeader>
-                  <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>
-                  {is2Pager && <p className="text-sm text-muted-foreground">
+              {/* Actual Swap Dialog */}
+              <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[80vh]">
+                  <DialogHeader>
+                    <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>
+                    {is2Pager && <p className="text-sm text-muted-foreground">
                       Select a 2-page layout or two 1-page layouts to fill this spread
                     </p>}
                   <div className="flex gap-2 mt-3">
@@ -451,14 +472,26 @@ function SortablePageCard({
               </DialogContent>
             </Dialog>
 
-            <Button variant="destructive" size="sm" className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" onClick={() => onRemovePage(index)} title="Remove Page">
-              <Trash2 className="h-2.5 w-2.5" />
-            </Button>
-          </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" 
+                title="Remove Page"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemovePage(index);
+                }}
+              >
+                <Trash2 className="h-2.5 w-2.5" />
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
+
 export function MagazineStoryboard({
   pages,
   allLayouts,
@@ -474,18 +507,23 @@ export function MagazineStoryboard({
   magazineCategory
 }: MagazineStoryboardProps) {
   const [addPageDialogOpen, setAddPageDialogOpen] = useState(false);
-  const sensors = useSensors(useSensor(PointerSensor, {
-    activationConstraint: {
-      distance: 8 // 8px movement required to start drag
-    }
-  }), useSensor(KeyboardSensor, {
-    coordinateGetter: sortableKeyboardCoordinates
-  }));
+  const isPublished = article && 'status' in article ? article.status !== 'DRAFT' : false;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8 // 8px movement required to start drag
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
   function handleDragEnd(event: DragEndEvent) {
-    const {
-      active,
-      over
-    } = event;
+    if (isPublished) return; // Don't allow drag for published articles
+    
+    const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = pages.findIndex(page => page.pageNumber.toString() === active.id);
       const newIndex = pages.findIndex(page => page.pageNumber.toString() === over?.id);
@@ -498,16 +536,20 @@ export function MagazineStoryboard({
   const totalPages = pages.reduce((total, page) => {
     return total + (page.typeOfPage === '2 pager' ? 2 : 1);
   }, 0);
-  
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       {/* Top navigation bar */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-2xl font-bold">Magazine Storyboard</h2>
+        <h2 className="text-2xl font-bold">
+          Magazine Storyboard
+          {isPublished && <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-800">View Only</Badge>}
+        </h2>
         <div className="flex items-center gap-4">
           <div className="text-sm text-muted-foreground">
             Total pages: {totalPages}
           </div>
-          {onSave && (
+          {onSave && !isPublished && (
             <Button onClick={onSave} className="gap-2">
               <Save className="h-4 w-4" />
               Save Magazine
@@ -516,8 +558,8 @@ export function MagazineStoryboard({
         </div>
       </div>
 
-      {/* New Recommendations Button - Repositioned below title */}
-      {onRegenerateRecommendations && (
+      {/* New Recommendations Button - Only show for draft articles */}
+      {onRegenerateRecommendations && !isPublished && (
         <div className="flex justify-center">
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -549,73 +591,85 @@ export function MagazineStoryboard({
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={pages.map(page => page.pageNumber.toString())} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
-          {pages.map((page, index) => <SortablePageCard key={page.pageNumber} page={page} index={index} allLayouts={allLayouts} onSwapLayout={onSwapLayout} onEditPage={onEditPage} onRemovePage={onRemovePage} />)}
-          
-          {/* Add Page Card - Always visible after last page */}
-          {onAddPage && (
-            <Dialog open={addPageDialogOpen} onOpenChange={setAddPageDialogOpen}>
-              <DialogTrigger asChild>
-                <Card className="cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] border-dashed border-2 border-muted-foreground/30 bg-muted/20">
-                  <CardContent className="p-4 h-full flex flex-col items-center justify-center min-h-[200px]">
-                    <Plus className="h-12 w-12 text-muted-foreground mb-2" />
-                    <p className="text-sm font-medium text-muted-foreground">Add Page</p>
-                  </CardContent>
-                </Card>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh]">
-                <DialogHeader>
-                  <DialogTitle>Select Layout for New Page</DialogTitle>
-                </DialogHeader>
-                <ScrollArea className="h-[60vh]">
-                  <div className="space-y-6 p-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-3">Available Layouts</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {allLayouts.map(layout => (
-                          <Card 
-                            key={layout.layout_id} 
-                            className="cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02]"
-                            onClick={() => {
-                              onAddPage(layout.layout_id);
-                              setAddPageDialogOpen(false);
-                            }}
-                          >
-                            <CardContent className="p-3">
-                              <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                                {layout.layout_json ? (
-                                  <LayoutRenderer 
-                                    layoutJson={layout.layout_json} 
-                                    width={80} 
-                                    className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
-                                  />
-                                ) : (
-                                  <div className="text-xs text-center text-muted-foreground">
-                                    Layout {layout.layout_id}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="text-xs text-center">
-                                <div className="font-medium">#{layout.layout_id}</div>
-                                <div className="text-muted-foreground">
-                                  {layout.layout_metadata?.layout_category}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-200">
+            {pages.map((page, index) => (
+              <SortablePageCard 
+                key={page.pageNumber} 
+                page={page} 
+                index={index} 
+                allLayouts={allLayouts} 
+                onSwapLayout={onSwapLayout} 
+                onEditPage={onEditPage} 
+                onRemovePage={onRemovePage}
+                isPublished={isPublished}
+              />
+            ))}
+            
+            {/* Add Page Card - Only show for draft articles */}
+            {onAddPage && !isPublished && (
+              <Dialog open={addPageDialogOpen} onOpenChange={setAddPageDialogOpen}>
+                <DialogTrigger asChild>
+                  <Card className="cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] border-dashed border-2 border-muted-foreground/30 bg-muted/20">
+                    <CardContent className="p-4 h-full flex flex-col items-center justify-center min-h-[200px]">
+                      <Plus className="h-12 w-12 text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium text-muted-foreground">Add Page</p>
+                    </CardContent>
+                  </Card>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh]">
+                  <DialogHeader>
+                    <DialogTitle>Select Layout for New Page</DialogTitle>
+                  </DialogHeader>
+                  <ScrollArea className="h-[60vh]">
+                    <div className="space-y-6 p-4">
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">Available Layouts</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {allLayouts.map(layout => (
+                            <Card 
+                              key={layout.layout_id} 
+                              className="cursor-pointer transition-all duration-200 hover:bg-muted hover:scale-[1.02]"
+                              onClick={() => {
+                                onAddPage(layout.layout_id);
+                                setAddPageDialogOpen(false);
+                              }}
+                            >
+                              <CardContent className="p-3">
+                                <div className="aspect-square bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
+                                  {layout.layout_json ? (
+                                    <LayoutRenderer 
+                                      layoutJson={layout.layout_json} 
+                                      width={80} 
+                                      className="w-full h-full object-contain transition-transform duration-200 hover:scale-110" 
+                                    />
+                                  ) : (
+                                    <div className="text-xs text-center text-muted-foreground">
+                                      Layout {layout.layout_id}
+                                    </div>
+                                  )}
                                 </div>
-                                <Badge variant="outline" className="text-xs mt-1">
-                                  {layout.layout_metadata?.type_of_page || '1-Page'}
-                                </Badge>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                                <div className="text-xs text-center">
+                                  <div className="font-medium">#{layout.layout_id}</div>
+                                  <div className="text-muted-foreground">
+                                    {layout.layout_metadata?.layout_category}
+                                  </div>
+                                  <Badge variant="outline" className="text-xs mt-1">
+                                    {layout.layout_metadata?.type_of_page || '1-Page'}
+                                  </Badge>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </ScrollArea>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </SortableContext>
       </DndContext>
-    </div>;
+    </div>
+  );
 }

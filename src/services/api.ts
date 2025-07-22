@@ -1,5 +1,5 @@
 
-import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse, LayoutRecommendation, ArticleRecommendationResponse } from '@/types/api';
+import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse, LayoutRecommendation, ArticleRecommendationResponse, RecommendationResponse } from '@/types/api';
 import { ImageEdit } from '@/types/imageGeneration';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -233,16 +233,22 @@ class ApiService {
     magazineCategory: string, 
     pageCount: number,
     articleTitle: string = "Draft Article",
-    createdBy?: string
-  ): Promise<ArticleRecommendationResponse> {
+    createdBy?: string,
+    rank: number = 0,
+    articleId?: number
+  ): Promise<RecommendationResponse> {
     const params = new URLSearchParams({
       article_title: articleTitle,
       magazine_title: magazineTitle,
       magazine_category: magazineCategory, 
-      page_count: pageCount.toString()
+      page_count: pageCount.toString(),
+      rank: rank.toString()
     });
     if (createdBy) {
       params.append('created_by', createdBy);
+    }
+    if (articleId) {
+      params.append('article_id', articleId.toString());
     }
     
     // Use a direct POST to avoid routing conflicts

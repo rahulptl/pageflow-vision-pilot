@@ -27,6 +27,7 @@ interface MagazineStoryboardProps {
   article?: {
     layout_order: number[];
     article_json: Record<string, any>;
+    article_id?: number;
   };
   onSwapLayout: (pageIndex: number, newLayoutId: number | number[]) => void;
   onEditPage: (page: PagePlan) => void;
@@ -34,6 +35,9 @@ interface MagazineStoryboardProps {
   onRemovePage: (pageIndex: number) => void;
   onAddPage?: (layoutId: number) => void;
   onSave?: () => void;
+  onRegenerateRecommendations?: () => void;
+  magazineTitle?: string;
+  magazineCategory?: string;
 }
 interface SortablePageCardProps {
   page: PagePlan;
@@ -434,12 +438,16 @@ function SortablePageCard({
 export function MagazineStoryboard({
   pages,
   allLayouts,
+  article,
   onSwapLayout,
   onEditPage,
   onReorderPages,
   onRemovePage,
   onAddPage,
-  onSave
+  onSave,
+  onRegenerateRecommendations,
+  magazineTitle,
+  magazineCategory
 }: MagazineStoryboardProps) {
   const [addPageDialogOpen, setAddPageDialogOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, {
@@ -475,6 +483,16 @@ export function MagazineStoryboard({
           <div className="text-sm text-muted-foreground">
             Total pages: {totalPages}
           </div>
+          {onRegenerateRecommendations && (
+            <Button 
+              onClick={onRegenerateRecommendations}
+              variant="outline" 
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              New Recommendations
+            </Button>
+          )}
           {onSave && (
             <Button onClick={onSave} className="gap-2">
               <Save className="h-4 w-4" />

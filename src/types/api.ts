@@ -104,6 +104,29 @@ export interface LayoutRecommendation {
 }
 
 // New API response type for article recommendations
+export interface ArticleOut {
+  article_id: number;
+  article_title: string;
+  page_count: number;
+  status: string;
+  magazine_title: string;
+  magazine_category: string;
+  article_json: Record<string, any>[];
+  layout_order: number[];
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecommendationResponse {
+  article: ArticleOut;
+  rank: number;
+  total_alternatives: number;
+  has_more: boolean;
+}
+
+// Legacy type for backward compatibility
 export interface ArticleRecommendationResponse {
   article_title: string;
   page_count: number;

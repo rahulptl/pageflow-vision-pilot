@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText, Save } from "lucide-react";
 import { apiService } from "@/services/api";
-import { Layout, ArticleRecommendationResponse, Article } from "@/types/api";
+import { Layout, ArticleRecommendationResponse, Article, RecommendationResponse } from "@/types/api";
 import { toast } from "sonner";
 import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
@@ -57,28 +57,37 @@ export function MagazineCreatePage() {
   const [activeTab, setActiveTab] = useState('storyboard');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [originalLayoutOrder, setOriginalLayoutOrder] = useState<number[]>([]);
+  const [currentRank, setCurrentRank] = useState(0);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // No mock data - will be removed
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: ({ rank = 0, articleId }: { rank?: number; articleId?: number } = {}) => {
       console.log("🔥 CALLING getLayoutRecommendations with:");
       console.log("  magazineTitle:", formData.magazineTitle);
       console.log("  magazineCategory:", formData.magazineCategory);
       console.log("  pageCount:", formData.pageCount);
       console.log("  articleName:", formData.articleName);
+      console.log("  rank:", rank);
+      console.log("  articleId:", articleId);
       
       return apiService.getLayoutRecommendations(
         formData.magazineTitle, 
         formData.magazineCategory, 
         formData.pageCount,
-        formData.articleName
+        formData.articleName,
+        undefined, // createdBy
+        rank,
+        articleId
       );
     },
-    onSuccess: async (articleData) => {
-      console.log("✅ Recommendation API Success:", articleData);
+    onSuccess: async (recommendationData: RecommendationResponse) => {
+      console.log("✅ Recommendation API Success:", recommendationData);
+      const articleData = recommendationData.article;
       setArticle(articleData);
+      setCurrentRank(recommendationData.rank);
 
       // Check if we have the new article structure with article_json array
       if (!articleData.article_json || !Array.isArray(articleData.article_json)) {
@@ -120,8 +129,15 @@ export function MagazineCreatePage() {
     onError: (error) => {
       console.error("❌ Recommendation mutation error:", error);
       toast.error('Failed to get layout recommendations: ' + error.message);
+      setIsRegenerating(false);
     }
   });
+
+  const handleRegenerateRecommendations = () => {
+    const articleId = article && 'article_id' in article ? article.article_id : undefined;
+    setIsRegenerating(true);
+    getRecommendationsMutation.mutate({ rank: currentRank + 1, articleId });
+  };
 
   // Get all articles
   const { data: articles = [] } = useQuery({
@@ -144,7 +160,7 @@ export function MagazineCreatePage() {
       toast.error('Please fill in all fields');
       return;
     }
-    getRecommendationsMutation.mutate();
+    getRecommendationsMutation.mutate({});
   };
   const handleOpenArticle = async (article: any) => {
     try {
@@ -827,7 +843,18 @@ export function MagazineCreatePage() {
         </TabsList>
 
         <TabsContent value="storyboard">
-          <MagazineStoryboard pages={pagePlan} allLayouts={allLayouts} article={article} onSwapLayout={handleSwapLayout} onEditPage={handleEditPage} onReorderPages={handleReorderPages} onRemovePage={handleRemovePage} />
+          <MagazineStoryboard 
+            pages={pagePlan} 
+            allLayouts={allLayouts} 
+            article={article} 
+            onSwapLayout={handleSwapLayout} 
+            onEditPage={handleEditPage} 
+            onReorderPages={handleReorderPages} 
+            onRemovePage={handleRemovePage}
+            onRegenerateRecommendations={handleRegenerateRecommendations}
+            magazineTitle={formData.magazineTitle}
+            magazineCategory={formData.magazineCategory}
+          />
         </TabsContent>
 
         <TabsContent value="upload">

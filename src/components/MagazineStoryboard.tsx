@@ -57,6 +57,7 @@ function SortablePageCard({
   onRemovePage
 }: SortablePageCardProps) {
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [swapWarningOpen, setSwapWarningOpen] = useState(false);
   const [selectedOnePagers, setSelectedOnePagers] = useState<number[]>([]);
   const [layoutFilter, setLayoutFilter] = useState<'all' | '1-pager' | '2-pager'>('all');
   const {
@@ -164,12 +165,34 @@ function SortablePageCard({
           
           {/* Action buttons at bottom - fixed height container for uniform alignment */}
           <div className="flex justify-center gap-1 h-6 items-center">
-            <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
-              <DialogTrigger asChild>
+            {/* Swap Layout Warning Dialog */}
+            <AlertDialog open={swapWarningOpen} onOpenChange={setSwapWarningOpen}>
+              <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="h-6 w-6 p-0 transition-transform duration-150 hover:scale-[1.02]" title="Swap Layout">
                   <RefreshCw className="h-2.5 w-2.5" />
                 </Button>
-              </DialogTrigger>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-base">Swap Layout?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm">
+                    Any content edits for this page will be lost. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => {
+                    setSwapWarningOpen(false);
+                    setSwapDialogOpen(true);
+                  }}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Actual Swap Dialog */}
+            <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
                   <DialogTitle>Choose Layout for Page {page.pageNumber}</DialogTitle>

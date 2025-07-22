@@ -127,18 +127,29 @@ export const LayoutRenderer: React.FC<Props> = ({
                 };
 
                 return (
-                  <rect
-                    key={obj.id}
-                    x={0}
-                    y={0}
-                    width={geom.width}
-                    height={geom.height}
-                    fill="none"
-                    stroke={getColor()}
-                    strokeWidth={1.5}
-                    transform={`matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e + xOffset}, ${t.f})`}
-                    opacity={0.8}
-                  />
+                  <g key={obj.id}>
+                    <rect
+                      x={0}
+                      y={0}
+                      width={geom.width}
+                      height={geom.height}
+                      fill="none"
+                      stroke={getColor()}
+                      strokeWidth={1.5}
+                      transform={`matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e + xOffset}, ${t.f})`}
+                      opacity={0.8}
+                    />
+                    <text
+                      x={8}
+                      y={16}
+                      fontSize="10"
+                      fill={getColor()}
+                      fontWeight="bold"
+                      transform={`matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e + xOffset}, ${t.f})`}
+                    >
+                      ID: {obj.id}
+                    </text>
+                  </g>
                 );
               })}
             </g>

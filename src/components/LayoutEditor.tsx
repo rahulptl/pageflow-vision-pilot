@@ -415,8 +415,9 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                     <CardContent className="space-y-4">
                       {pageTextFields.map((field) => (
                         <div key={field.id} className="space-y-2">
-                          <Label className="font-medium text-sm">
+                          <Label className="font-medium text-sm flex items-center gap-2">
                             {formatTextType(field.textType || 'Text')}
+                            <Badge variant="secondary" className="text-xs">ID: {field.objectId}</Badge>
                           </Label>
                           {field.textType?.includes('body') || field.textType?.includes('copy') ? (
                             <Textarea
@@ -469,8 +470,9 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
 
                         return (
                           <div key={field.id} className="border rounded-lg p-4 space-y-3">
-                            <Label className="font-medium text-sm">
+                            <Label className="font-medium text-sm flex items-center gap-2">
                               {formatTextType(field.imageType || 'Image')}
+                              <Badge variant="secondary" className="text-xs">ID: {field.objectId}</Badge>
                             </Label>
                             
                             {hasUploadedImage || hasExistingImage ? (

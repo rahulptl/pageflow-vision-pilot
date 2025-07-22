@@ -59,6 +59,7 @@ export function MagazineCreatePage() {
   const [originalLayoutOrder, setOriginalLayoutOrder] = useState<number[]>([]);
   const [currentRank, setCurrentRank] = useState(0);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isSwapRecommending, setIsSwapRecommending] = useState(false);
 
   // No mock data - will be removed
 
@@ -88,6 +89,7 @@ export function MagazineCreatePage() {
       const articleData = recommendationData.article;
       setArticle(articleData);
       setCurrentRank(recommendationData.rank);
+      setIsSwapRecommending(false);
 
       // Check if we have the new article structure with article_json array
       if (!articleData.article_json || !Array.isArray(articleData.article_json)) {
@@ -130,6 +132,7 @@ export function MagazineCreatePage() {
       console.error("❌ Recommendation mutation error:", error);
       toast.error('Failed to get layout recommendations: ' + error.message);
       setIsRegenerating(false);
+      setIsSwapRecommending(false);
     }
   });
 
@@ -260,6 +263,11 @@ export function MagazineCreatePage() {
   };
   const handleSwapLayout = async (pageIndex: number, newLayoutId: number | number[]) => {
     setHasUnsavedChanges(true);
+    
+    // Calculate current total page count before swap
+    const currentTotalPages = pagePlan.reduce((total, page) => {
+      return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+    }, 0);
     
     try {
       // Fetch layout JSON for the new layout(s)
@@ -427,6 +435,26 @@ export function MagazineCreatePage() {
           const newTotalPages = currentPages.reduce((total, page) => {
             return total + (page.typeOfPage === '2 pager' ? 2 : 1);
           }, 0);
+          
+          // Check if page count has changed and trigger new recommendations
+          if (newTotalPages !== currentTotalPages) {
+            console.log(`📊 Page count changed from ${currentTotalPages} to ${newTotalPages}, fetching new recommendations...`);
+            
+            setIsSwapRecommending(true);
+            toast.info(`Page count changed to ${newTotalPages}. Generating new recommendations...`);
+            
+            // Update form data page count first
+            setFormData(prev => ({ ...prev, pageCount: newTotalPages }));
+            
+            // Trigger new recommendations with updated page count
+            setTimeout(() => {
+              const articleId = article && 'article_id' in article ? article.article_id : undefined;
+              getRecommendationsMutation.mutate({ 
+                rank: 1, // Start fresh with rank 1 when page count changes
+                articleId 
+              });
+            }, 100);
+          }
           
           // Update article with new page count
           setArticle(currentArticle => {
@@ -859,6 +887,7 @@ export function MagazineCreatePage() {
             onRegenerateRecommendations={handleRegenerateRecommendations}
             magazineTitle={formData.magazineTitle}
             magazineCategory={formData.magazineCategory}
+            isSwapRecommending={isSwapRecommending}
           />
         </TabsContent>
 

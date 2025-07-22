@@ -251,15 +251,15 @@ class ApiService {
       params.append('article_id', articleId.toString());
     }
     
-    // Use a direct POST to avoid routing conflicts
-    const fullUrl = `${API_BASE_URL}/articles/recommend?${params}`;
-    console.log("🚀 DIRECT RECOMMENDATION API CALL:");
+    // Use GET method with correct v1 endpoint
+    const fullUrl = `${API_BASE_URL}/v1/articles/recommend?${params}`;
+    console.log("🚀 RECOMMENDATION API CALL:");
     console.log("  Full URL:", fullUrl);
-    console.log("  Method: POST");
+    console.log("  Method: GET");
     console.log("  Params:", Object.fromEntries(params));
     
     const response = await fetch(fullUrl, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       }

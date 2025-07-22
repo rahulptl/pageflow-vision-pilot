@@ -21,7 +21,7 @@ export function Sidebar({ isOpen, isAdmin = false }: SidebarProps) {
     { icon: File, label: "Articles", href: "/admin/articles" },
     { icon: BookOpen, label: "Magazines", href: "/admin/magazines" },
     { icon: Sparkles, label: "Image Generation", href: "/admin/image-generation" },
-    { icon: Users, label: "User Portal", href: "/user/" },
+    { icon: Users, label: "User Portal", href: "/user/magazines/create" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
 

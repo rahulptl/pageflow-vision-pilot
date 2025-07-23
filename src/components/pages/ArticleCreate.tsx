@@ -275,9 +275,27 @@ export function ArticleCreatePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Article Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter article title..." {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select article title..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Breaking News: Major Economic Changes">Breaking News: Major Economic Changes</SelectItem>
+                            <SelectItem value="Technology Breakthrough in AI">Technology Breakthrough in AI</SelectItem>
+                            <SelectItem value="Sports Championship Finals">Sports Championship Finals</SelectItem>
+                            <SelectItem value="Climate Change Impact Report">Climate Change Impact Report</SelectItem>
+                            <SelectItem value="Celebrity Interview Exclusive">Celebrity Interview Exclusive</SelectItem>
+                            <SelectItem value="Local Community Events">Local Community Events</SelectItem>
+                            <SelectItem value="Business Market Analysis">Business Market Analysis</SelectItem>
+                            <SelectItem value="Health and Wellness Tips">Health and Wellness Tips</SelectItem>
+                            <SelectItem value="Travel Destination Guide">Travel Destination Guide</SelectItem>
+                            <SelectItem value="Food and Dining Review">Food and Dining Review</SelectItem>
+                            <SelectItem value="Fashion Trends 2024">Fashion Trends 2024</SelectItem>
+                            <SelectItem value="Political Election Coverage">Political Election Coverage</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

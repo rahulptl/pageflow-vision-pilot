@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText, Save } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiService } from "@/services/api";
 import { Layout, ArticleRecommendationResponse, Article, RecommendationResponse } from "@/types/api";
 import { toast } from "sonner";
@@ -807,18 +808,52 @@ export function MagazineCreatePage() {
               
               <div>
                 <Label htmlFor="magazineTitle">Magazine Title</Label>
-                <Input id="magazineTitle" value={formData.magazineTitle} onChange={e => setFormData(prev => ({
-                ...prev,
-                magazineTitle: e.target.value
-              }))} placeholder="Enter magazine title" />
+                <Select value={formData.magazineTitle} onValueChange={(value) => setFormData(prev => ({
+                  ...prev,
+                  magazineTitle: value
+                }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select magazine title..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tech Weekly">Tech Weekly</SelectItem>
+                    <SelectItem value="Lifestyle Today">Lifestyle Today</SelectItem>
+                    <SelectItem value="Auto World">Auto World</SelectItem>
+                    <SelectItem value="Business Insider">Business Insider</SelectItem>
+                    <SelectItem value="Health & Wellness">Health & Wellness</SelectItem>
+                    <SelectItem value="Travel Adventures">Travel Adventures</SelectItem>
+                    <SelectItem value="Fashion Forward">Fashion Forward</SelectItem>
+                    <SelectItem value="Sports Weekly">Sports Weekly</SelectItem>
+                    <SelectItem value="Food & Dining">Food & Dining</SelectItem>
+                    <SelectItem value="Home & Garden">Home & Garden</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
                 <Label htmlFor="magazineCategory">Magazine Category</Label>
-                <Input id="magazineCategory" value={formData.magazineCategory} onChange={e => setFormData(prev => ({
-                ...prev,
-                magazineCategory: e.target.value
-              }))} placeholder="Enter category (e.g., car, lifestyle, tech)" />
+                <Select value={formData.magazineCategory} onValueChange={(value) => setFormData(prev => ({
+                  ...prev,
+                  magazineCategory: value
+                }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                    <SelectItem value="automotive">Automotive</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                    <SelectItem value="health">Health</SelectItem>
+                    <SelectItem value="travel">Travel</SelectItem>
+                    <SelectItem value="fashion">Fashion</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="food">Food & Dining</SelectItem>
+                    <SelectItem value="home">Home & Garden</SelectItem>
+                    <SelectItem value="entertainment">Entertainment</SelectItem>
+                    <SelectItem value="news">News</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>

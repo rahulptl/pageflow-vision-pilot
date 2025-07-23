@@ -62,7 +62,15 @@ export function MagazineCreatePage() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isSwapRecommending, setIsSwapRecommending] = useState(false);
 
-  // No mock data - will be removed
+  // Fetch articles for dropdown options
+  const { data: allArticles = [] } = useQuery({
+    queryKey: ['articles-for-dropdowns'],
+    queryFn: () => apiService.getArticles(),
+  });
+
+  // Extract unique magazine titles and categories
+  const uniqueMagazineTitles = [...new Set(allArticles.map(article => article.magazine_title).filter(Boolean))];
+  const uniqueMagazineCategories = [...new Set(allArticles.map(article => article.magazine_category).filter(Boolean))];
 
   // Get layout recommendations
   const getRecommendationsMutation = useMutation({
@@ -816,16 +824,9 @@ export function MagazineCreatePage() {
                     <SelectValue placeholder="Select magazine title..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Tech Weekly">Tech Weekly</SelectItem>
-                    <SelectItem value="Lifestyle Today">Lifestyle Today</SelectItem>
-                    <SelectItem value="Auto World">Auto World</SelectItem>
-                    <SelectItem value="Business Insider">Business Insider</SelectItem>
-                    <SelectItem value="Health & Wellness">Health & Wellness</SelectItem>
-                    <SelectItem value="Travel Adventures">Travel Adventures</SelectItem>
-                    <SelectItem value="Fashion Forward">Fashion Forward</SelectItem>
-                    <SelectItem value="Sports Weekly">Sports Weekly</SelectItem>
-                    <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                    <SelectItem value="Home & Garden">Home & Garden</SelectItem>
+                    {uniqueMagazineTitles.map(title => (
+                      <SelectItem key={title} value={title}>{title}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -840,18 +841,9 @@ export function MagazineCreatePage() {
                     <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="technology">Technology</SelectItem>
-                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                    <SelectItem value="automotive">Automotive</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="health">Health</SelectItem>
-                    <SelectItem value="travel">Travel</SelectItem>
-                    <SelectItem value="fashion">Fashion</SelectItem>
-                    <SelectItem value="sports">Sports</SelectItem>
-                    <SelectItem value="food">Food & Dining</SelectItem>
-                    <SelectItem value="home">Home & Garden</SelectItem>
-                    <SelectItem value="entertainment">Entertainment</SelectItem>
-                    <SelectItem value="news">News</SelectItem>
+                    {uniqueMagazineCategories.map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

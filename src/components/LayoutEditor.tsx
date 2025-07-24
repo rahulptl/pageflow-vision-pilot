@@ -350,7 +350,11 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
               <Button variant="outline" onClick={() => setShowLayoutGuideModal(true)}>
                 View Layout Guide
               </Button>
-              <VivaDesignerIntegration layoutJson={page.layoutJson || page.layout?.layout_json} />
+              <VivaDesignerIntegration 
+                layoutJson={page.layoutJson || page.layout?.layout_json}
+                articleName={article?.article_title}
+                pageNumber={page.pageNumber}
+              />
               <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" />
                 Cancel

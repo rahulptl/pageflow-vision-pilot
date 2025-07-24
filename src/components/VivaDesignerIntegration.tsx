@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 
 interface VivaDesignerIntegrationProps {
   layoutJson: any;
+  articleName?: string;
+  pageNumber?: number;
   onClose?: () => void;
 }
 
@@ -17,7 +19,7 @@ const VIVA_CONFIG: VivaConfig = {
   host: 'https://vd11.viva.de/patharai'
 };
 
-export function VivaDesignerIntegration({ layoutJson, onClose }: VivaDesignerIntegrationProps) {
+export function VivaDesignerIntegration({ layoutJson, articleName = 'article', pageNumber = 1, onClose }: VivaDesignerIntegrationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -29,15 +31,25 @@ export function VivaDesignerIntegration({ layoutJson, onClose }: VivaDesignerInt
   const [error, setError] = useState<string>('');
 
   const extractJobIdFromUrl = (downloadUrl: string): string => {
+    // Extract JobID from URL like: https://vd11.viva.de/patharai/api/download/JIDE971E9086B62D0519781B9521E836AD6/filename.vjson
     const pathSegments = downloadUrl.split('/');
-    return pathSegments[pathSegments.length - 2];
+    const downloadIndex = pathSegments.findIndex(segment => segment === 'download');
+    if (downloadIndex !== -1 && downloadIndex + 1 < pathSegments.length) {
+      return pathSegments[downloadIndex + 1];
+    }
+    throw new Error('Could not extract JobID from download URL');
   };
 
   const createVjsonFile = (layoutData: any): File => {
     const jsonString = JSON.stringify(layoutData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
-    const timestamp = Date.now();
-    return new File([blob], `layout_${timestamp}.vjson`, { type: 'application/json' });
+    
+    // Create friendly filename: articleName + pageNumber + timestamp
+    const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp
+    const sanitizedArticleName = articleName.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+    const filename = `${sanitizedArticleName}-page${pageNumber}-${timestamp}.vjson`;
+    
+    return new File([blob], filename, { type: 'application/json' });
   };
 
   const uploadLayoutToViva = async () => {
@@ -64,12 +76,18 @@ export function VivaDesignerIntegration({ layoutJson, onClose }: VivaDesignerInt
       const data = await response.json();
       console.log('Upload response:', data);
 
-      if (!data['download-url']) {
+      // Handle the correct response structure
+      if (!data.files || !Array.isArray(data.files) || data.files.length === 0) {
+        throw new Error('No files in upload response');
+      }
+
+      const uploadedFile = data.files[0];
+      if (!uploadedFile['download-url']) {
         throw new Error('No download URL in response');
       }
 
-      const extractedJobId = extractJobIdFromUrl(data['download-url']);
-      const extractedDocumentName = data['document-name'] || vjsonFile.name;
+      const extractedJobId = extractJobIdFromUrl(uploadedFile['download-url']);
+      const extractedDocumentName = uploadedFile.name || vjsonFile.name;
 
       setJobId(extractedJobId);
       setDocumentName(extractedDocumentName);

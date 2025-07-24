@@ -1,0 +1,276 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Loader2, Download, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface VivaDesignerIntegrationProps {
+  layoutJson: any;
+  onClose?: () => void;
+}
+
+interface VivaConfig {
+  host: string;
+}
+
+const VIVA_CONFIG: VivaConfig = {
+  host: 'https://vd11.viva.de/patharai'
+};
+
+export function VivaDesignerIntegration({ layoutJson, onClose }: VivaDesignerIntegrationProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [jobId, setJobId] = useState<string>('');
+  const [documentName, setDocumentName] = useState<string>('');
+  const [designerUrl, setDesignerUrl] = useState<string>('');
+  const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  const extractJobIdFromUrl = (downloadUrl: string): string => {
+    const pathSegments = downloadUrl.split('/');
+    return pathSegments[pathSegments.length - 2];
+  };
+
+  const createVjsonFile = (layoutData: any): File => {
+    const jsonString = JSON.stringify(layoutData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const timestamp = Date.now();
+    return new File([blob], `layout_${timestamp}.vjson`, { type: 'application/json' });
+  };
+
+  const uploadLayoutToViva = async () => {
+    try {
+      setIsUploading(true);
+      setError('');
+      
+      const vjsonFile = createVjsonFile(layoutJson);
+      const formData = new FormData();
+      formData.append('file', vjsonFile);
+
+      const response = await fetch(`${VIVA_CONFIG.host}/api/upload`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Upload response:', data);
+
+      if (!data['download-url']) {
+        throw new Error('No download URL in response');
+      }
+
+      const extractedJobId = extractJobIdFromUrl(data['download-url']);
+      const extractedDocumentName = data['document-name'] || vjsonFile.name;
+
+      setJobId(extractedJobId);
+      setDocumentName(extractedDocumentName);
+
+      toast.success('Layout uploaded successfully');
+      
+      // Start conversion
+      await convertToDesigner(extractedJobId, extractedDocumentName);
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const convertToDesigner = async (jobIdParam: string, documentNameParam: string) => {
+    try {
+      setIsConverting(true);
+      
+      const nameWithoutExtension = documentNameParam.replace('.vjson', '');
+      
+      const params = new URLSearchParams({
+        waitType: 'json',
+        'document-name': documentNameParam,
+        ticketID: jobIdParam,
+        exportName: nameWithoutExtension,
+        resultTypes: 'desd',
+        outHow: 'json'
+      });
+
+      const response = await fetch(`${VIVA_CONFIG.host}/api/export/?${params}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Conversion failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Conversion response:', data);
+
+      // Create designer URL
+      const designerUrl = `${VIVA_CONFIG.host}/designer/?document-name=output%2F${nameWithoutExtension}.desd&jobid=${jobIdParam}&locale=en`;
+      setDesignerUrl(designerUrl);
+
+      toast.success('Layout converted successfully');
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Conversion failed';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
+  const exportToPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      setError('');
+      
+      const nameWithoutExtension = documentName.replace('.vjson', '');
+      
+      const params = new URLSearchParams({
+        waitType: 'json',
+        'document-name': `output/${nameWithoutExtension}.desd`,
+        ticketID: jobId,
+        exportName: nameWithoutExtension,
+        resultTypes: 'pdf',
+        outHow: 'json'
+      });
+
+      const response = await fetch(`${VIVA_CONFIG.host}/api/export/?${params}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`PDF export failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('PDF export response:', data);
+
+      const pdfUrl = `${VIVA_CONFIG.host}/api/download/${jobId}/output/${nameWithoutExtension}.pdf`;
+      setPdfDownloadUrl(pdfUrl);
+
+      toast.success('PDF exported successfully');
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'PDF export failed';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setJobId('');
+    setDocumentName('');
+    setDesignerUrl('');
+    setPdfDownloadUrl('');
+    setError('');
+    onClose?.();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="gap-2">
+          <ExternalLink className="h-4 w-4" />
+          Edit in Designer
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>VIVA Designer Integration</DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex-1 flex flex-col space-y-4">
+          {/* Control Panel */}
+          <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+            {!designerUrl ? (
+              <Button 
+                onClick={uploadLayoutToViva}
+                disabled={isUploading || isConverting}
+                className="gap-2"
+              >
+                {(isUploading || isConverting) && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isUploading ? 'Uploading...' : isConverting ? 'Converting...' : 'Start Designer'}
+              </Button>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Button 
+                  onClick={exportToPdf}
+                  disabled={isExportingPdf}
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  {isExportingPdf && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isExportingPdf ? 'Exporting...' : 'Save as PDF'}
+                </Button>
+                
+                {pdfDownloadUrl && (
+                  <Button asChild variant="outline" className="gap-2">
+                    <a href={pdfDownloadUrl} target="_blank" rel="noopener noreferrer">
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </a>
+                  </Button>
+                )}
+                
+                <Button onClick={handleClose} variant="ghost">
+                  Close
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-destructive text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {(isUploading || isConverting) && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                <p className="text-muted-foreground">
+                  {isUploading ? 'Uploading layout to VIVA...' : 'Converting to designer format...'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Designer iframe */}
+          {designerUrl && (
+            <div className="flex-1 border rounded-lg overflow-hidden">
+              <iframe
+                src={designerUrl}
+                className="w-full h-full"
+                title="VIVA Designer"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
+              />
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

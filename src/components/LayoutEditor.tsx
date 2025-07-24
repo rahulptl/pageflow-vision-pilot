@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { LayoutRenderer } from "@/components/LayoutRenderer";
+import { VivaDesignerIntegration } from "./VivaDesignerIntegration";
 
 interface PagePlan {
   pageNumber: number;
@@ -349,6 +350,7 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
               <Button variant="outline" onClick={() => setShowLayoutGuideModal(true)}>
                 View Layout Guide
               </Button>
+              <VivaDesignerIntegration layoutJson={page.layoutJson || page.layout?.layout_json} />
               <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" />
                 Cancel

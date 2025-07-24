@@ -276,16 +276,20 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
             </div>
           )}
 
-          {/* Designer iframe */}
+          {/* Designer Link */}
           {designerUrl && (
-            <div className="flex-1 border rounded-lg overflow-hidden">
-              <iframe
-                src={designerUrl}
-                className="w-full h-full"
-                title="VIVA Designer"
-                allowFullScreen
-                allow="fullscreen; cross-origin-isolated"
-              />
+            <div className="flex-1 flex items-center justify-center border rounded-lg">
+              <div className="text-center space-y-4">
+                <p className="text-muted-foreground">
+                  Designer ready! Click the button below to open in a new tab.
+                </p>
+                <Button asChild className="gap-2">
+                  <a href={designerUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                    Open Designer
+                  </a>
+                </Button>
+              </div>
             </div>
           )}
         </div>

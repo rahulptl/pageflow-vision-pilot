@@ -138,7 +138,7 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
       // Create designer URL
       const designerUrl = `${VIVA_CONFIG.host}/designer/?document-name=output%2F${nameWithoutExtension}.desd&jobid=${jobIdParam}&locale=en`;
       setDesignerUrl(designerUrl);
-
+      console.log(designerUrl);
       toast.success('Layout converted successfully');
       
     } catch (err) {

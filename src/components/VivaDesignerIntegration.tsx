@@ -283,7 +283,8 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
                 src={designerUrl}
                 className="w-full h-full"
                 title="VIVA Designer"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
+                allowFullScreen
+                allow="fullscreen; cross-origin-isolated"
               />
             </div>
           )}

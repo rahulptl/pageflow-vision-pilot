@@ -465,6 +465,11 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
                 {getStatusBadge(page.vivaStatus)}
                 
                 <div className="flex items-center gap-2">
+                  {(() => {
+                    console.log(`🔍 Page ${page.pageNumber} vivaStatus:`, page.vivaStatus);
+                    console.log(`🔍 Page ${page.pageNumber} vivaStatus?.status:`, page.vivaStatus?.status);
+                    return null;
+                  })()}
                   {!page.vivaStatus || page.vivaStatus.status === 'not_started' ? (
                     <Button
                       onClick={() => uploadToViva(index)}

@@ -17,6 +17,7 @@ import { LayoutEditor } from "@/components/LayoutEditor";
 import { createPagesFromArticle, updateArticleFromPages } from "@/utils/articleHelpers";
 import { VivaLayoutStatus } from "@/types/magazine";
 import { VivaLayoutTracker } from "@/components/VivaLayoutTracker";
+import { v4 as uuidv4 } from 'uuid';
 interface MagazineFormData {
   articleName: string;
   magazineTitle: string;
@@ -566,6 +567,58 @@ export function MagazineCreatePage() {
       return updatedPlan;
     });
   };
+
+  const handleAddPage = (layoutId: number) => {
+    const selectedLayout = allLayouts.find(layout => layout.layout_id === layoutId);
+    if (!selectedLayout) {
+      toast.error("Layout not found");
+      return;
+    }
+
+    // Calculate the next page number based on existing pages
+    const maxPageNumber = Math.max(...pagePlan.map(p => p.pageNumber), 0);
+    const nextPageNumber = maxPageNumber + 1;
+    
+    const now = new Date().toISOString();
+    const pageUid = uuidv4();
+    
+    const newPage: PagePlan = {
+      pageNumber: nextPageNumber,
+      pageUid,
+      layoutId: selectedLayout.layout_id,
+      typeOfPage: selectedLayout.layout_metadata?.type_of_page || '1 pager',
+      layoutJson: selectedLayout.layout_json,
+      isCompleted: false,
+      xmlUploaded: false,
+      boundingBoxImage: selectedLayout.bounding_box_image,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setPagePlan(prev => [...prev, newPage]);
+    setHasUnsavedChanges(true);
+    
+    // Calculate new page count after addition
+    const newPageCount = [...pagePlan, newPage].reduce((total, page) => {
+      return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+    }, 0);
+    
+    // Update formData with new page count
+    setFormData(prev => ({ ...prev, pageCount: newPageCount }));
+    
+    // Update article page_count after page addition
+    setArticle(currentArticle => {
+      if (currentArticle) {
+        return {
+          ...currentArticle,
+          page_count: newPageCount
+        };
+      }
+      return currentArticle;
+    });
+    
+    toast.success("Page added successfully");
+  };
   const handleEditPage = (page: PagePlan) => {
     // Don't allow editing for published articles
     if (article && 'status' in article && article.status !== 'DRAFT') {
@@ -937,6 +990,7 @@ export function MagazineCreatePage() {
             onEditPage={handleEditPage} 
             onReorderPages={handleReorderPages} 
             onRemovePage={handleRemovePage}
+            onAddPage={handleAddPage}
             onRegenerateRecommendations={handleRegenerateRecommendations}
             magazineTitle={formData.magazineTitle}
             magazineCategory={formData.magazineCategory}

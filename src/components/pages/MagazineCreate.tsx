@@ -925,7 +925,7 @@ export function MagazineCreatePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="storyboard">Storyboard</TabsTrigger>
-          <TabsTrigger value="upload">Upload & Create</TabsTrigger>
+          <TabsTrigger value="upload">Editor</TabsTrigger>
         </TabsList>
 
         <TabsContent value="storyboard">
@@ -948,43 +948,13 @@ export function MagazineCreatePage() {
           <VivaLayoutTracker 
             pages={pagePlan} 
             onUpdatePage={(pageIndex: number, vivaStatus: VivaLayoutStatus, documentName?: string) => {
-              console.log("🔥 onUpdatePage called:", { pageIndex, vivaStatus, documentName });
-              
-              // Update the page plan with VIVA status
-              const updatedPages = pagePlan.map((page, index) => 
+              setPagePlan(prev => prev.map((page, index) => 
                 index === pageIndex ? { 
                   ...page, 
                   vivaStatus,
                   ...(documentName && { vivaDocumentName: documentName })
                 } : page
-              );
-              
-              console.log("📝 Updated pages:", updatedPages[pageIndex]);
-              setPagePlan(updatedPages);
-              
-              // Save VIVA status to database immediately with updated data
-              if (article?.article_id) {
-                console.log("💾 Attempting to save to database for article:", article.article_id);
-                
-                const { article_json } = updateArticleFromPages(updatedPages);
-                const currentPageCount = updatedPages.reduce((total, page) => {
-                  return total + (page.typeOfPage === '2 pager' ? 2 : 1);
-                }, 0);
-                
-                console.log("📤 Saving article_json to DB:", article_json);
-                console.log("📊 Page count:", currentPageCount);
-                
-                apiService.updateArticle(article.article_id, {
-                  page_count: currentPageCount,
-                  article_json
-                }).then((result) => {
-                  console.log("✅ VIVA status saved to database successfully:", result);
-                }).catch((error) => {
-                  console.error("❌ Failed to save VIVA status:", error);
-                });
-              } else {
-                console.warn("⚠️ No article_id found, cannot save to database");
-              }
+              ));
             }}
             onPublishArticle={handlePublishArticle}
             article={article}

@@ -83,9 +83,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       const formData_ = new FormData();
       formData_.append('file', vjsonFile);
 
-      const uploadUrl = article?.article_id 
-        ? `${VIVA_CONFIG.host}/api/upload/?ticketID=${article.article_id}`
-        : `${VIVA_CONFIG.host}/api/upload`;
+      const uploadUrl = `${VIVA_CONFIG.host}/api/upload/?ticketID=${article.article_id}`;
 
       const response = await fetch(uploadUrl, {
         method: 'POST',

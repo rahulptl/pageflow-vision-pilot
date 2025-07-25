@@ -137,6 +137,7 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
         outHow: 'json'
       });
 
+      console.log(params);
       const response = await fetch(`${VIVA_CONFIG.host}/api/export/?${params}`, {
         method: 'GET',
         headers: {

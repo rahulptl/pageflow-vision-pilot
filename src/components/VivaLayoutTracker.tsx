@@ -64,6 +64,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
 
     // Skip upload if document already exists in VIVA
     if (page.vivaDocumentName) {
+      console.log('🔗 VIVA: Document already exists, connecting to existing document:', page.vivaDocumentName);
       const jobId = getJobId();
       const vivaStatus: VivaLayoutStatus = {
         jobId,
@@ -84,6 +85,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       formData_.append('file', vjsonFile);
 
       const uploadUrl = `${VIVA_CONFIG.host}/api/upload/?ticketID=${article.article_id}`;
+      console.log('🚀 VIVA API: Uploading to:', uploadUrl);
 
       const response = await fetch(uploadUrl, {
         method: 'POST',
@@ -93,11 +95,18 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         }
       });
 
+      console.log('📥 VIVA API Response (Upload):', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
         throw new Error(`Upload failed: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('📊 VIVA Upload Response Data:', data);
       
       if (!data.files || !Array.isArray(data.files) || data.files.length === 0) {
         throw new Error('No files in upload response');
@@ -106,6 +115,8 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       const uploadedFile = data.files[0];
       const documentName = uploadedFile.name || vjsonFile.name;
       const jobId = getJobId();
+
+      console.log('✅ VIVA Upload Success:', { documentName, jobId });
 
       const vivaStatus: VivaLayoutStatus = {
         jobId,
@@ -121,6 +132,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       await convertToDesigner(pageIndex, jobId, documentName);
       
     } catch (error) {
+      console.error('❌ VIVA Upload Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       toast.error(errorMessage);
     } finally {
@@ -143,19 +155,33 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         outHow: 'json'
       });
 
-      const response = await fetch(`${VIVA_CONFIG.host}/api/export/?${params}`, {
+      const convertUrl = `${VIVA_CONFIG.host}/api/export/?${params}`;
+      console.log('🚀 VIVA API: Converting to designer:', convertUrl);
+
+      const response = await fetch(convertUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         }
       });
 
+      console.log('📥 VIVA API Response (Convert):', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
         throw new Error(`Conversion failed: ${response.statusText}`);
       }
 
+      const data = await response.json();
+      console.log('📊 VIVA Convert Response Data:', data);
+
       const designerUrl = `${VIVA_CONFIG.host}/designer/?document-name=output%2F${nameWithoutExtension}.desd&jobid=${jobId}&locale=en`;
       
+      console.log('✅ VIVA Convert Success:', { designerUrl });
+
       const vivaStatus: VivaLayoutStatus = {
         jobId,
         documentName,
@@ -168,11 +194,62 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       toast.success('Layout converted to designer format');
       
     } catch (error) {
+      console.error('❌ VIVA Convert Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Conversion failed';
       toast.error(errorMessage);
     } finally {
       setLoadingStates(prev => ({ ...prev, [pageIndex]: null }));
     }
+  };
+
+  const pollQueue = async (queueId: string): Promise<boolean> => {
+    const maxAttempts = 30; // 5 minutes with 10-second intervals
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      try {
+        const queueUrl = `${VIVA_CONFIG.host}/api/queue/${queueId}`;
+        console.log(`🔄 VIVA API: Polling queue (attempt ${attempts + 1}):`, queueUrl);
+
+        const response = await fetch(queueUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+
+        console.log('📥 VIVA API Response (Queue):', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+
+        if (!response.ok) {
+          throw new Error(`Queue polling failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📊 VIVA Queue Response Data:', data);
+
+        if (data.state === 'success') {
+          console.log('✅ VIVA Queue Success:', data);
+          return true;
+        } else if (data.state === 'error' || data.state === 'failed') {
+          console.error('❌ VIVA Queue Failed:', data);
+          return false;
+        }
+
+        // Wait 10 seconds before next attempt
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        attempts++;
+      } catch (error) {
+        console.error('❌ VIVA Queue Polling Error:', error);
+        return false;
+      }
+    }
+
+    console.error('⏰ VIVA Queue Polling Timeout');
+    return false;
   };
 
   const exportToPdf = async (pageIndex: number) => {
@@ -198,15 +275,38 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         outHow: 'json'
       });
 
-      const response = await fetch(`${VIVA_CONFIG.host}/api/export/?${params}`, {
+      const exportUrl = `${VIVA_CONFIG.host}/api/export/?${params}`;
+      console.log('🚀 VIVA API: Exporting to PDF:', exportUrl);
+
+      const response = await fetch(exportUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         }
       });
 
+      console.log('📥 VIVA API Response (Export):', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
         throw new Error(`PDF export failed: ${response.statusText}`);
+      }
+
+      const exportData = await response.json();
+      console.log('📊 VIVA Export Response Data:', exportData);
+
+      // Check if we got a queue-id for polling
+      if (exportData['queue-id']) {
+        console.log('🔄 VIVA: Starting queue polling for queue-id:', exportData['queue-id']);
+        const queueSuccess = await pollQueue(exportData['queue-id']);
+        
+        if (!queueSuccess) {
+          toast.error('PDF export failed during processing');
+          return;
+        }
       }
 
       const pdfUrl = `${VIVA_CONFIG.host}/api/download/${vivaStatus.jobId}/output/${nameWithoutExtension}.pdf`;
@@ -218,10 +318,12 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         lastUpdated: new Date()
       };
 
+      console.log('✅ VIVA PDF Export Success:', { pdfUrl });
       onUpdatePage(pageIndex, updatedVivaStatus);
       toast.success('PDF exported successfully');
       
     } catch (error) {
+      console.error('❌ VIVA Export Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'PDF export failed';
       toast.error(errorMessage);
     } finally {

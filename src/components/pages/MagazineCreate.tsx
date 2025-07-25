@@ -959,8 +959,8 @@ export function MagazineCreatePage() {
                 } : page
               ));
 
-              // Update backend via API
-              if (article?.article_id) {
+              // Only update backend via API if the status is confirmed (converted or pdf_exported)
+              if (article?.article_id && (vivaStatus.status === 'converted' || vivaStatus.status === 'pdf_exported')) {
                 try {
                   const pageToUpdate = pagePlan[pageIndex];
                   const updatedLayoutJson = {
@@ -972,7 +972,8 @@ export function MagazineCreatePage() {
                   console.log("🔄 Making PATCH call to update article:", {
                     articleId: article.article_id,
                     pageUid: pageToUpdate.pageUid,
-                    updatedLayoutJson
+                    updatedLayoutJson,
+                    vivaStatusConfirmed: vivaStatus.status
                   });
 
                   await apiService.patchPageLayout(
@@ -986,6 +987,8 @@ export function MagazineCreatePage() {
                   console.error("❌ Failed to update article with VIVA status:", error);
                   toast.error("Failed to save VIVA status to database");
                 }
+              } else {
+                console.log("ℹ️ Skipping DB update for intermediate status:", vivaStatus.status);
               }
             }}
             onPublishArticle={handlePublishArticle}

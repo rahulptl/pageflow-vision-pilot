@@ -8,7 +8,11 @@ interface VivaDesignerIntegrationProps {
   layoutJson: any;
   articleName?: string;
   pageNumber?: number;
+  articleId?: number;
+  pageUid?: string;
+  vivaDocumentName?: string;
   onClose?: () => void;
+  onVivaStatusUpdate?: (vivaDocumentName: string, jobId: string) => void;
 }
 
 interface VivaConfig {
@@ -19,7 +23,7 @@ const VIVA_CONFIG: VivaConfig = {
   host: 'https://vd11.viva.de/patharai'
 };
 
-export function VivaDesignerIntegration({ layoutJson, articleName = 'article', pageNumber = 1, onClose }: VivaDesignerIntegrationProps) {
+export function VivaDesignerIntegration({ layoutJson, articleName = 'article', pageNumber = 1, articleId, pageUid, vivaDocumentName, onClose, onVivaStatusUpdate }: VivaDesignerIntegrationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -30,14 +34,9 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
   const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  const extractJobIdFromUrl = (downloadUrl: string): string => {
-    // Extract JobID from URL like: https://vd11.viva.de/patharai/api/download/JIDE971E9086B62D0519781B9521E836AD6/filename.vjson
-    const pathSegments = downloadUrl.split('/');
-    const downloadIndex = pathSegments.findIndex(segment => segment === 'download');
-    if (downloadIndex !== -1 && downloadIndex + 1 < pathSegments.length) {
-      return pathSegments[downloadIndex + 1];
-    }
-    throw new Error('Could not extract JobID from download URL');
+  const getJobId = (): string => {
+    // Use articleID as jobID so all layouts of the same article go to the same folder
+    return articleId?.toString() || articleName || 'article';
   };
 
   const createVjsonFile = (layoutData: any): File => {
@@ -56,6 +55,22 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
     try {
       setIsUploading(true);
       setError('');
+      
+      // Skip upload if document already exists in VIVA
+      if (vivaDocumentName) {
+        const extractedJobId = getJobId();
+        setJobId(extractedJobId);
+        setDocumentName(vivaDocumentName);
+        
+        // Notify parent component about the status
+        if (onVivaStatusUpdate) {
+          onVivaStatusUpdate(vivaDocumentName, extractedJobId);
+        }
+        
+        toast.success('Connected to existing VIVA document');
+        await convertToDesigner(extractedJobId, vivaDocumentName);
+        return;
+      }
       
       const vjsonFile = createVjsonFile(layoutJson);
       const formData = new FormData();
@@ -82,15 +97,16 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
       }
 
       const uploadedFile = data.files[0];
-      if (!uploadedFile['download-url']) {
-        throw new Error('No download URL in response');
-      }
-
-      const extractedJobId = extractJobIdFromUrl(uploadedFile['download-url']);
       const extractedDocumentName = uploadedFile.name || vjsonFile.name;
+      const extractedJobId = getJobId(); // Use consistent jobId approach
 
       setJobId(extractedJobId);
       setDocumentName(extractedDocumentName);
+
+      // Notify parent component about the status
+      if (onVivaStatusUpdate) {
+        onVivaStatusUpdate(extractedDocumentName, extractedJobId);
+      }
 
       toast.success('Layout uploaded successfully');
       
@@ -227,7 +243,7 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
                 className="gap-2"
               >
                 {(isUploading || isConverting) && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isUploading ? 'Uploading...' : isConverting ? 'Converting...' : 'Start Designer'}
+                {isUploading ? (vivaDocumentName ? 'Connecting...' : 'Uploading...') : isConverting ? 'Converting...' : (vivaDocumentName ? 'Connect to VIVA' : 'Upload to VIVA')}
               </Button>
             ) : (
               <div className="flex items-center gap-4">

@@ -24,6 +24,7 @@ interface PagePlan {
   boundingBoxImage?: string;
   createdAt: string;
   updatedAt: string;
+  vivaDocumentName?: string; // Track document name in VIVA
 }
 
 interface LayoutEditorProps {
@@ -354,6 +355,9 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
                 layoutJson={page.layoutJson || page.layout?.layout_json}
                 articleName={article?.article_title}
                 pageNumber={page.pageNumber}
+                articleId={article?.article_id}
+                pageUid={page.pageUid}
+                vivaDocumentName={page.vivaDocumentName}
               />
               <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" />

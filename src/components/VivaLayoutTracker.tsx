@@ -52,7 +52,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
 
   const getJobId = (): string => {
     // Use articleID as jobID so all layouts of the same article go to the same folder
-    return article?.id || formData.articleName || 'article';
+    return article?.article_id?.toString() || formData.articleName || 'article';
   };
 
   const uploadToViva = async (pageIndex: number) => {

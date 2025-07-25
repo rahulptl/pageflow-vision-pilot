@@ -49,9 +49,9 @@ export function createPagesFromArticle(
         boundingBoxImage: pageData.bounding_box_image,
         createdAt: pageData.created_at,
         updatedAt: pageData.updated_at,
-        // Load VIVA status from database
-        vivaDocumentName: pageData.viva_document_name,
-        vivaStatus: pageData.viva_status
+        // Load VIVA status from database (handle both snake_case and camelCase)
+        vivaDocumentName: pageData.viva_document_name || pageData.vivaDocumentName,
+        vivaStatus: pageData.viva_status || pageData.vivaStatus
       });
 
       // Increment page number based on layout type

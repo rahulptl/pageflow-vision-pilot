@@ -165,18 +165,29 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         }
       });
 
-      console.log('📥 VIVA API Response (Convert):', {
+      console.log('📥 VIVA API Response (Export):', {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok
       });
 
       if (!response.ok) {
-        throw new Error(`Conversion failed: ${response.statusText}`);
+        throw new Error(`Export failed: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      console.log('📊 VIVA Convert Response Data:', data);
+      const exportData = await response.json();
+      console.log('📊 VIVA Export Response Data:', exportData);
+
+      // Check if we got a queue-id for polling
+      if (exportData['queue-id']) {
+        console.log('🔄 VIVA: Starting queue polling for queue-id:', exportData['queue-id']);
+        const queueSuccess = await pollQueue(exportData['queue-id']);
+        
+        if (!queueSuccess) {
+          toast.error('Document conversion failed during processing');
+          return;
+        }
+      }
 
       const designerUrl = `${VIVA_CONFIG.host}/designer/?document-name=output%2F${nameWithoutExtension}.desd&jobid=${jobId}&locale=en`;
       

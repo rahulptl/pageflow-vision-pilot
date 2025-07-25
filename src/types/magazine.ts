@@ -41,4 +41,13 @@ export interface DriftWarning {
   field: string;
   type: 'length' | 'count' | 'missing';
   message: string;
-} 
+}
+
+export interface VivaLayoutStatus {
+  jobId?: string;
+  documentName?: string;
+  designerUrl?: string;
+  pdfDownloadUrl?: string;
+  status: 'not_started' | 'uploaded' | 'converted' | 'pdf_exported';
+  lastUpdated?: Date;
+}

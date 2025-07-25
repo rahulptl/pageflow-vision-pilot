@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText, Save } from "lucide-react";
+import { Upload, Edit, ArrowRight, Check, Plus, FolderOpen, Calendar, FileText, Save, ExternalLink, Download, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiService } from "@/services/api";
 import { Layout, ArticleRecommendationResponse, Article, RecommendationResponse } from "@/types/api";
@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { MagazineStoryboard } from "@/components/MagazineStoryboard";
 import { LayoutEditor } from "@/components/LayoutEditor";
 import { createPagesFromArticle, updateArticleFromPages } from "@/utils/articleHelpers";
+import { VivaLayoutStatus } from "@/types/magazine";
+import { VivaLayoutTracker } from "@/components/VivaLayoutTracker";
 interface MagazineFormData {
   articleName: string;
   magazineTitle: string;
@@ -43,6 +45,7 @@ interface PagePlan {
   boundingBoxImage?: string;
   createdAt: string;
   updatedAt: string;
+  vivaStatus?: VivaLayoutStatus;
 }
 export function MagazineCreatePage() {
   const [step, setStep] = useState<'workspace' | 'form' | 'storyboard' | 'editing'>('workspace');
@@ -685,6 +688,11 @@ export function MagazineCreatePage() {
   const handleSaveChanges = () => {
     saveChangesMutation.mutate();
   };
+
+  const handlePublishArticle = () => {
+    toast.success('Article published successfully!');
+    // Could redirect to workspace or stay on current view
+  };
   const progress = pagePlan.length > 0 ? pagePlan.filter(p => p.isCompleted && p.xmlUploaded).length / pagePlan.length * 100 : 0;
   const totalPages = pagePlan.reduce((sum, page) => sum + (page.typeOfPage === '2 pager' ? 2 : 1), 0);
   // Filter articles for different sections
@@ -936,44 +944,17 @@ export function MagazineCreatePage() {
         </TabsContent>
 
         <TabsContent value="upload">
-          <div className="space-y-6">
-            <div className="grid gap-4">
-              {pagePlan.map((page, index) => <Card key={page.pageNumber} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold">
-                        {page.pageNumber}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Page {page.pageNumber}</h3>
-                        <p className="text-sm text-muted-foreground">{page.typeOfPage}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      {page.isCompleted && <Badge variant="secondary" className="gap-1">
-                          <Check className="h-3 w-3" />
-                          Edited
-                        </Badge>}
-                      
-                       {page.isCompleted ? <Badge variant="default" className="gap-1">
-                          <Check className="h-3 w-3" />
-                          Ready
-                        </Badge> : <Badge variant="outline">
-                          Pending
-                        </Badge>}
-                    </div>
-                  </div>
-                </Card>)}
-            </div>
-            
-            <div className="flex justify-center pt-6">
-              <Button size="lg" onClick={handleCreateArticle} disabled={!pagePlan.every(p => p.isCompleted && p.xmlUploaded)}>
-                Create Article
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <VivaLayoutTracker 
+            pages={pagePlan} 
+            onUpdatePage={(pageIndex: number, vivaStatus: VivaLayoutStatus) => {
+              setPagePlan(prev => prev.map((page, index) => 
+                index === pageIndex ? { ...page, vivaStatus } : page
+              ));
+            }}
+            onPublishArticle={handlePublishArticle}
+            article={article}
+            formData={formData}
+          />
         </TabsContent>
       </Tabs>
     </div>;

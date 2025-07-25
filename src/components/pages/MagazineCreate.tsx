@@ -45,6 +45,7 @@ interface PagePlan {
   boundingBoxImage?: string;
   createdAt: string;
   updatedAt: string;
+  vivaDocumentName?: string; // Track document name in VIVA
   vivaStatus?: VivaLayoutStatus;
 }
 export function MagazineCreatePage() {
@@ -946,9 +947,13 @@ export function MagazineCreatePage() {
         <TabsContent value="upload">
           <VivaLayoutTracker 
             pages={pagePlan} 
-            onUpdatePage={(pageIndex: number, vivaStatus: VivaLayoutStatus) => {
+            onUpdatePage={(pageIndex: number, vivaStatus: VivaLayoutStatus, documentName?: string) => {
               setPagePlan(prev => prev.map((page, index) => 
-                index === pageIndex ? { ...page, vivaStatus } : page
+                index === pageIndex ? { 
+                  ...page, 
+                  vivaStatus,
+                  ...(documentName && { vivaDocumentName: documentName })
+                } : page
               ));
             }}
             onPublishArticle={handlePublishArticle}

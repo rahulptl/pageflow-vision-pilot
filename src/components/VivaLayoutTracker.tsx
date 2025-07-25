@@ -19,12 +19,13 @@ interface PagePlan {
   boundingBoxImage?: string;
   createdAt: string;
   updatedAt: string;
+  vivaDocumentName?: string; // Track document name in VIVA
   vivaStatus?: VivaLayoutStatus;
 }
 
 interface VivaLayoutTrackerProps {
   pages: PagePlan[];
-  onUpdatePage: (pageIndex: number, vivaStatus: VivaLayoutStatus) => void;
+  onUpdatePage: (pageIndex: number, vivaStatus: VivaLayoutStatus, documentName?: string) => void;
   onPublishArticle: () => void;
   article: any;
   formData: any;
@@ -49,19 +50,29 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
     return new File([blob], filename, { type: 'application/json' });
   };
 
-  const extractJobIdFromUrl = (downloadUrl: string): string => {
-    const pathSegments = downloadUrl.split('/');
-    const downloadIndex = pathSegments.findIndex(segment => segment === 'download');
-    if (downloadIndex !== -1 && downloadIndex + 1 < pathSegments.length) {
-      return pathSegments[downloadIndex + 1];
-    }
-    throw new Error('Could not extract JobID from download URL');
+  const getJobId = (): string => {
+    // Use articleID as jobID so all layouts of the same article go to the same folder
+    return article?.id || formData.articleName || 'article';
   };
 
   const uploadToViva = async (pageIndex: number) => {
     const page = pages[pageIndex];
     if (!page.layoutJson) {
       toast.error('No layout data available for this page');
+      return;
+    }
+
+    // Skip upload if document already exists in VIVA
+    if (page.vivaDocumentName) {
+      const jobId = getJobId();
+      const vivaStatus: VivaLayoutStatus = {
+        jobId,
+        documentName: page.vivaDocumentName,
+        status: 'uploaded',
+        lastUpdated: new Date()
+      };
+      onUpdatePage(pageIndex, vivaStatus);
+      await convertToDesigner(pageIndex, jobId, page.vivaDocumentName);
       return;
     }
 
@@ -91,12 +102,8 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       }
 
       const uploadedFile = data.files[0];
-      if (!uploadedFile['download-url']) {
-        throw new Error('No download URL in response');
-      }
-
-      const jobId = extractJobIdFromUrl(uploadedFile['download-url']);
       const documentName = uploadedFile.name || vjsonFile.name;
+      const jobId = getJobId();
 
       const vivaStatus: VivaLayoutStatus = {
         jobId,
@@ -105,7 +112,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         lastUpdated: new Date()
       };
 
-      onUpdatePage(pageIndex, vivaStatus);
+      onUpdatePage(pageIndex, vivaStatus, documentName);
       toast.success('Layout uploaded to VIVA successfully');
       
       // Auto-convert to designer
@@ -354,12 +361,12 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
                       {loadingStates[index] === 'uploading' ? (
                         <>
                           <Loader2 className="h-3 w-3 animate-spin" />
-                          Uploading...
+                          {page.vivaDocumentName ? 'Connecting...' : 'Uploading...'}
                         </>
                       ) : (
                         <>
                           <UploadIcon className="h-3 w-3" />
-                          Upload to VIVA
+                          {page.vivaDocumentName ? 'Connect to VIVA' : 'Upload to VIVA'}
                         </>
                       )}
                     </Button>

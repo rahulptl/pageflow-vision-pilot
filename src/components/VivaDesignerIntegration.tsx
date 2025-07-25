@@ -75,7 +75,11 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
       const formData = new FormData();
       formData.append('file', vjsonFile);
 
-      const response = await fetch(`${VIVA_CONFIG.host}/api/upload`, {
+      const uploadUrl = articleId 
+        ? `${VIVA_CONFIG.host}/api/upload/?ticketID=${articleId}`
+        : `${VIVA_CONFIG.host}/api/upload`;
+
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
         headers: {

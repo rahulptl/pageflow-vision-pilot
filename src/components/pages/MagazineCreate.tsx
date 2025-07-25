@@ -569,6 +569,11 @@ export function MagazineCreatePage() {
   };
 
   const handleAddPage = (layoutId: number) => {
+    if (!allLayouts || allLayouts.length === 0) {
+      toast.error("Layouts not loaded yet");
+      return;
+    }
+    
     const selectedLayout = allLayouts.find(layout => layout.layout_id === layoutId);
     if (!selectedLayout) {
       toast.error("Layout not found");

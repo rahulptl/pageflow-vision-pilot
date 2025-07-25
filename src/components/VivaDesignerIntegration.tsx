@@ -43,10 +43,9 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
     const jsonString = JSON.stringify(layoutData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     
-    // Create friendly filename: articleName + pageNumber + timestamp
+    // Create filename with just timestamp
     const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp
-    const sanitizedArticleName = articleName.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
-    const filename = `${sanitizedArticleName}-page${pageNumber}-${timestamp}.vjson`;
+    const filename = `${timestamp}.vjson`;
     
     return new File([blob], filename, { type: 'application/json' });
   };

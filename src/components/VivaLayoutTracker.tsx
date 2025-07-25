@@ -468,6 +468,12 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
                   {(() => {
                     console.log(`🔍 Page ${page.pageNumber} vivaStatus:`, page.vivaStatus);
                     console.log(`🔍 Page ${page.pageNumber} vivaStatus?.status:`, page.vivaStatus?.status);
+                    console.log(`🔍 Condition 1 (!page.vivaStatus):`, !page.vivaStatus);
+                    console.log(`🔍 Condition 2 (status === 'not_started'):`, page.vivaStatus?.status === 'not_started');
+                    console.log(`🔍 Condition 3 (status === 'converted'):`, page.vivaStatus?.status === 'converted');
+                    console.log(`🔍 Condition 4 (has designerUrl):`, !!page.vivaStatus?.designerUrl);
+                    console.log(`🔍 Combined upload condition:`, !page.vivaStatus || page.vivaStatus.status === 'not_started');
+                    console.log(`🔍 Combined edit condition:`, page.vivaStatus?.status === 'converted' && page.vivaStatus?.designerUrl);
                     return null;
                   })()}
                   {!page.vivaStatus || page.vivaStatus.status === 'not_started' ? (

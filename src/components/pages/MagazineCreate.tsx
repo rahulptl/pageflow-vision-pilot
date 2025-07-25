@@ -948,17 +948,32 @@ export function MagazineCreatePage() {
           <VivaLayoutTracker 
             pages={pagePlan} 
             onUpdatePage={(pageIndex: number, vivaStatus: VivaLayoutStatus, documentName?: string) => {
-              setPagePlan(prev => prev.map((page, index) => 
+              // Update the page plan with VIVA status
+              const updatedPages = pagePlan.map((page, index) => 
                 index === pageIndex ? { 
                   ...page, 
                   vivaStatus,
                   ...(documentName && { vivaDocumentName: documentName })
                 } : page
-              ));
+              );
               
-              // Save VIVA status to database immediately
+              setPagePlan(updatedPages);
+              
+              // Save VIVA status to database immediately with updated data
               if (article?.article_id) {
-                saveChangesMutation.mutate();
+                const { article_json } = updateArticleFromPages(updatedPages);
+                const currentPageCount = updatedPages.reduce((total, page) => {
+                  return total + (page.typeOfPage === '2 pager' ? 2 : 1);
+                }, 0);
+                
+                apiService.updateArticle(article.article_id, {
+                  page_count: currentPageCount,
+                  article_json
+                }).then(() => {
+                  console.log("VIVA status saved to database");
+                }).catch((error) => {
+                  console.error("Failed to save VIVA status:", error);
+                });
               }
             }}
             onPublishArticle={handlePublishArticle}

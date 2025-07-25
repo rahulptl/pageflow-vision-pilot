@@ -12,6 +12,8 @@ interface PagePlan {
   boundingBoxImage?: string;
   createdAt: string;
   updatedAt: string;
+  vivaDocumentName?: string;
+  vivaStatus?: any; // VivaLayoutStatus type
 }
 
 interface Article {
@@ -46,7 +48,10 @@ export function createPagesFromArticle(
         pageUid: pageData.page_uid,
         boundingBoxImage: pageData.bounding_box_image,
         createdAt: pageData.created_at,
-        updatedAt: pageData.updated_at
+        updatedAt: pageData.updated_at,
+        // Load VIVA status from database
+        vivaDocumentName: pageData.viva_document_name,
+        vivaStatus: pageData.viva_status
       });
 
       // Increment page number based on layout type
@@ -105,7 +110,10 @@ export function updateArticleFromPages(
       layout_json: page.layoutJson || {},
       bounding_box_image: page.boundingBoxImage,
       created_at: page.createdAt,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      // Save VIVA status to database
+      viva_document_name: page.vivaDocumentName,
+      viva_status: page.vivaStatus
     });
   });
 

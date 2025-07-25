@@ -955,6 +955,11 @@ export function MagazineCreatePage() {
                   ...(documentName && { vivaDocumentName: documentName })
                 } : page
               ));
+              
+              // Save VIVA status to database immediately
+              if (article?.article_id) {
+                saveChangesMutation.mutate();
+              }
             }}
             onPublishArticle={handlePublishArticle}
             article={article}

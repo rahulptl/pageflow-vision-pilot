@@ -947,7 +947,10 @@ export function MagazineCreatePage() {
         <TabsContent value="upload">
           <VivaLayoutTracker 
             pages={pagePlan} 
-            onUpdatePage={(pageIndex: number, vivaStatus: VivaLayoutStatus, documentName?: string) => {
+            onUpdatePage={async (pageIndex: number, vivaStatus: VivaLayoutStatus, documentName?: string) => {
+              console.log("🔄 Updating page with VIVA status:", { pageIndex, vivaStatus, documentName });
+              
+              // Update local state
               setPagePlan(prev => prev.map((page, index) => 
                 index === pageIndex ? { 
                   ...page, 
@@ -955,6 +958,35 @@ export function MagazineCreatePage() {
                   ...(documentName && { vivaDocumentName: documentName })
                 } : page
               ));
+
+              // Update backend via API
+              if (article?.article_id) {
+                try {
+                  const pageToUpdate = pagePlan[pageIndex];
+                  const updatedLayoutJson = {
+                    ...pageToUpdate.layoutJson,
+                    vivaStatus,
+                    ...(documentName && { vivaDocumentName: documentName })
+                  };
+
+                  console.log("🔄 Making PATCH call to update article:", {
+                    articleId: article.article_id,
+                    pageUid: pageToUpdate.pageUid,
+                    updatedLayoutJson
+                  });
+
+                  await apiService.patchPageLayout(
+                    article.article_id,
+                    pageToUpdate.pageUid,
+                    updatedLayoutJson
+                  );
+                  
+                  console.log("✅ Successfully updated article with VIVA status");
+                } catch (error) {
+                  console.error("❌ Failed to update article with VIVA status:", error);
+                  toast.error("Failed to save VIVA status to database");
+                }
+              }
             }}
             onPublishArticle={handlePublishArticle}
             article={article}

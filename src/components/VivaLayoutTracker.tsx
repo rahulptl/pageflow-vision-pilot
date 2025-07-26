@@ -51,7 +51,8 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
   const currentVivaMessage = useAnimatedMessages({
     messages: vivaLoadingMessages,
     interval: 1500,
-    isActive: Object.values(loadingStates).some(state => state === 'uploading' || state === 'converting')
+    isActive: Object.values(loadingStates).some(state => state === 'uploading' || state === 'converting') || 
+              pages.some(page => page.vivaStatus?.status === 'uploaded')
   });
 
   const createVjsonFile = (layoutData: any, articleName: string, pageNumber: number): File => {
@@ -598,15 +599,15 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
                 {getStatusBadge(page.vivaStatus)}
                 
                 <div className="flex items-center gap-2">
-                  {!page.vivaStatus || page.vivaStatus.status === 'not_started' ? (
+                  {!page.vivaStatus || page.vivaStatus.status === 'not_started' || page.vivaStatus.status === 'uploaded' ? (
                     <Button
                       onClick={() => uploadToViva(index)}
-                      disabled={loadingStates[index] === 'uploading'}
+                      disabled={loadingStates[index] === 'uploading' || loadingStates[index] === 'converting' || page.vivaStatus?.status === 'uploaded'}
                       variant="outline"
                       size="sm"
                       className="gap-2"
                     >
-                      {loadingStates[index] === 'uploading' ? (
+                      {loadingStates[index] === 'uploading' || loadingStates[index] === 'converting' || page.vivaStatus?.status === 'uploaded' ? (
                         <AnimatePresence mode="wait">
                           <motion.div
                             key="viva-uploading"

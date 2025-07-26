@@ -51,7 +51,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
   const currentVivaMessage = useAnimatedMessages({
     messages: vivaLoadingMessages,
     interval: 1500,
-    isActive: Object.values(loadingStates).some(state => state === 'uploading')
+    isActive: Object.values(loadingStates).some(state => state === 'uploading' || state === 'converting')
   });
 
   const createVjsonFile = (layoutData: any, articleName: string, pageNumber: number): File => {

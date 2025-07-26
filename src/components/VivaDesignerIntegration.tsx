@@ -44,7 +44,7 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
   const currentVivaMessage = useAnimatedMessages({
     messages: vivaLoadingMessages,
     interval: 1500,
-    isActive: isUploading || isConverting
+    isActive: (isUploading || isConverting) && !designerUrl
   });
 
   const getJobId = (): string => {

@@ -361,7 +361,7 @@ class ApiService {
 
   // Process zip file
   async processZip(desdPath: string): Promise<any> {
-    return this.request<any>('/process-zip', {
+    return this.request<any>('/articles/process-zip', {
       method: 'POST',
       body: JSON.stringify({ desd_path: desdPath }),
     });

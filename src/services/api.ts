@@ -3,7 +3,7 @@ import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWit
 import { ImageEdit } from '@/types/imageGeneration';
 
 // const API_BASE_URL = 'https://ild-backend-app-a3fxgmh7ckf7cxfs.germanywestcentral-01.azurewebsites.net';
-const API_BASE_URL = '127.0.0.1:8000'
+const API_BASE_URL = 'http://127.0.0.1:8000'
 
 export interface ArticleSearchParams {
   article_title?: string;

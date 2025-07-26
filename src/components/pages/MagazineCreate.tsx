@@ -165,7 +165,7 @@ export function MagazineCreatePage() {
   const currentLoadingMessage = useAnimatedMessages({
     messages: loadingMessages,
     interval: 1500,
-    isActive: getRecommendationsMutation.isPending
+    isActive: getRecommendationsMutation?.isPending || false
   });
 
   const handleRegenerateRecommendations = () => {

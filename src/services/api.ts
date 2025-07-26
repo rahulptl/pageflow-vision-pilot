@@ -363,7 +363,7 @@ class ApiService {
   async mergePdfs(pdfUrls: string[]): Promise<{ public_url: string }> {
     return this.request<{ public_url: string }>('/articles/merge-pdfs', {
       method: 'POST',
-      body: JSON.stringify(pdfUrls), // Send array directly, not wrapped in object
+      body: JSON.stringify({ pdf_urls: pdfUrls }), // Wrap in object with pdf_urls key
     });
   }
 

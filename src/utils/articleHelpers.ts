@@ -50,8 +50,8 @@ export function createPagesFromArticle(
         createdAt: pageData.created_at,
         updatedAt: pageData.updated_at,
         // Load VIVA status from database (handle both snake_case and camelCase)
-        vivaDocumentName: pageData.layout_json.vivaStatus.viva_document_name,
-        vivaStatus: pageData.layout_json.vivaStatus
+        vivaDocumentName: pageData.layout_json?.vivaStatus?.viva_document_name || null,
+        vivaStatus: pageData.layout_json?.vivaStatus || null,
       });
 
       // Increment page number based on layout type

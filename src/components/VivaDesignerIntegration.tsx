@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2, Download, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAnimatedMessages } from "@/hooks/useAnimatedMessages";
 
 interface VivaDesignerIntegrationProps {
   layoutJson: any;
@@ -33,6 +35,17 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
   const [designerUrl, setDesignerUrl] = useState<string>('');
   const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
+
+  // Animated loading messages for VIVA upload
+  const vivaLoadingMessages = [
+    "Preparing layout for editing..."
+  ];
+
+  const currentVivaMessage = useAnimatedMessages({
+    messages: vivaLoadingMessages,
+    interval: 1500,
+    isActive: isUploading || isConverting
+  });
 
   const getJobId = (): string => {
     // Use articleID as jobID so all layouts of the same article go to the same folder
@@ -246,8 +259,36 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
                 disabled={isUploading || isConverting}
                 className="gap-2"
               >
-                {(isUploading || isConverting) && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isUploading ? (vivaDocumentName ? 'Connecting...' : 'Uploading...') : isConverting ? 'Converting...' : (vivaDocumentName ? 'Connect to VIVA' : 'Upload to VIVA')}
+                <AnimatePresence mode="wait">
+                  {(isUploading || isConverting) ? (
+                    <motion.div
+                      key="viva-uploading"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center gap-2"
+                    >
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <motion.span
+                        key={currentVivaMessage}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {currentVivaMessage}
+                      </motion.span>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="viva-default"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2"
+                    >
+                      {vivaDocumentName ? 'Connect to VIVA' : 'Upload to VIVA'}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Button>
             ) : (
               <div className="flex items-center gap-4">

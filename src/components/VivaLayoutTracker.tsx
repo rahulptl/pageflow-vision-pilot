@@ -5,7 +5,7 @@ import { useAnimatedMessages } from "@/hooks/useAnimatedMessages";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ExternalLink, Download, Loader2, Check, Upload as UploadIcon, Eye } from 'lucide-react';
+import { ExternalLink, Download, Loader2, Check, Upload as UploadIcon } from 'lucide-react';
 import { VivaLayoutStatus } from '@/types/magazine';
 import { toast } from 'sonner';
 import { apiService } from '@/services/api';
@@ -613,48 +613,43 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
                         </motion.div>
                       )}
                     </Button>
-                  ) : page.vivaStatus.status === 'converted' && page.vivaStatus.designerUrl ? (
+                  ) : (page.vivaStatus.status === 'converted' || page.vivaStatus.status === 'pdf_exported') && page.vivaStatus.designerUrl ? (
                     <>
                       <Button asChild variant="outline" size="sm" className="gap-2">
                         <a href={page.vivaStatus.designerUrl} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3 w-3" />
-                          Edit in Designer
+                          Open in Designer
                         </a>
                       </Button>
-                      <Button
-                        onClick={() => exportToPdf(index)}
-                        disabled={loadingStates[index] === 'exporting'}
-                        variant="secondary"
-                        size="sm"
-                        className="gap-2"
-                      >
-                        {loadingStates[index] === 'exporting' ? (
-                          <>
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            Exporting...
-                          </>
-                        ) : (
-                          <>
+                      {page.vivaStatus.status === 'converted' && (
+                        <Button
+                          onClick={() => exportToPdf(index)}
+                          disabled={loadingStates[index] === 'exporting'}
+                          variant="secondary"
+                          size="sm"
+                          className="gap-2"
+                        >
+                          {loadingStates[index] === 'exporting' ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Exporting...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-3 w-3" />
+                              Export PDF
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      {page.vivaStatus.status === 'pdf_exported' && page.vivaStatus.pdfDownloadUrl && (
+                        <Button asChild variant="secondary" size="sm" className="gap-2">
+                          <a href={page.vivaStatus.pdfDownloadUrl} target="_blank" rel="noopener noreferrer">
                             <Download className="h-3 w-3" />
-                            Export PDF
-                          </>
-                        )}
-                      </Button>
-                    </>
-                  ) : page.vivaStatus.status === 'pdf_exported' && page.vivaStatus.pdfDownloadUrl ? (
-                    <>
-                      <Button asChild variant="outline" size="sm" className="gap-2">
-                        <a href={page.vivaStatus.designerUrl} target="_blank" rel="noopener noreferrer">
-                          <Eye className="h-3 w-3" />
-                          View in Designer
-                        </a>
-                      </Button>
-                      <Button asChild variant="secondary" size="sm" className="gap-2">
-                        <a href={page.vivaStatus.pdfDownloadUrl} target="_blank" rel="noopener noreferrer">
-                          <Download className="h-3 w-3" />
-                          Download PDF
-                        </a>
-                      </Button>
+                            Download PDF
+                          </a>
+                        </Button>
+                      )}
                     </>
                   ) : null}
                 </div>

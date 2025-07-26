@@ -242,7 +242,7 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <ExternalLink className="h-4 w-4" />
-          Edit in Designer
+          Open in Designer
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
@@ -347,7 +347,7 @@ export function VivaDesignerIntegration({ layoutJson, articleName = 'article', p
                 <Button asChild className="gap-2">
                   <a href={designerUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
-                    Open Designer
+                    Open in Designer
                   </a>
                 </Button>
               </div>

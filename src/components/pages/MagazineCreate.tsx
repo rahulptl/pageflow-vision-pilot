@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAnimatedMessages } from "@/hooks/useAnimatedMessages";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,6 +150,22 @@ export function MagazineCreatePage() {
       setIsRegenerating(false);
       setIsSwapRecommending(false);
     }
+  });
+
+  // Animated loading messages
+  const loadingMessages = [
+    "Thinking...",
+    "Putting things together...", 
+    "Finding the right fit...",
+    "Analyzing layout patterns...",
+    "Crafting the perfect design...",
+    "Almost there..."
+  ];
+
+  const currentLoadingMessage = useAnimatedMessages({
+    messages: loadingMessages,
+    interval: 1500,
+    isActive: getRecommendationsMutation.isPending
   });
 
   const handleRegenerateRecommendations = () => {
@@ -928,8 +946,38 @@ export function MagazineCreatePage() {
                   Back to Workspace
                 </Button>
                 <Button type="submit" className="flex-1" disabled={getRecommendationsMutation.isPending}>
-                  {getRecommendationsMutation.isPending ? 'Getting Recommendations...' : 'Create Article Plan'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <AnimatePresence mode="wait">
+                    {getRecommendationsMutation.isPending ? (
+                      <motion.div
+                        key="loading"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2"
+                      >
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <motion.span
+                          key={currentLoadingMessage}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {currentLoadingMessage}
+                        </motion.span>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="default"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2"
+                      >
+                        Create Article Plan
+                        <ArrowRight className="h-4 w-4" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </Button>
               </div>
             </form>

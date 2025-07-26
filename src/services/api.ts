@@ -361,20 +361,10 @@ class ApiService {
 
   // Merge PDFs API
   async mergePdfs(pdfUrls: string[]): Promise<{ public_url: string }> {
-    const response = await fetch(`${API_BASE_URL}/articles/merge-pdfs`, {
+    return this.request<{ public_url: string }>('/articles/merge-pdfs', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(pdfUrls), // Send array directly, not wrapped in object
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to merge PDFs: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    return response.json();
   }
 
   // Process zip API for VIVA Designer

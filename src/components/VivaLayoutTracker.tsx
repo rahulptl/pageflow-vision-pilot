@@ -476,7 +476,9 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
   };
 
   const convertedPages = pages.filter(page => page.vivaStatus?.status === 'converted' || page.vivaStatus?.status === 'pdf_exported').length;
+  const pdfExportedPages = pages.filter(page => page.vivaStatus?.status === 'pdf_exported').length;
   const progress = pages.length > 0 ? (convertedPages / pages.length) * 100 : 0;
+  const allPdfsReady = pages.length > 0 && pdfExportedPages === pages.length;
 
   return (
     <div className="space-y-6">
@@ -491,7 +493,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
           </div>
           <Button 
             onClick={handlePublish}
-            disabled={isPublishing || progress < 100}
+            disabled={isPublishing || !allPdfsReady}
             className="gap-2"
             size="lg"
           >

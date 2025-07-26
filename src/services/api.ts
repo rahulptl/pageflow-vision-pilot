@@ -2,7 +2,7 @@
 import { Layout, LayoutRun, RunLayoutRequest, Article, ArticleCreate, ArticleWithLayout, TemplateRequest, TemplateResponse, LayoutRecommendation, ArticleRecommendationResponse, RecommendationResponse } from '@/types/api';
 import { ImageEdit } from '@/types/imageGeneration';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = 'https://ild-backend-app-a3fxgmh7ckf7cxfs.germanywestcentral-01.azurewebsites.net';
 
 export interface ArticleSearchParams {
   article_title?: string;
@@ -356,40 +356,6 @@ class ApiService {
     return this.request<Article>(`/articles/${articleId}/page/${pageUid}`, {
       method: 'PATCH',
       body: JSON.stringify(layoutJson),
-    });
-  }
-
-  // Merge PDFs API
-  async mergePdfs(pdfUrls: string[]): Promise<{ public_url: string }> {
-    return this.request<{ public_url: string }>('/articles/merge-pdfs', {
-      method: 'POST',
-      body: JSON.stringify({ pdf_urls: pdfUrls }), // Wrap in object with pdf_urls key
-    });
-  }
-
-  // Process zip API for VIVA Designer
-  async processZip(desdPath: string): Promise<{ zip_url: string }> {
-    const response = await fetch(`${API_BASE_URL}/articles/process-zip`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ desd_path: desdPath }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to process zip: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    return response.json();
-  }
-
-  // Update article status to PUBLISHED
-  async publishArticle(articleId: number): Promise<Article> {
-    return this.request<Article>(`/articles/${articleId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'PUBLISHED' }),
     });
   }
 }

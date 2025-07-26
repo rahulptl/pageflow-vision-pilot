@@ -38,6 +38,7 @@ const VIVA_CONFIG = {
 
 export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, article, formData }: VivaLayoutTrackerProps) {
   const [loadingStates, setLoadingStates] = useState<{ [pageIndex: number]: 'uploading' | 'converting' | 'exporting' | null }>({});
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
   const createVjsonFile = (layoutData: any, articleName: string, pageNumber: number): File => {
@@ -383,8 +384,8 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
     }
   };
 
-  const handlePublish = async () => {
-    setIsPublishing(true);
+  const handleDownload = async () => {
+    setIsDownloading(true);
     
     try {
       // Step 1: Check if all pages have pdfDownloadUrl
@@ -435,10 +436,34 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       console.log('🔄 Merging PDFs...', pdfUrls);
       const response = await apiService.mergePdfs(pdfUrls);
       
-      // Step 5: Open the merged PDF in a new tab
-      window.open(response.public_url, '_blank');
+      // Step 5: Download the merged PDF
+      const link = document.createElement('a');
+      link.href = response.public_url;
+      link.download = `${formData.articleName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
-      toast.success(`Successfully merged ${formData.articleName}.pdf and opened in new tab`);
+      toast.success(`Successfully downloaded ${formData.articleName}.pdf`);
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to download article';
+      toast.error(errorMessage);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    
+    try {
+      // Update article status to PUBLISHED in database
+      await apiService.publishArticle(article.article_id);
+      
+      toast.success('Article published successfully!');
+      onPublishArticle(); // Call the parent callback
       
     } catch (error) {
       console.error('Publish error:', error);
@@ -491,24 +516,45 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
               Upload layouts to VIVA Designer for editing and export as PDF
             </p>
           </div>
-          <Button 
-            onClick={handlePublish}
-            disabled={isPublishing || !allPdfsReady}
-            className="gap-2"
-            size="lg"
-          >
-            {isPublishing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Publishing...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                Publish Article
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleDownload}
+              disabled={isDownloading || !allPdfsReady}
+              variant="outline"
+              size="lg"
+              className="gap-2"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Download Article
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={handlePublish}
+              disabled={isPublishing || !allPdfsReady}
+              className="gap-2"
+              size="lg"
+            >
+              {isPublishing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Publish Article
+                </>
+              )}
+            </Button>
+          </div>
         </div>
         
         <div className="space-y-2">

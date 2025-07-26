@@ -394,6 +394,14 @@ class ApiService {
 
     return response.json();
   }
+
+  // Update article status to PUBLISHED
+  async publishArticle(articleId: number): Promise<Article> {
+    return this.request<Article>(`/articles/${articleId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'PUBLISHED' }),
+    });
+  }
 }
 
 export const apiService = new ApiService();

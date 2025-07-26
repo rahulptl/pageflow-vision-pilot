@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { ExternalLink, Download, Loader2, Check, Upload as UploadIcon, Eye } from 'lucide-react';
 import { VivaLayoutStatus } from '@/types/magazine';
 import { toast } from 'sonner';
+import { apiService } from '@/services/api';
 
 interface PagePlan {
   pageNumber: number;
@@ -343,61 +344,73 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
   };
 
   const handlePublish = async () => {
-    // First, export any pages that are converted but not yet exported to PDF
-    const convertedPages = pages.filter(page => page.vivaStatus?.status === 'converted');
-    const pagesWithPdfs = pages.filter(page => page.vivaStatus?.status === 'pdf_exported');
-    
     setIsPublishing(true);
     
     try {
-      // Export PDFs for all converted pages that don't have PDFs yet
-      for (let i = 0; i < convertedPages.length; i++) {
-        const pageIndex = pages.findIndex(p => p.pageUid === convertedPages[i].pageUid);
-        if (pageIndex !== -1) {
-          await exportToPdf(pageIndex);
+      // Step 1: Check if all pages have pdfDownloadUrl
+      const pagesWithoutPdf = pages.filter(page => !page.vivaStatus?.pdfDownloadUrl);
+      
+      // Step 2: Export PDFs for pages that don't have them yet
+      if (pagesWithoutPdf.length > 0) {
+        console.log(`🔄 Exporting PDFs for ${pagesWithoutPdf.length} pages without PDF...`);
+        
+        for (let i = 0; i < pagesWithoutPdf.length; i++) {
+          const pageIndex = pages.findIndex(p => p.pageUid === pagesWithoutPdf[i].pageUid);
+          if (pageIndex !== -1) {
+            // Check if page is converted, if not convert first
+            if (pagesWithoutPdf[i].vivaStatus?.status !== 'converted' && pagesWithoutPdf[i].vivaStatus?.status !== 'pdf_exported') {
+              // Upload and convert if needed
+              if (!pagesWithoutPdf[i].vivaStatus || pagesWithoutPdf[i].vivaStatus.status === 'not_started') {
+                await uploadToViva(pageIndex);
+                // uploadToViva already calls convertToDesigner
+              }
+            } else {
+              // Just export to PDF
+              await exportToPdf(pageIndex);
+            }
+          }
         }
+        
+        // Wait for all exports to complete
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
       
-      // Wait a moment for all exports to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Step 3: Get all PDF URLs in page order
+      const sortedPages = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
+      const pdfUrls = sortedPages
+        .filter(page => page.vivaStatus?.pdfDownloadUrl)
+        .map(page => page.vivaStatus!.pdfDownloadUrl!);
       
-      // Get updated pages with PDFs
-      const updatedPagesWithPdfs = pages.filter(page => page.vivaStatus?.status === 'pdf_exported');
-      
-      if (updatedPagesWithPdfs.length === 0) {
-        toast.error('No PDF files available for download. Please try exporting PDFs manually first.');
+      if (pdfUrls.length === 0) {
+        toast.error('No PDF files available for merging. Please try exporting PDFs manually first.');
         return;
       }
       
-      // Create a single download link for the first PDF to avoid Chrome blocking
-      // User can download others manually
-      const firstPdfUrl = updatedPagesWithPdfs[0].vivaStatus!.pdfDownloadUrl!;
-      
-      // Use window.open instead of creating links to avoid popup blocker
-      const downloadWindow = window.open(firstPdfUrl, '_blank');
-      
-      if (!downloadWindow) {
-        // Fallback if popup is blocked
-        const link = document.createElement('a');
-        link.href = firstPdfUrl;
-        link.download = `${formData.articleName}-page-${updatedPagesWithPdfs[0].pageNumber}.pdf`;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      if (pdfUrls.length !== pages.length) {
+        toast.error(`Only ${pdfUrls.length} of ${pages.length} pages have PDFs. Please ensure all pages are exported.`);
+        return;
       }
       
-      if (updatedPagesWithPdfs.length > 1) {
-        toast.success(`Started download of page 1. ${updatedPagesWithPdfs.length - 1} more PDFs available for individual download.`);
-      } else {
-        toast.success(`Downloaded PDF for ${formData.articleName}`);
-      }
+      // Step 4: Call merge-pdf API
+      console.log('🔄 Merging PDFs...', pdfUrls);
+      const mergedPdfBlob = await apiService.mergePdfs(pdfUrls);
       
-      // Don't call onPublishArticle() to avoid unwanted redirects
+      // Step 5: Download the merged PDF
+      const downloadUrl = URL.createObjectURL(mergedPdfBlob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${formData.articleName}-merged.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+      
+      toast.success(`Successfully merged and downloaded ${formData.articleName}.pdf`);
       
     } catch (error) {
       console.error('Publish error:', error);
-      toast.error('Failed to publish article');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to publish article';
+      toast.error(errorMessage);
     } finally {
       setIsPublishing(false);
     }

@@ -358,6 +358,26 @@ class ApiService {
       body: JSON.stringify(layoutJson),
     });
   }
+
+  // Merge PDFs API
+  async mergePdfs(pdfUrls: string[]): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/articles/merge-pdfs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pdf_urls: pdfUrls
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to merge PDFs: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return response.blob();
+  }
 }
 
 export const apiService = new ApiService();

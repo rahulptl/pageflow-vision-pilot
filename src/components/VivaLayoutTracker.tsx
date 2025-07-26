@@ -488,31 +488,6 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
     }
   };
 
-  const getStatusBadge = (vivaStatus?: VivaLayoutStatus) => {
-    if (!vivaStatus) {
-      return <Badge variant="outline">Not Started</Badge>;
-    }
-    
-    switch (vivaStatus.status) {
-      case 'uploaded':
-        return <Badge variant="secondary" className="gap-1">
-          <UploadIcon className="h-3 w-3" />
-          Uploaded
-        </Badge>;
-      case 'converted':
-        return <Badge variant="default" className="gap-1">
-          <Check className="h-3 w-3" />
-          Ready for Editing
-        </Badge>;
-      case 'pdf_exported':
-        return <Badge variant="default" className="gap-1 bg-green-500">
-          <Check className="h-3 w-3" />
-          PDF Ready
-        </Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
 
   const convertedPages = pages.filter(page => page.vivaStatus?.status === 'converted' || page.vivaStatus?.status === 'pdf_exported').length;
   const pdfExportedPages = pages.filter(page => page.vivaStatus?.status === 'pdf_exported').length;
@@ -596,7 +571,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
               </div>
               
               <div className="flex items-center gap-3">
-                {getStatusBadge(page.vivaStatus)}
+                
                 
                 <div className="flex items-center gap-2">
                   {!page.vivaStatus || page.vivaStatus.status === 'not_started' || page.vivaStatus.status === 'uploaded' ? (

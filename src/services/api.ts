@@ -360,20 +360,11 @@ class ApiService {
   }
 
   // Process zip file
-  async processZip(zipFile: File): Promise<any> {
-    const formData = new FormData();
-    formData.append('file', zipFile);
-
-    const response = await fetch(`${API_BASE_URL}/process-zip`, {
+  async processZip(desdPath: string): Promise<any> {
+    return this.request<any>('/process-zip', {
       method: 'POST',
-      body: formData,
+      body: JSON.stringify({ desd_path: desdPath }),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to process zip: ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   // Merge PDFs

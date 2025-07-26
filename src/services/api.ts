@@ -366,9 +366,7 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        pdf_urls: pdfUrls
-      }),
+      body: JSON.stringify(pdfUrls), // Send array directly, not wrapped in object
     });
 
     if (!response.ok) {

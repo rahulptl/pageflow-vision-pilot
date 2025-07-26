@@ -142,7 +142,6 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       };
 
       onUpdatePage(pageIndex, vivaStatus, documentName);
-      toast.success('Layout uploaded to VIVA successfully');
       
       // Auto-convert to designer
       await convertToDesigner(pageIndex, jobId, documentName);

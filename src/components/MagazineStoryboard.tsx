@@ -574,7 +574,7 @@ export function MagazineStoryboard({
             <AlertDialogTrigger asChild>
               <Button 
                 variant="outline" 
-                className="gap-2 border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-950"
+                className="gap-2 border-brand-purple/20 text-brand-purple hover:border-brand-purple/30"
               >
                 <RefreshCw className="h-4 w-4" />
                 Generate New Recommendations

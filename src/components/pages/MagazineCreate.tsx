@@ -770,9 +770,9 @@ export function MagazineCreatePage() {
           <section>
             <h2 className="text-xl font-semibold mb-4">Create New Article</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer" onClick={handleCreateNew}>
+              <Card className="border-dashed border-2 border-brand-purple/30 hover:border-brand-purple/50 transition-colors cursor-pointer" onClick={handleCreateNew}>
                 <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                  <Plus className="h-12 w-12 text-muted-foreground mb-4" />
+                  <Plus className="h-12 w-12 text-brand-purple mb-4" />
                   <h3 className="font-semibold mb-2">Create New Article</h3>
                   <p className="text-sm text-muted-foreground">Start a new article project</p>
                 </CardContent>

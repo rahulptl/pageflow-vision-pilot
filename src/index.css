@@ -37,6 +37,12 @@
 
     --radius: 0.75rem;
 
+    /* Brand Colors */
+    --brand-purple: 262 87% 62%; /* #7c4ff0 */
+    --brand-blue: 192 100% 51%;   /* #03cdff */
+    --brand-black: 0 0% 0%;       /* #000000 */
+    --brand-white: 0 0% 100%;     /* #ffffff */
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;

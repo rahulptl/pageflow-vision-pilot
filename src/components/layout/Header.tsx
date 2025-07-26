@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Bell, Menu } from "lucide-react";
+import { ProfileDropdown } from "./ProfileDropdown";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -24,15 +25,15 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
             </Button>
           )}
           
-          <h1 className="text-xl font-semibold text-foreground">
-            Intelligent Layout Design
-          </h1>
+          <img 
+            src="/lovable-uploads/30e0e1ea-c234-4656-a4db-bf73b7505308.png" 
+            alt="ILD Logo" 
+            className="h-10 w-auto"
+          />
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-            <span className="text-primary font-medium text-xs">A</span>
-          </div>
+          <ProfileDropdown />
         </div>
       </div>
     </header>

@@ -190,7 +190,47 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         }
       }
 
-      const designerUrl = `${VIVA_CONFIG.host}/designer/?document-name=output%2F${nameWithoutExtension}.desd&jobid=${jobId}&locale=en`;
+      // Step 4: Process DESD to ZIP
+      console.log('🔄 VIVA: Processing DESD to ZIP...');
+      const desdPath = `${VIVA_CONFIG.host}/api/download/${jobId}/output/${nameWithoutExtension}.desd`;
+      console.log('📁 DESD Path:', desdPath);
+      
+      const zipResponse = await apiService.processZip(desdPath);
+      console.log('📊 Process Zip Response:', zipResponse);
+      
+      // Step 5: Download ZIP and upload back to VIVA
+      console.log('⬇️ VIVA: Downloading ZIP from:', zipResponse.zip_url);
+      const zipFileResponse = await fetch(zipResponse.zip_url);
+      if (!zipFileResponse.ok) {
+        throw new Error(`Failed to download ZIP: ${zipFileResponse.statusText}`);
+      }
+      
+      const zipBlob = await zipFileResponse.blob();
+      const zipFileName = `${nameWithoutExtension}.zip`;
+      const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
+      
+      // Upload ZIP to VIVA
+      console.log('⬆️ VIVA: Uploading ZIP file:', zipFileName);
+      const zipFormData = new FormData();
+      zipFormData.append('file', zipFile);
+      
+      const zipUploadUrl = `${VIVA_CONFIG.host}/api/upload/?ticketID=${jobId}`;
+      const zipUploadResponse = await fetch(zipUploadUrl, {
+        method: 'POST',
+        body: zipFormData,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!zipUploadResponse.ok) {
+        throw new Error(`ZIP upload failed: ${zipUploadResponse.statusText}`);
+      }
+      
+      console.log('✅ VIVA: ZIP uploaded successfully');
+      
+      // Step 6: Use ZIP in designer URL
+      const designerUrl = `${VIVA_CONFIG.host}/designer/?document-name=${zipFileName}&jobid=${jobId}&locale=en`;
       
       console.log('✅ VIVA Convert Success:', { designerUrl });
 

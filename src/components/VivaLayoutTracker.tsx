@@ -359,35 +359,41 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       }
       
       // Wait a moment for all exports to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Get updated pages with PDFs
       const updatedPagesWithPdfs = pages.filter(page => page.vivaStatus?.status === 'pdf_exported');
       
       if (updatedPagesWithPdfs.length === 0) {
-        toast.error('No PDF files available for download');
+        toast.error('No PDF files available for download. Please try exporting PDFs manually first.');
         return;
       }
       
-      // Download all PDFs individually (since we don't have a PDF merger)
-      const pdfUrls = updatedPagesWithPdfs.map(page => page.vivaStatus!.pdfDownloadUrl!);
+      // Create a single download link for the first PDF to avoid Chrome blocking
+      // User can download others manually
+      const firstPdfUrl = updatedPagesWithPdfs[0].vivaStatus!.pdfDownloadUrl!;
       
-      for (let i = 0; i < pdfUrls.length; i++) {
+      // Use window.open instead of creating links to avoid popup blocker
+      const downloadWindow = window.open(firstPdfUrl, '_blank');
+      
+      if (!downloadWindow) {
+        // Fallback if popup is blocked
         const link = document.createElement('a');
-        link.href = pdfUrls[i];
-        link.download = `${formData.articleName}-page-${updatedPagesWithPdfs[i].pageNumber}.pdf`;
+        link.href = firstPdfUrl;
+        link.download = `${formData.articleName}-page-${updatedPagesWithPdfs[0].pageNumber}.pdf`;
+        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        // Small delay between downloads
-        if (i < pdfUrls.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
       }
       
-      toast.success(`Downloaded ${pdfUrls.length} PDF files for ${formData.articleName}`);
-      onPublishArticle();
+      if (updatedPagesWithPdfs.length > 1) {
+        toast.success(`Started download of page 1. ${updatedPagesWithPdfs.length - 1} more PDFs available for individual download.`);
+      } else {
+        toast.success(`Downloaded PDF for ${formData.articleName}`);
+      }
+      
+      // Don't call onPublishArticle() to avoid unwanted redirects
       
     } catch (error) {
       console.error('Publish error:', error);

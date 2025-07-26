@@ -343,34 +343,54 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
   };
 
   const handlePublish = async () => {
+    // First, export any pages that are converted but not yet exported to PDF
+    const convertedPages = pages.filter(page => page.vivaStatus?.status === 'converted');
     const pagesWithPdfs = pages.filter(page => page.vivaStatus?.status === 'pdf_exported');
     
-    if (pagesWithPdfs.length !== pages.length) {
-      toast.error('All pages must be exported as PDF before publishing');
-      return;
-    }
-
     setIsPublishing(true);
     
     try {
-      // Download all PDFs and merge them (simplified - in real app you'd use a PDF library)
-      const pdfUrls = pagesWithPdfs.map(page => page.vivaStatus!.pdfDownloadUrl!);
+      // Export PDFs for all converted pages that don't have PDFs yet
+      for (let i = 0; i < convertedPages.length; i++) {
+        const pageIndex = pages.findIndex(p => p.pageUid === convertedPages[i].pageUid);
+        if (pageIndex !== -1) {
+          await exportToPdf(pageIndex);
+        }
+      }
       
-      // For now, just download the first PDF as a demo
-      // In a real implementation, you'd merge all PDFs into one
-      if (pdfUrls.length > 0) {
+      // Wait a moment for all exports to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Get updated pages with PDFs
+      const updatedPagesWithPdfs = pages.filter(page => page.vivaStatus?.status === 'pdf_exported');
+      
+      if (updatedPagesWithPdfs.length === 0) {
+        toast.error('No PDF files available for download');
+        return;
+      }
+      
+      // Download all PDFs individually (since we don't have a PDF merger)
+      const pdfUrls = updatedPagesWithPdfs.map(page => page.vivaStatus!.pdfDownloadUrl!);
+      
+      for (let i = 0; i < pdfUrls.length; i++) {
         const link = document.createElement('a');
-        link.href = pdfUrls[0];
-        link.download = `${formData.articleName}-merged.pdf`;
+        link.href = pdfUrls[i];
+        link.download = `${formData.articleName}-page-${updatedPagesWithPdfs[i].pageNumber}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        // Small delay between downloads
+        if (i < pdfUrls.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
       
-      toast.success('Article published successfully!');
+      toast.success(`Downloaded ${pdfUrls.length} PDF files for ${formData.articleName}`);
       onPublishArticle();
       
     } catch (error) {
+      console.error('Publish error:', error);
       toast.error('Failed to publish article');
     } finally {
       setIsPublishing(false);
@@ -403,8 +423,8 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
     }
   };
 
-  const completedPages = pages.filter(page => page.vivaStatus?.status === 'pdf_exported').length;
-  const progress = pages.length > 0 ? (completedPages / pages.length) * 100 : 0;
+  const convertedPages = pages.filter(page => page.vivaStatus?.status === 'converted' || page.vivaStatus?.status === 'pdf_exported').length;
+  const progress = pages.length > 0 ? (convertedPages / pages.length) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -419,7 +439,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
           </div>
           <Button 
             onClick={handlePublish}
-            disabled={isPublishing || completedPages !== pages.length}
+            disabled={isPublishing || progress < 100}
             className="gap-2"
             size="lg"
           >
@@ -439,7 +459,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
         
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Progress: {completedPages} of {pages.length} pages completed</span>
+            <span>Progress: {convertedPages} of {pages.length} pages completed</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="w-full" />

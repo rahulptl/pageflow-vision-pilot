@@ -396,7 +396,7 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       const response = await apiService.mergePdfs(pdfUrls);
       
       // Step 5: Open the merged PDF in a new tab
-      window.open(response.sas_url, '_blank');
+      window.open(response.public_url, '_blank');
       
       toast.success(`Successfully merged ${formData.articleName}.pdf and opened in new tab`);
       

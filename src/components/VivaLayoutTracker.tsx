@@ -196,7 +196,15 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       const desdPath = `${VIVA_CONFIG.host}/api/download/${jobId}/output/${nameWithoutExtension}.desd`;
       console.log('📁 DESD Path:', desdPath);
       
-      const zipResponse = await apiService.processZip(desdPath);
+      // Fetch the DESD file first
+      const desdResponse = await fetch(desdPath);
+      if (!desdResponse.ok) {
+        throw new Error(`Failed to fetch DESD file: ${desdResponse.statusText}`);
+      }
+      const desdBlob = await desdResponse.blob();
+      const desdFile = new File([desdBlob], `${nameWithoutExtension}.desd`, { type: 'application/octet-stream' });
+      
+      const zipResponse = await apiService.processZip(desdFile);
       console.log('📊 Process Zip Response:', zipResponse);
       
       // Step 5: Download ZIP and upload back to VIVA

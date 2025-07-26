@@ -358,6 +358,39 @@ class ApiService {
       body: JSON.stringify(layoutJson),
     });
   }
+
+  // Process zip file
+  async processZip(zipFile: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', zipFile);
+
+    const response = await fetch(`${API_BASE_URL}/process-zip`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to process zip: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Merge PDFs
+  async mergePdfs(pdfUrls: string[]): Promise<{ public_url: string }> {
+    return this.request<{ public_url: string }>('/articles/merge-pdfs', {
+      method: 'POST',
+      body: JSON.stringify({ pdf_urls: pdfUrls }),
+    });
+  }
+
+  // Publish article
+  async publishArticle(articleId: number): Promise<Article> {
+    return this.request<Article>(`/articles/${articleId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'PUBLISHED' }),
+    });
+  }
 }
 
 export const apiService = new ApiService();

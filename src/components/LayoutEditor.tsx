@@ -344,7 +344,6 @@ export function LayoutEditor({ page, article, onSave, onCancel }: LayoutEditorPr
               <h1 className="text-2xl font-bold">Edit Page {page.pageNumber}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline">{page.typeOfPage}</Badge>
-                <Badge variant="secondary">Layout #{page.layoutId}</Badge>
               </div>
             </div>
             <div className="flex gap-2">

@@ -171,9 +171,6 @@ export function Dashboard() {
                       <FileText className="w-6 h-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        Layout #{layout.layout_id}
-                      </p>
                       <p className="text-sm text-muted-foreground">
                         by {formatUser(layout.created_by)} • {formatShortDate(layout.created_at)}
                       </p>

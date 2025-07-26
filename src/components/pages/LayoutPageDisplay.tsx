@@ -30,9 +30,6 @@ export function LayoutPageDisplay({ layoutPage, layout }: LayoutPageDisplayProps
           <Badge variant="outline" className="font-semibold text-base">
             {pageText}
           </Badge>
-          <span className="text-muted-foreground text-sm">
-            (Layout #{layout.layout_id})
-          </span>
         </div>
         <Link to={`/layouts/${layout.layout_id}`}>
           <Button variant="outline" size="sm">

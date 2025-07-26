@@ -263,9 +263,6 @@ function SortablePageCard({
                                          </div>
                                         <div className="text-xs text-center">
                                           <div className="font-medium">Page {page.pageNumber + idx}</div>
-                                          <Badge variant="secondary" className="text-xs">
-                                            Layout #{layoutId}
-                                          </Badge>
                                         </div>
                                       </CardContent>
                                     </Card>

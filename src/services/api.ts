@@ -360,7 +360,7 @@ class ApiService {
   }
 
   // Merge PDFs API
-  async mergePdfs(pdfUrls: string[]): Promise<Blob> {
+  async mergePdfs(pdfUrls: string[]): Promise<{ sas_url: string }> {
     const response = await fetch(`${API_BASE_URL}/articles/merge-pdfs`, {
       method: 'POST',
       headers: {
@@ -374,7 +374,7 @@ class ApiService {
       throw new Error(`Failed to merge PDFs: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return response.blob();
+    return response.json();
   }
 }
 

@@ -393,19 +393,12 @@ export function VivaLayoutTracker({ pages, onUpdatePage, onPublishArticle, artic
       
       // Step 4: Call merge-pdf API
       console.log('🔄 Merging PDFs...', pdfUrls);
-      const mergedPdfBlob = await apiService.mergePdfs(pdfUrls);
+      const response = await apiService.mergePdfs(pdfUrls);
       
-      // Step 5: Download the merged PDF
-      const downloadUrl = URL.createObjectURL(mergedPdfBlob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${formData.articleName}-merged.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
+      // Step 5: Open the merged PDF in a new tab
+      window.open(response.sas_url, '_blank');
       
-      toast.success(`Successfully merged and downloaded ${formData.articleName}.pdf`);
+      toast.success(`Successfully merged ${formData.articleName}.pdf and opened in new tab`);
       
     } catch (error) {
       console.error('Publish error:', error);

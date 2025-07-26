@@ -379,14 +379,12 @@ class ApiService {
 
   // Process zip API for VIVA Designer
   async processZip(desdPath: string): Promise<{ zip_url: string }> {
-    const params = new URLSearchParams();
-    params.append('desd_path', desdPath);
-    
-    const response = await fetch(`${API_BASE_URL}/articles/process-zip?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/articles/process-zip`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ desd_path: desdPath }),
     });
 
     if (!response.ok) {
